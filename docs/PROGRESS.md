@@ -38,7 +38,7 @@
 |----------|--------|--------|-------|
 | `/api/admin/businesses` | GET, POST | ✅ | List all, create new |
 | `/api/admin/businesses/[id]` | GET, PATCH, DELETE | ✅ | Single business CRUD |
-| `/api/admin/users` | GET, PATCH | ✅ | List all, update role/business |
+| `/api/admin/users` | GET, POST, PATCH | ✅ | List all, create, update |
 | `/api/business/info` | GET | ✅ | Get current business |
 | `/api/business/settings` | PATCH | ✅ | Update business name |
 | `/api/codes/validate` | POST, GET | ✅ | Validate code, get history |
@@ -55,6 +55,8 @@
 | Alert | `ui/alert.tsx` | Info, success, warning, error alerts |
 | Spinner | `ui/spinner.tsx` | Loading indicator |
 | CopyButton | `ui/copy-button.tsx` | Copy to clipboard |
+| Skeleton | `ui/skeleton.tsx` | Loading placeholders |
+| NavigationProgress | `ui/navigation-progress.tsx` | Top progress bar |
 | EmptyState | `ui/empty-state.tsx` | Empty data placeholder |
 | ErrorState | `ui/error-state.tsx` | Error display |
 
@@ -63,6 +65,7 @@
 |-----------|----------|---------|
 | BusinessForm | `forms/business-form.tsx` | Create/edit business |
 | UserForm | `forms/user-form.tsx` | Edit user role/business |
+| CreateUserForm | `forms/create-user-form.tsx` | Create new user |
 | BusinessSettingsForm | `forms/business-settings-form.tsx` | Business owner settings |
 | CodeValidationForm | `cashier/code-validation-form.tsx` | Validate gift card codes |
 
@@ -73,10 +76,10 @@
 ### Code Quality
 | Item | Priority | Notes |
 |------|----------|-------|
-| Add loading states to all pages | Medium | Some pages lack Suspense boundaries |
+| Add loading states to all pages | ✅ Done | Skeleton loading for all dashboard pages |
 | Add error boundaries | Medium | Graceful error handling in UI |
 | Form validation feedback | Low | Could add inline field validation |
-| Optimistic updates | Low | Better UX for form submissions |
+| Optimistic updates | ✅ Done | useTransition for instant nav feedback |
 
 ### Testing
 | Item | Priority | Notes |

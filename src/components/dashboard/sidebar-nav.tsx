@@ -6,6 +6,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import type { Role } from '@/types';
 import {
@@ -49,7 +51,16 @@ interface SidebarNavProps {
 
 export function SidebarNav({ role }: SidebarNavProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const items = NAV_ITEMS[role] || [];
+
+  const handleNavigation = (href: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    startTransition(() => {
+      router.push(href);
+    });
+  };
 
   return (
     <nav className="space-y-1">
@@ -61,14 +72,16 @@ export function SidebarNav({ role }: SidebarNavProps) {
           <Link
             key={item.href}
             href={item.href}
+            onClick={(e) => handleNavigation(item.href, e)}
             className={cn(
-              'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+              'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150',
               isActive
                 ? 'bg-slate-900 text-white'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+              isPending && 'opacity-70'
             )}
           >
-            <item.icon className="w-5 h-5" />
+            <item.icon className={cn('w-5 h-5', isPending && 'animate-pulse')} />
             {item.title}
           </Link>
         );

@@ -17,6 +17,14 @@ const updateUserSchema = z.object({
   businessId: z.string().uuid('ID de empresa inválido').nullable().optional(),
 });
 
+// Validation schema for creating a user
+const createUserSchema = z.object({
+  email: z.string().email('Email inválido'),
+  fullName: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').nullable().optional(),
+  role: z.enum(['ADMIN', 'BUSINESS_OWNER', 'CASHIER']),
+  businessId: z.string().uuid('ID de empresa inválido').nullable().optional(),
+});
+
 export async function GET() {
   try {
     const user = await getSessionUser();
@@ -107,6 +115,84 @@ export async function PATCH(request: Request) {
     }
 
     return NextResponse.json({ data });
+  } catch (error) {
+    console.error('Unexpected error:', error);
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const user = await getSessionUser();
+    
+    if (!user || !isAdmin(user)) {
+      return NextResponse.json(
+        { error: 'Acesso não autorizado' },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json();
+    const validation = createUserSchema.safeParse(body);
+
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error.issues[0].message },
+        { status: 400 }
+      );
+    }
+
+    const { email, fullName, role, businessId } = validation.data;
+
+    // Validate business requirement for non-admin roles
+    if (role !== 'ADMIN' && !businessId) {
+      return NextResponse.json(
+        { error: 'Empresa é obrigatória para este tipo de usuário' },
+        { status: 400 }
+      );
+    }
+
+    const supabase = await createClient();
+
+    // Check if user already exists
+    const { data: existingUser } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', email)
+      .single();
+
+    if (existingUser) {
+      return NextResponse.json(
+        { error: 'Já existe um usuário com este email' },
+        { status: 409 }
+      );
+    }
+
+    // Create profile (user will complete registration on first login)
+    const { data, error } = await supabase
+      .from('profiles')
+      .insert({
+        id: crypto.randomUUID(),
+        email,
+        full_name: fullName,
+        role,
+        business_id: businessId,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating user:', error);
+      return NextResponse.json(
+        { error: 'Erro ao criar usuário' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ data }, { status: 201 });
   } catch (error) {
     console.error('Unexpected error:', error);
     return NextResponse.json(

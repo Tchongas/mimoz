@@ -4,10 +4,11 @@
 // MIMOZ - Dashboard Layout Component
 // ============================================
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { cn } from '@/lib/utils';
 import { SidebarNav } from './sidebar-nav';
 import { TopBar } from './top-bar';
+import { NavigationProgress } from '@/components/ui';
 import type { SessionUser } from '@/types';
 import { X } from 'lucide-react';
 
@@ -22,6 +23,11 @@ export function DashboardLayout({ children, user, businessName }: DashboardLayou
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Navigation progress bar */}
+      <Suspense fallback={null}>
+        <NavigationProgress />
+      </Suspense>
+
       {/* Mobile sidebar overlay */}
       {isSidebarOpen && (
         <div
