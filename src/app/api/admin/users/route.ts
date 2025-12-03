@@ -157,7 +157,7 @@ export async function POST(request: Request) {
 
     const supabase = await createClient();
 
-    // Check if user already exists
+    // Check if user already exists in profiles (already logged in before)
     const { data: existingUser } = await supabase
       .from('profiles')
       .select('id')
@@ -166,28 +166,42 @@ export async function POST(request: Request) {
 
     if (existingUser) {
       return NextResponse.json(
-        { error: 'Já existe um usuário com este email' },
+        { error: 'Este usuário já existe no sistema' },
         { status: 409 }
       );
     }
 
-    // Create profile (user will complete registration on first login)
+    // Check if invite already exists
+    const { data: existingInvite } = await supabase
+      .from('user_invites')
+      .select('id')
+      .eq('email', email)
+      .single();
+
+    if (existingInvite) {
+      return NextResponse.json(
+        { error: 'Já existe um convite pendente para este email' },
+        { status: 409 }
+      );
+    }
+
+    // Create invite (user will get role/business on first login)
     const { data, error } = await supabase
-      .from('profiles')
+      .from('user_invites')
       .insert({
-        id: crypto.randomUUID(),
         email,
         full_name: fullName,
         role,
         business_id: businessId,
+        invited_by: user.id,
       })
       .select()
       .single();
 
     if (error) {
-      console.error('Error creating user:', error);
+      console.error('Error creating invite:', error);
       return NextResponse.json(
-        { error: 'Erro ao criar usuário' },
+        { error: 'Erro ao criar convite' },
         { status: 500 }
       );
     }
