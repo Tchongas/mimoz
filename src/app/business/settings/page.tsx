@@ -4,8 +4,9 @@
 
 import { requireBusiness } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui';
-import { Building2, Link as LinkIcon, Copy } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CopyButton } from '@/components/ui';
+import { BusinessSettingsForm } from '@/components/forms';
+import { Building2, Link as LinkIcon, Users } from 'lucide-react';
 
 async function getBusiness(businessId: string) {
   const supabase = await createClient();
@@ -19,9 +20,30 @@ async function getBusiness(businessId: string) {
   return data;
 }
 
+async function getTeamMembers(businessId: string) {
+  const supabase = await createClient();
+  
+  const { data, count } = await supabase
+    .from('profiles')
+    .select('id, full_name, email, role', { count: 'exact' })
+    .eq('business_id', businessId)
+    .order('role');
+
+  return { members: data || [], count: count || 0 };
+}
+
+const roleLabels: Record<string, string> = {
+  ADMIN: 'Administrador',
+  BUSINESS_OWNER: 'Proprietário',
+  CASHIER: 'Operador',
+};
+
 export default async function BusinessSettingsPage() {
   const user = await requireBusiness();
-  const business = await getBusiness(user.businessId);
+  const [business, team] = await Promise.all([
+    getBusiness(user.businessId),
+    getTeamMembers(user.businessId),
+  ]);
 
   if (!business) {
     return (
@@ -31,7 +53,7 @@ export default async function BusinessSettingsPage() {
     );
   }
 
-  const storeUrl = `${process.env.NEXT_PUBLIC_APP_URL}/store/${business.slug}`;
+  const storeUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://mimoz.com.br'}/store/${business.slug}`;
 
   return (
     <div className="space-y-6">
@@ -59,31 +81,43 @@ export default async function BusinessSettingsPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Nome da Empresa
-                </label>
-                <input
-                  type="text"
-                  value={business.name}
-                  disabled
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-700"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Slug
-                </label>
-                <input
-                  type="text"
-                  value={business.slug}
-                  disabled
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-700"
-                />
-              </div>
-            </div>
+            <BusinessSettingsForm business={business} />
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Team Members */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Equipe</CardTitle>
+          <CardDescription>{team.count} membro(s) na equipe</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {team.members.length === 0 ? (
+            <div className="p-4 text-center text-slate-500">
+              <Users className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+              <p>Nenhum membro na equipe</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {team.members.map((member) => (
+                <div key={member.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                  <div>
+                    <p className="font-medium text-slate-900">
+                      {member.full_name || 'Sem nome'}
+                    </p>
+                    <p className="text-sm text-slate-500">{member.email}</p>
+                  </div>
+                  <span className="px-2 py-1 text-xs font-medium bg-slate-200 text-slate-700 rounded-full">
+                    {roleLabels[member.role] || member.role}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+          <p className="mt-4 text-sm text-slate-500">
+            Para adicionar ou remover membros, contate o administrador.
+          </p>
         </CardContent>
       </Card>
 
@@ -99,12 +133,7 @@ export default async function BusinessSettingsPage() {
             <code className="flex-1 text-sm text-slate-700 truncate">
               {storeUrl}
             </code>
-            <button
-              className="p-2 text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
-              title="Copiar link"
-            >
-              <Copy className="w-4 h-4" />
-            </button>
+            <CopyButton text={storeUrl} />
           </div>
           <p className="mt-2 text-sm text-slate-500">
             Este link estará disponível quando a página da loja for implementada.

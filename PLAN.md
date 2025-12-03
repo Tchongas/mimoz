@@ -127,26 +127,26 @@ A whitelabel webpage generator for businesses to sell gift cards. This system in
 
 ## Implementation Phases
 
-### Phase 1: Foundation (Current)
+### Phase 1: Foundation ✅
 - [x] Project setup
-- [ ] Database migrations
-- [ ] RLS policies
-- [ ] Supabase utilities
-- [ ] Auth utilities
-- [ ] RBAC utilities
-- [ ] Middleware
+- [x] Database migrations
+- [x] RLS policies
+- [x] Supabase utilities
+- [x] Auth utilities
+- [x] RBAC utilities
+- [x] Middleware
 
-### Phase 2: Auth & Dashboards
-- [ ] Auth pages (login, logout, callback)
-- [ ] Shared components
-- [ ] Admin dashboard
-- [ ] Business dashboard
-- [ ] Cashier dashboard
+### Phase 2: Auth & Dashboards ✅
+- [x] Auth pages (login, logout, callback)
+- [x] Shared components (DashboardLayout, SidebarNav, TopBar)
+- [x] Admin dashboard (home, businesses, users)
+- [x] Business dashboard (home, settings, analytics)
+- [x] Cashier dashboard (validation, history)
 
-### Phase 3: API Layer
-- [ ] Admin API routes
-- [ ] Business API routes
-- [ ] Code validation API
+### Phase 3: API Layer ✅
+- [x] Admin API routes (businesses CRUD, users PATCH)
+- [x] Business API routes (info, settings)
+- [x] Code validation API (POST, GET)
 
 ### Phase 4: Future (Store Pages)
 - [ ] /store/[slug] public pages
@@ -157,9 +157,9 @@ A whitelabel webpage generator for businesses to sell gift cards. This system in
 ---
 
 ## Security Checklist
-- [ ] All auth on server-side
-- [ ] RLS enabled on all tables
-- [ ] Middleware protects all dashboard routes
-- [ ] API routes validate session + role
-- [ ] No client-side role checks for security
-- [ ] Business isolation enforced at DB level
+- [x] All auth on server-side
+- [x] RLS enabled on all tables
+- [x] Middleware protects all dashboard routes
+- [x] API routes validate session + role
+- [x] No client-side role checks for security
+- [x] Business isolation enforced at DB level
