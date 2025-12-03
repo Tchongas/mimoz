@@ -1,0 +1,78 @@
+'use client';
+
+// ============================================
+// MIMOZ - Sidebar Navigation Component
+// ============================================
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
+import type { Role } from '@/types';
+import {
+  LayoutDashboard,
+  Building2,
+  Users,
+  Settings,
+  BarChart3,
+  QrCode,
+  History,
+  type LucideIcon,
+} from 'lucide-react';
+
+interface NavItem {
+  title: string;
+  href: string;
+  icon: LucideIcon;
+}
+
+// Navigation items per role
+const NAV_ITEMS: Record<Role, NavItem[]> = {
+  ADMIN: [
+    { title: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+    { title: 'Empresas', href: '/admin/businesses', icon: Building2 },
+    { title: 'Usuários', href: '/admin/users', icon: Users },
+  ],
+  BUSINESS_OWNER: [
+    { title: 'Visão Geral', href: '/business', icon: LayoutDashboard },
+    { title: 'Configurações', href: '/business/settings', icon: Settings },
+    { title: 'Analytics', href: '/business/analytics', icon: BarChart3 },
+  ],
+  CASHIER: [
+    { title: 'Validar Código', href: '/cashier', icon: QrCode },
+    { title: 'Histórico', href: '/cashier/history', icon: History },
+  ],
+};
+
+interface SidebarNavProps {
+  role: Role;
+}
+
+export function SidebarNav({ role }: SidebarNavProps) {
+  const pathname = usePathname();
+  const items = NAV_ITEMS[role] || [];
+
+  return (
+    <nav className="space-y-1">
+      {items.map((item) => {
+        const isActive = pathname === item.href || 
+          (item.href !== `/${role.toLowerCase()}` && pathname.startsWith(item.href));
+        
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={cn(
+              'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+              isActive
+                ? 'bg-slate-900 text-white'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+            )}
+          >
+            <item.icon className="w-5 h-5" />
+            {item.title}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
