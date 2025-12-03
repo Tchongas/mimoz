@@ -21,7 +21,7 @@ export default function NotFound() {
         </h2>
         
         <p className="text-slate-500 mb-8">
-          A página que você está procurando não existe ou foi movida.
+          Desculpe, mas a página que você está procurando não existe ou foi movida.
         </p>
 
         <div className="flex gap-3">
