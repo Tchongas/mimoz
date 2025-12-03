@@ -3,7 +3,8 @@
 // ============================================
 
 import Link from 'next/link';
-import { FileQuestion, Home, ArrowLeft } from 'lucide-react';
+import { FileQuestion, Home } from 'lucide-react';
+import BackButton from './components/BackButton';
 
 export default function NotFound() {
   return (
@@ -32,13 +33,7 @@ export default function NotFound() {
             Início
           </Link>
           
-          <button
-            onClick={() => history.back()}
-            className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Voltar
-          </button>
+          <BackButton />
         </div>
       </div>
     </div>
