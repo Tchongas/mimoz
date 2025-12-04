@@ -11,12 +11,15 @@ import { getSessionUser } from '@/lib/auth';
 import { isBusinessOwner, isAdmin } from '@/lib/rbac';
 import { z } from 'zod';
 
+const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+
 const updateSchema = z.object({
   name: z.string().min(2).optional(),
   description: z.string().nullable().optional(),
   amountCents: z.number().int().positive().optional(),
   validDays: z.number().int().min(1).max(3650).optional(),
   isActive: z.boolean().optional(),
+  cardColor: z.string().regex(hexColorRegex, 'Cor inválida').nullable().optional(),
 });
 
 export async function GET(
@@ -122,7 +125,7 @@ export async function PATCH(
       );
     }
 
-    const { name, description, amountCents, validDays, isActive } = validation.data;
+    const { name, description, amountCents, validDays, isActive, cardColor } = validation.data;
 
     const updateData: Record<string, unknown> = {};
     if (name !== undefined) updateData.name = name;
@@ -130,6 +133,7 @@ export async function PATCH(
     if (amountCents !== undefined) updateData.amount_cents = amountCents;
     if (validDays !== undefined) updateData.valid_days = validDays;
     if (isActive !== undefined) updateData.is_active = isActive;
+    if (cardColor !== undefined) updateData.card_color = cardColor;
 
     const { data, error } = await supabase
       .from('gift_card_templates')

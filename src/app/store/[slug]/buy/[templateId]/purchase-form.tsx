@@ -15,9 +15,10 @@ interface PurchaseFormProps {
   businessSlug: string;
   templateId: string;
   amount: number;
+  accentColor?: string;
 }
 
-export function PurchaseForm({ businessId, businessSlug, templateId, amount }: PurchaseFormProps) {
+export function PurchaseForm({ businessId, businessSlug, templateId, amount, accentColor = '#2563eb' }: PurchaseFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -193,21 +194,21 @@ export function PurchaseForm({ businessId, businessSlug, templateId, amount }: P
       </div>
 
       {/* Submit */}
-      <Button
+      <button
         type="submit"
-        className="w-full"
-        size="lg"
         disabled={isLoading}
+        className="w-full py-3 px-6 rounded-lg text-white font-medium text-lg flex items-center justify-center gap-2 transition-opacity hover:opacity-90 disabled:opacity-50"
+        style={{ backgroundColor: accentColor }}
       >
         {isLoading ? (
           <Spinner size="sm" />
         ) : (
           <>
-            <CreditCard className="w-5 h-5 mr-2" />
+            <CreditCard className="w-5 h-5" />
             Pagar {formatCurrency(amount)}
           </>
         )}
-      </Button>
+      </button>
 
       <p className="text-xs text-slate-500 text-center">
         Pagamento seguro processado por Stripe

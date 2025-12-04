@@ -250,11 +250,19 @@ A whitelabel webpage generator for businesses to sell gift cards. This system in
 - [x] **Admin business edit** with customization
   - Color pickers with live preview
   - Contact information fields
+- [x] **Business owner settings** with full customization
+  - Same color pickers and contact fields as admin
+  - Can edit everything except slug and delete business
 - [x] **Store pages** apply customization
   - Header uses primary_color
   - Buttons use secondary_color
   - Gift cards use gift_card_color
   - Business description in hero
+  - Buy page uses customization colors
+- [x] **Per-template customization**
+  - card_color column in gift_card_templates
+  - Template color overrides business default
+  - Color picker in template form with preview
 
 ### Phase 6: Payment Integration 🔜
 - [ ] **Stripe Connect setup**

@@ -13,13 +13,20 @@ interface BuyPageProps {
   params: Promise<{ slug: string; templateId: string }>;
 }
 
+// Default colors
+const DEFAULT_COLORS = {
+  primary: '#1e3a5f',
+  secondary: '#2563eb',
+  giftCard: '#1e3a5f',
+};
+
 async function getTemplateData(slug: string, templateId: string) {
   const supabase = await createClient();
 
-  // Get business by slug
+  // Get business by slug with customization fields
   const { data: business } = await supabase
     .from('businesses')
-    .select('id, name, slug')
+    .select('id, name, slug, primary_color, secondary_color, gift_card_color')
     .eq('slug', slug)
     .single();
 
@@ -49,6 +56,11 @@ export default async function BuyPage({ params }: BuyPageProps) {
 
   const { business, template } = data;
 
+  // Get colors with fallbacks - template color overrides business default
+  const primaryColor = business.primary_color || DEFAULT_COLORS.primary;
+  const secondaryColor = business.secondary_color || DEFAULT_COLORS.secondary;
+  const giftCardColor = template.card_color || business.gift_card_color || DEFAULT_COLORS.giftCard;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       {/* Header */}
@@ -62,7 +74,10 @@ export default async function BuyPage({ params }: BuyPageProps) {
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-slate-900 rounded-lg flex items-center justify-center">
+              <div 
+                className="w-10 h-10 rounded-lg flex items-center justify-center"
+                style={{ backgroundColor: primaryColor }}
+              >
                 <Gift className="w-5 h-5 text-white" />
               </div>
               <h1 className="text-xl font-bold text-slate-900">{business.name}</h1>
@@ -76,13 +91,16 @@ export default async function BuyPage({ params }: BuyPageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Card Preview */}
           <div>
-            <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8 text-white aspect-[3/2] flex flex-col justify-between relative overflow-hidden">
+            <div 
+              className="rounded-2xl p-8 text-white aspect-[3/2] flex flex-col justify-between relative overflow-hidden"
+              style={{ backgroundColor: giftCardColor }}
+            >
               {/* Decorative elements */}
-              <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-              <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+              <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
               
               <div className="relative">
-                <p className="text-slate-400 text-sm">Vale-Presente</p>
+                <p className="text-white/60 text-sm">Vale-Presente</p>
                 <h2 className="text-2xl font-bold mt-1">{business.name}</h2>
               </div>
               
@@ -90,7 +108,7 @@ export default async function BuyPage({ params }: BuyPageProps) {
                 <p className="text-5xl font-bold">
                   {formatCurrency(template.amount_cents)}
                 </p>
-                <p className="text-slate-400 text-sm mt-2">
+                <p className="text-white/60 text-sm mt-2">
                   {template.name}
                 </p>
               </div>
@@ -125,6 +143,7 @@ export default async function BuyPage({ params }: BuyPageProps) {
                 businessSlug={business.slug}
                 templateId={template.id}
                 amount={template.amount_cents}
+                accentColor={secondaryColor}
               />
             </div>
           </div>

@@ -10,6 +10,8 @@ import { getSessionUser } from '@/lib/auth';
 import { isBusinessOwner, isAdmin } from '@/lib/rbac';
 import { z } from 'zod';
 
+const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+
 const templateSchema = z.object({
   businessId: z.string().uuid(),
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -17,6 +19,7 @@ const templateSchema = z.object({
   amountCents: z.number().int().positive('Valor deve ser positivo'),
   validDays: z.number().int().min(1).max(3650).default(365),
   isActive: z.boolean().default(true),
+  cardColor: z.string().regex(hexColorRegex, 'Cor inválida').nullable().optional(),
 });
 
 export async function GET() {
@@ -91,7 +94,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { businessId, name, description, amountCents, validDays, isActive } = validation.data;
+    const { businessId, name, description, amountCents, validDays, isActive, cardColor } = validation.data;
 
     // Verify user has access to this business
     if (user.businessId !== businessId && !isAdmin(user)) {
@@ -112,6 +115,7 @@ export async function POST(request: Request) {
         amount_cents: amountCents,
         valid_days: validDays,
         is_active: isActive,
+        card_color: cardColor || null,
       })
       .select()
       .single();

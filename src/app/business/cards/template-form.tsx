@@ -11,6 +11,7 @@ import { formatCurrency } from '@/lib/utils';
 
 interface TemplateFormProps {
   businessId: string;
+  businessGiftCardColor?: string;
   template?: {
     id: string;
     name: string;
@@ -18,12 +19,15 @@ interface TemplateFormProps {
     amount_cents: number;
     valid_days: number;
     is_active: boolean;
+    card_color: string | null;
   };
 }
 
 const PRESET_AMOUNTS = [2500, 5000, 10000, 15000, 20000, 25000, 50000, 10000];
 
-export function TemplateForm({ businessId, template }: TemplateFormProps) {
+const DEFAULT_CARD_COLOR = '#1e3a5f';
+
+export function TemplateForm({ businessId, businessGiftCardColor, template }: TemplateFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +38,8 @@ export function TemplateForm({ businessId, template }: TemplateFormProps) {
   const [customAmount, setCustomAmount] = useState('');
   const [validDays, setValidDays] = useState(template?.valid_days || 365);
   const [isActive, setIsActive] = useState(template?.is_active ?? true);
+  const [useCustomColor, setUseCustomColor] = useState(!!template?.card_color);
+  const [cardColor, setCardColor] = useState(template?.card_color || businessGiftCardColor || DEFAULT_CARD_COLOR);
 
   const handleAmountChange = (value: string) => {
     const cents = Math.round(parseFloat(value) * 100);
@@ -63,6 +69,7 @@ export function TemplateForm({ businessId, template }: TemplateFormProps) {
           amountCents,
           validDays,
           isActive,
+          cardColor: useCustomColor ? cardColor : null,
         }),
       });
 
@@ -217,6 +224,48 @@ export function TemplateForm({ businessId, template }: TemplateFormProps) {
               <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-slate-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-900"></div>
             </label>
           </div>
+
+          {/* Custom Color */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-slate-900">Cor personalizada</p>
+                <p className="text-sm text-slate-500">
+                  {useCustomColor ? 'Usando cor própria' : 'Usando cor padrão da empresa'}
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={useCustomColor}
+                  onChange={(e) => setUseCustomColor(e.target.checked)}
+                  className="sr-only peer"
+                  disabled={isLoading}
+                />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-slate-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-900"></div>
+              </label>
+            </div>
+            
+            {useCustomColor && (
+              <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                <input
+                  type="color"
+                  value={cardColor}
+                  onChange={(e) => setCardColor(e.target.value)}
+                  disabled={isLoading}
+                  className="w-12 h-12 rounded border border-slate-300 cursor-pointer"
+                />
+                <div className="flex-1">
+                  <Input
+                    value={cardColor}
+                    onChange={(e) => setCardColor(e.target.value)}
+                    placeholder="#1e3a5f"
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -224,10 +273,16 @@ export function TemplateForm({ businessId, template }: TemplateFormProps) {
       <Card>
         <CardContent className="p-6">
           <p className="text-sm text-slate-500 mb-4">Pré-visualização</p>
-          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-6 text-white max-w-sm">
-            <p className="text-slate-400 text-xs">Vale-Presente</p>
-            <p className="text-3xl font-bold mt-2">{formatCurrency(amountCents)}</p>
-            <p className="text-slate-400 text-sm mt-4">{name || 'Nome do modelo'}</p>
+          <div 
+            className="rounded-xl p-6 text-white max-w-sm relative overflow-hidden"
+            style={{ backgroundColor: useCustomColor ? cardColor : (businessGiftCardColor || DEFAULT_CARD_COLOR) }}
+          >
+            {/* Decorative elements */}
+            <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
+            <p className="text-white/60 text-xs relative">Vale-Presente</p>
+            <p className="text-3xl font-bold mt-2 relative">{formatCurrency(amountCents)}</p>
+            <p className="text-white/60 text-sm mt-4 relative">{name || 'Nome do modelo'}</p>
           </div>
         </CardContent>
       </Card>
