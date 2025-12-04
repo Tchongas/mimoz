@@ -156,6 +156,8 @@ export function getRoleDashboard(role: Role): string {
       return '/business';
     case 'CASHIER':
       return '/cashier';
+    case 'CUSTOMER':
+      return '/account';
     default:
       return '/auth/login';
   }

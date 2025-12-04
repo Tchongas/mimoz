@@ -1,13 +1,15 @@
 // ============================================
 // MIMOZ - Gift Card Purchase Page
 // ============================================
+// Requires authentication - form will redirect to login if needed
 
 import { createClient } from '@/lib/supabase/server';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Gift } from 'lucide-react';
+import { ArrowLeft, Gift, User } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { PurchaseForm } from './purchase-form';
+import { LoginButton } from '@/app/auth/login/login-button';
 
 interface BuyPageProps {
   params: Promise<{ slug: string; templateId: string }>;
@@ -48,6 +50,22 @@ async function getTemplateData(slug: string, templateId: string) {
 
 export default async function BuyPage({ params }: BuyPageProps) {
   const { slug, templateId } = await params;
+  const supabase = await createClient();
+  
+  // Check if user is authenticated
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  // Get user profile if authenticated
+  let userProfile = null;
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name, email')
+      .eq('id', user.id)
+      .single();
+    userProfile = profile;
+  }
+  
   const data = await getTemplateData(slug, templateId);
 
   if (!data) {
@@ -60,6 +78,10 @@ export default async function BuyPage({ params }: BuyPageProps) {
   const primaryColor = business.primary_color || DEFAULT_COLORS.primary;
   const secondaryColor = business.secondary_color || DEFAULT_COLORS.secondary;
   const giftCardColor = template.card_color || business.gift_card_color || DEFAULT_COLORS.giftCard;
+  
+  // Build return URL for login redirect
+  const returnUrl = `/store/${slug}/buy/${templateId}`;
+  const isAuthenticated = !!user;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
@@ -138,13 +160,46 @@ export default async function BuyPage({ params }: BuyPageProps) {
               <h2 className="text-xl font-bold text-slate-900 mb-6">
                 Finalizar Compra
               </h2>
-              <PurchaseForm 
-                businessId={business.id}
-                businessSlug={business.slug}
-                templateId={template.id}
-                amount={template.amount_cents}
-                accentColor={secondaryColor}
-              />
+              
+              {isAuthenticated ? (
+                <>
+                  {/* Show logged in user info */}
+                  <div className="mb-6 p-4 bg-slate-50 rounded-xl flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center">
+                      <User className="w-5 h-5 text-slate-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-900">
+                        {userProfile?.full_name || user?.email?.split('@')[0]}
+                      </p>
+                      <p className="text-sm text-slate-500">{user?.email}</p>
+                    </div>
+                  </div>
+                  
+                  <PurchaseForm 
+                    businessId={business.id}
+                    businessSlug={business.slug}
+                    templateId={template.id}
+                    amount={template.amount_cents}
+                    accentColor={secondaryColor}
+                    returnUrl={returnUrl}
+                  />
+                </>
+              ) : (
+                /* Login prompt for unauthenticated users */
+                <div className="text-center py-4">
+                  <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
+                    <User className="w-8 h-8 text-slate-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-slate-900 mb-2">
+                    Faça login para continuar
+                  </h3>
+                  <p className="text-slate-500 text-sm mb-6">
+                    Você precisa estar logado para comprar um vale-presente.
+                  </p>
+                  <LoginButton redirectTo={returnUrl} />
+                </div>
+              )}
             </div>
           </div>
         </div>

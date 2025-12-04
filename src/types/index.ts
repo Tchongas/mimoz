@@ -3,7 +3,7 @@
 // ============================================
 
 // Database Types
-export type Role = 'ADMIN' | 'BUSINESS_OWNER' | 'CASHIER';
+export type Role = 'ADMIN' | 'BUSINESS_OWNER' | 'CASHIER' | 'CUSTOMER';
 
 export interface Business {
   id: string;

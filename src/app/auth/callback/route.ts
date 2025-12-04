@@ -46,12 +46,13 @@ export async function GET(request: Request) {
       .single();
 
     // If no profile exists yet, it will be created by the trigger
-    // Default role is CASHIER, so redirect there
-    const role = profile?.role || 'CASHIER';
+    // Default role is now CUSTOMER for new signups
+    const role = profile?.role || 'CUSTOMER';
     const businessId = profile?.business_id;
 
-    // Check if non-admin user needs a business
-    if (role !== 'ADMIN' && !businessId) {
+    // Check if business-related roles need a business assigned
+    // ADMIN and CUSTOMER don't need a business
+    if (role !== 'ADMIN' && role !== 'CUSTOMER' && !businessId) {
       return NextResponse.redirect(`${origin}/auth/no-business`);
     }
 

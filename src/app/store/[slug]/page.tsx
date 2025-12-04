@@ -5,8 +5,9 @@
 import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { Gift, ShoppingBag, Mail, Phone, Globe } from 'lucide-react';
+import { Gift, ShoppingBag, Mail, Phone, Globe, User } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { LoginButton } from '@/app/auth/login/login-button';
 
 interface StorePageProps {
   params: Promise<{ slug: string }>;
@@ -71,6 +72,11 @@ async function getStoreData(slug: string) {
 
 export default async function StorePage({ params }: StorePageProps) {
   const { slug } = await params;
+  const supabase = await createClient();
+  
+  // Check if user is authenticated
+  const { data: { user } } = await supabase.auth.getUser();
+  
   const data = await getStoreData(slug);
 
   if (!data) {
@@ -107,18 +113,41 @@ export default async function StorePage({ params }: StorePageProps) {
               )}
               <h1 className="text-xl font-bold text-slate-900">{business.name}</h1>
             </div>
-            {/* Contact Links */}
-            <div className="hidden sm:flex items-center gap-4 text-sm text-slate-500">
-              {business.contact_email && (
-                <a href={`mailto:${business.contact_email}`} className="flex items-center gap-1 hover:text-slate-700">
-                  <Mail className="w-4 h-4" />
-                  <span className="hidden md:inline">{business.contact_email}</span>
-                </a>
-              )}
-              {business.website && (
-                <a href={business.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-slate-700">
-                  <Globe className="w-4 h-4" />
-                </a>
+            {/* Right side - Contact + Account */}
+            <div className="flex items-center gap-4">
+              {/* Contact Links */}
+              <div className="hidden sm:flex items-center gap-4 text-sm text-slate-500">
+                {business.contact_email && (
+                  <a href={`mailto:${business.contact_email}`} className="flex items-center gap-1 hover:text-slate-700">
+                    <Mail className="w-4 h-4" />
+                    <span className="hidden md:inline">{business.contact_email}</span>
+                  </a>
+                )}
+                {business.website && (
+                  <a href={business.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-slate-700">
+                    <Globe className="w-4 h-4" />
+                  </a>
+                )}
+              </div>
+              
+              {/* Account Link */}
+              {user ? (
+                <Link
+                  href="/account"
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  <User className="w-4 h-4" />
+                  <span className="hidden sm:inline">Minha Conta</span>
+                </Link>
+              ) : (
+                <Link
+                  href={`/auth/login?redirect=/store/${slug}`}
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white rounded-lg transition-colors"
+                  style={{ backgroundColor: primaryColor }}
+                >
+                  <User className="w-4 h-4" />
+                  <span className="hidden sm:inline">Entrar</span>
+                </Link>
               )}
             </div>
           </div>

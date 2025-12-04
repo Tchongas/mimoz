@@ -3,12 +3,13 @@
 // ============================================
 // MIMOZ - Purchase Form Component
 // ============================================
+// Requires authentication - redirects to login if not logged in
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Input, Label, Alert, Spinner } from '@/components/ui';
+import { Input, Label, Alert, Spinner } from '@/components/ui';
 import { formatCurrency } from '@/lib/utils';
-import { User, Mail, MessageSquare, CreditCard } from 'lucide-react';
+import { Gift, Mail, MessageSquare, CreditCard } from 'lucide-react';
 
 interface PurchaseFormProps {
   businessId: string;
@@ -16,18 +17,15 @@ interface PurchaseFormProps {
   templateId: string;
   amount: number;
   accentColor?: string;
+  returnUrl: string; // URL to return after login
 }
 
-export function PurchaseForm({ businessId, businessSlug, templateId, amount, accentColor = '#2563eb' }: PurchaseFormProps) {
+export function PurchaseForm({ businessId, businessSlug, templateId, amount, accentColor = '#2563eb', returnUrl }: PurchaseFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Purchaser info
-  const [purchaserName, setPurchaserName] = useState('');
-  const [purchaserEmail, setPurchaserEmail] = useState('');
-
-  // Recipient info
+  // Recipient info (only needed if sending as gift)
   const [isGift, setIsGift] = useState(false);
   const [recipientName, setRecipientName] = useState('');
   const [recipientEmail, setRecipientEmail] = useState('');
@@ -45,17 +43,21 @@ export function PurchaseForm({ businessId, businessSlug, templateId, amount, acc
         body: JSON.stringify({
           businessId,
           templateId,
-          purchaserName,
-          purchaserEmail,
-          recipientName: isGift ? recipientName : purchaserName,
-          recipientEmail: isGift ? recipientEmail : purchaserEmail,
+          recipientName: isGift ? recipientName : '',
+          recipientEmail: isGift ? recipientEmail : '',
           recipientMessage: isGift ? recipientMessage : null,
+          isGift,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
+        // Handle auth required - redirect to login
+        if (data.code === 'AUTH_REQUIRED') {
+          router.push(`/auth/login?redirect=${encodeURIComponent(returnUrl)}`);
+          return;
+        }
         throw new Error(data.error || 'Erro ao processar compra');
       }
 
@@ -80,41 +82,8 @@ export function PurchaseForm({ businessId, businessSlug, templateId, amount, acc
         <Alert variant="error">{error}</Alert>
       )}
 
-      {/* Purchaser Info */}
-      <div className="space-y-4">
-        <h3 className="font-medium text-slate-900 flex items-center gap-2">
-          <User className="w-4 h-4" />
-          Seus dados
-        </h3>
-
-        <div className="space-y-2">
-          <Label htmlFor="purchaserName" required>Seu nome</Label>
-          <Input
-            id="purchaserName"
-            value={purchaserName}
-            onChange={(e) => setPurchaserName(e.target.value)}
-            placeholder="João Silva"
-            required
-            disabled={isLoading}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="purchaserEmail" required>Seu email</Label>
-          <Input
-            id="purchaserEmail"
-            type="email"
-            value={purchaserEmail}
-            onChange={(e) => setPurchaserEmail(e.target.value)}
-            placeholder="joao@email.com"
-            required
-            disabled={isLoading}
-          />
-        </div>
-      </div>
-
       {/* Gift Toggle */}
-      <div className="border-t border-slate-200 pt-6">
+      <div>
         <label className="flex items-center gap-3 cursor-pointer">
           <input
             type="checkbox"

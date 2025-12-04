@@ -3,13 +3,16 @@
 // ============================================
 // POST - Create checkout session and redirect to payment
 //
+// REQUIRES AUTHENTICATION - user must be logged in
+//
 // Flow:
-// 1. Validate request and template
-// 2. Generate unique gift card code
-// 3. Create pending gift card in database
-// 4. Create AbacatePay billing (payment link)
-// 5. Return payment URL for redirect
-// 6. Webhook handles activation after payment
+// 1. Verify user is authenticated
+// 2. Validate request and template
+// 3. Generate unique gift card code
+// 4. Create pending gift card linked to user
+// 5. Create AbacatePay billing (payment link)
+// 6. Return payment URL for redirect
+// 7. Webhook handles activation after payment
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
@@ -20,11 +23,11 @@ const checkoutSchema = z.object({
   // businessId is UUID in businesses table
   businessId: z.string().uuid(),
   templateId: z.string().uuid(),
-  purchaserName: z.string().min(2, 'Nome é obrigatório'),
-  purchaserEmail: z.string().email('Email inválido'),
+  // Recipient info (purchaser info comes from auth)
   recipientName: z.string().min(2, 'Nome do destinatário é obrigatório'),
   recipientEmail: z.string().email('Email do destinatário inválido'),
   recipientMessage: z.string().nullable().optional(),
+  isGift: z.boolean().default(false),
 });
 
 // Generate unique gift card code
@@ -52,6 +55,33 @@ function getBaseUrl(request: NextRequest): string {
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
+
+    // ========================================
+    // 1. REQUIRE AUTHENTICATION
+    // ========================================
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Você precisa estar logado para fazer uma compra', code: 'AUTH_REQUIRED' },
+        { status: 401 }
+      );
+    }
+
+    // Get user profile for name
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name, email')
+      .eq('id', user.id)
+      .single();
+
+    const purchaserName = profile?.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Cliente';
+    const purchaserEmail = user.email!;
+
+    // ========================================
+    // 2. VALIDATE REQUEST
+    // ========================================
     const body = await request.json();
     const validation = checkoutSchema.safeParse(body);
 
@@ -69,14 +99,15 @@ export async function POST(request: NextRequest) {
     const {
       businessId,
       templateId,
-      purchaserName,
-      purchaserEmail,
       recipientName,
       recipientEmail,
       recipientMessage,
+      isGift,
     } = validation.data;
 
-    const supabase = await createClient();
+    // If not a gift, recipient is the purchaser
+    const finalRecipientName = isGift ? recipientName : purchaserName;
+    const finalRecipientEmail = isGift ? recipientEmail : purchaserEmail;
 
     // Get template and business info
     const { data: template, error: templateError } = await supabase
@@ -147,10 +178,11 @@ export async function POST(request: NextRequest) {
           amount_cents: template.amount_cents,
           balance_cents: template.amount_cents,
           status: 'PENDING', // Will be activated by webhook
+          purchaser_user_id: user.id, // Link to authenticated user
           purchaser_email: purchaserEmail,
           purchaser_name: purchaserName,
-          recipient_email: recipientEmail,
-          recipient_name: recipientName,
+          recipient_email: finalRecipientEmail,
+          recipient_name: finalRecipientName,
           recipient_message: recipientMessage || null,
           expires_at: expiresAt.toISOString(),
         })
@@ -189,8 +221,8 @@ export async function POST(request: NextRequest) {
             giftCardCode: giftCard.code,
             businessId,
             templateId,
-            recipientEmail,
-            recipientName,
+            recipientEmail: finalRecipientEmail,
+            recipientName: finalRecipientName,
           },
         });
 
@@ -241,10 +273,11 @@ export async function POST(request: NextRequest) {
           amount_cents: template.amount_cents,
           balance_cents: template.amount_cents,
           status: 'ACTIVE', // Active immediately for testing
+          purchaser_user_id: user.id, // Link to authenticated user
           purchaser_email: purchaserEmail,
           purchaser_name: purchaserName,
-          recipient_email: recipientEmail,
-          recipient_name: recipientName,
+          recipient_email: finalRecipientEmail,
+          recipient_name: finalRecipientName,
           recipient_message: recipientMessage || null,
           expires_at: expiresAt.toISOString(),
         })
