@@ -46,6 +46,8 @@ const NAV_ITEMS: Record<Role, NavItem[]> = {
     { title: 'Validar Código', href: '/cashier', icon: QrCode },
     { title: 'Histórico', href: '/cashier/history', icon: History },
   ],
+  // CUSTOMER role uses /account pages, not dashboard
+  CUSTOMER: [],
 };
 
 interface SidebarNavProps {
