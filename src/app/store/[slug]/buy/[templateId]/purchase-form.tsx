@@ -11,7 +11,7 @@ import { formatCurrency } from '@/lib/utils';
 import { User, Mail, MessageSquare, CreditCard } from 'lucide-react';
 
 interface PurchaseFormProps {
-  businessId: string;
+  businessId: string | number;
   businessSlug: string;
   templateId: string;
   amount: number;

@@ -18,7 +18,6 @@ import {
   getBilling,
 } from '@/lib/payments';
 import type { BillingPaidEvent, BillingPaidEventData } from '@/lib/payments';
-import { generateCode } from '@/lib/utils';
 
 /**
  * POST /api/webhooks/abacatepay
@@ -119,7 +118,7 @@ async function handleBillingPaid(event: BillingPaidEvent) {
     .from('gift_cards')
     .select('*, gift_card_templates(*)')
     .eq('payment_provider_id', pixQrCode?.id || '')
-    .eq('status', 'pending')
+    .eq('status', 'PENDING')
     .single();
 
   if (findError || !pendingCard) {
@@ -136,11 +135,9 @@ async function handleBillingPaid(event: BillingPaidEvent) {
   const { error: updateError } = await supabase
     .from('gift_cards')
     .update({
-      status: 'active',
-      payment_status: 'paid',
+      status: 'ACTIVE',
       payment_method: payment.method.toLowerCase(),
       payment_fee_cents: payment.fee,
-      paid_at: new Date().toISOString(),
     })
     .eq('id', pendingCard.id);
 
@@ -152,7 +149,7 @@ async function handleBillingPaid(event: BillingPaidEvent) {
   console.log('[Webhook] Gift card activated:', {
     id: pendingCard.id,
     code: pendingCard.code,
-    amount: pendingCard.original_amount_cents,
+    amount: pendingCard.amount_cents,
   });
 
   // TODO: Send confirmation emails

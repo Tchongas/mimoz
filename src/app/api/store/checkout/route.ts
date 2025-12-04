@@ -17,7 +17,11 @@ import { z } from 'zod';
 import { createBilling, isDevMode } from '@/lib/payments';
 
 const checkoutSchema = z.object({
-  businessId: z.string().uuid(),
+  // businessId is BIGINT in database, accept string or number
+  businessId: z.union([
+    z.string().regex(/^\d+$/).transform(Number),
+    z.number().int().positive(),
+  ]),
   templateId: z.string().uuid(),
   purchaserName: z.string().min(2, 'Nome é obrigatório'),
   purchaserEmail: z.string().email('Email inválido'),
@@ -139,10 +143,9 @@ export async function POST(request: NextRequest) {
           business_id: businessId,
           template_id: templateId,
           code: code!,
-          original_amount_cents: template.amount_cents,
+          amount_cents: template.amount_cents,
           balance_cents: template.amount_cents,
-          status: 'pending', // Will be activated by webhook
-          payment_status: 'pending',
+          status: 'PENDING', // Will be activated by webhook
           purchaser_email: purchaserEmail,
           purchaser_name: purchaserName,
           recipient_email: recipientEmail,
@@ -234,10 +237,9 @@ export async function POST(request: NextRequest) {
           business_id: businessId,
           template_id: templateId,
           code: code!,
-          original_amount_cents: template.amount_cents,
+          amount_cents: template.amount_cents,
           balance_cents: template.amount_cents,
-          status: 'active', // Active immediately for testing
-          payment_status: 'paid',
+          status: 'ACTIVE', // Active immediately for testing
           purchaser_email: purchaserEmail,
           purchaser_name: purchaserName,
           recipient_email: recipientEmail,
@@ -251,7 +253,10 @@ export async function POST(request: NextRequest) {
       if (giftCardError) {
         console.error('Error creating gift card:', giftCardError);
         return NextResponse.json(
-          { error: 'Erro ao criar vale-presente' },
+          { 
+            error: 'Erro ao criar vale-presente',
+            details: process.env.NODE_ENV === 'development' ? giftCardError.message : undefined,
+          },
           { status: 500 }
         );
       }
@@ -267,8 +272,13 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Checkout error:', error);
+    // Include more details in dev mode
+    const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
     return NextResponse.json(
-      { error: 'Erro interno do servidor' },
+      { 
+        error: process.env.NODE_ENV === 'development' ? errorMessage : 'Erro interno do servidor',
+        details: process.env.NODE_ENV === 'development' ? String(error) : undefined,
+      },
       { status: 500 }
     );
   }
