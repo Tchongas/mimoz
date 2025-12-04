@@ -18,6 +18,7 @@ import {
   BarChart3,
   QrCode,
   History,
+  FileText,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -33,11 +34,13 @@ const NAV_ITEMS: Record<Role, NavItem[]> = {
     { title: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { title: 'Empresas', href: '/admin/businesses', icon: Building2 },
     { title: 'Usuários', href: '/admin/users', icon: Users },
+    { title: 'Relatórios', href: '/admin/reports', icon: FileText },
   ],
   BUSINESS_OWNER: [
     { title: 'Visão Geral', href: '/business', icon: LayoutDashboard },
+    { title: 'Vale-Presentes', href: '/business/cards', icon: QrCode },
+    { title: 'Relatórios', href: '/business/reports', icon: FileText },
     { title: 'Configurações', href: '/business/settings', icon: Settings },
-    { title: 'Analytics', href: '/business/analytics', icon: BarChart3 },
   ],
   CASHIER: [
     { title: 'Validar Código', href: '/cashier', icon: QrCode },

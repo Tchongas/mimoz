@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Business Analytics Page
+// MIMOZ - Business Reports Page
 // ============================================
 
 import { requireBusiness } from '@/lib/auth';
@@ -109,7 +109,7 @@ async function getAnalyticsData(businessId: string) {
   };
 }
 
-export default async function BusinessAnalyticsPage() {
+export default async function BusinessReportsPage() {
   const user = await requireBusiness();
   const analytics = await getAnalyticsData(user.businessId);
 
@@ -121,7 +121,7 @@ export default async function BusinessAnalyticsPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Analytics</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Relatórios</h1>
         <p className="text-slate-500">Métricas e relatórios da sua empresa</p>
       </div>
 

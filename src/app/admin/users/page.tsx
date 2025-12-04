@@ -5,9 +5,20 @@
 import { createClient } from '@/lib/supabase/server';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui';
 import { formatDate, getInitials } from '@/lib/utils';
-import { Users, Plus, ExternalLink } from 'lucide-react';
+import { Users, Plus, ExternalLink, Clock, Mail, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import type { ProfileWithBusiness } from '@/types';
+import { DeleteInviteButton } from './delete-invite-button';
+
+interface UserInvite {
+  id: string;
+  email: string;
+  full_name: string | null;
+  role: string;
+  business_id: string | null;
+  created_at: string;
+  business?: { id: string; name: string } | null;
+}
 
 async function getUsers(): Promise<ProfileWithBusiness[]> {
   const supabase = await createClient();
@@ -28,6 +39,25 @@ async function getUsers(): Promise<ProfileWithBusiness[]> {
   return data || [];
 }
 
+async function getPendingInvites(): Promise<UserInvite[]> {
+  const supabase = await createClient();
+  
+  const { data, error } = await supabase
+    .from('user_invites')
+    .select(`
+      *,
+      business:businesses(id, name)
+    `)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching invites:', error);
+    return [];
+  }
+
+  return data || [];
+}
+
 const roleLabels: Record<string, string> = {
   ADMIN: 'Administrador',
   BUSINESS_OWNER: 'Proprietário',
@@ -41,7 +71,10 @@ const roleColors: Record<string, string> = {
 };
 
 export default async function AdminUsersPage() {
-  const users = await getUsers();
+  const [users, pendingInvites] = await Promise.all([
+    getUsers(),
+    getPendingInvites(),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -60,10 +93,89 @@ export default async function AdminUsersPage() {
         </Link>
       </div>
 
+      {/* Pending Invites */}
+      {pendingInvites.length > 0 && (
+        <Card className="border-amber-200 bg-amber-50/50">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <Clock className="w-5 h-5 text-amber-600" />
+              <CardTitle className="text-amber-800">
+                Convites Pendentes ({pendingInvites.length})
+              </CardTitle>
+            </div>
+            <p className="text-sm text-amber-700">
+              Usuários que ainda não fizeram login no sistema
+            </p>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-amber-100/50 border-b border-amber-200">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase tracking-wider">
+                      Email
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase tracking-wider">
+                      Função
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase tracking-wider">
+                      Empresa
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase tracking-wider">
+                      Convidado em
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-amber-700 uppercase tracking-wider">
+                      Ações
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-amber-200 bg-white">
+                  {pendingInvites.map((invite) => (
+                    <tr key={invite.id} className="hover:bg-amber-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center">
+                            <Mail className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-slate-900">
+                              {invite.full_name || 'Aguardando login'}
+                            </p>
+                            <p className="text-sm text-slate-500">{invite.email}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${roleColors[invite.role]}`}>
+                          {roleLabels[invite.role]}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {invite.business ? (
+                          <span className="text-sm text-slate-700">{invite.business.name}</span>
+                        ) : (
+                          <span className="text-sm text-slate-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                        {formatDate(invite.created_at)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <DeleteInviteButton inviteId={invite.id} email={invite.email} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Users Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Lista de Usuários</CardTitle>
+          <CardTitle>Usuários Ativos ({users.length})</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {users.length === 0 ? (

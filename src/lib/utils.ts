@@ -47,6 +47,18 @@ export function formatTimeOnly(date: string | Date): string {
 }
 
 // ============================================
+// FORMAT CURRENCY
+// ============================================
+// Format cents to Brazilian Real
+
+export function formatCurrency(cents: number): string {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(cents / 100);
+}
+
+// ============================================
 // SLUGIFY
 // ============================================
 // Convert string to URL-safe slug

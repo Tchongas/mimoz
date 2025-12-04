@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Business Analytics Loading State
+// MIMOZ - Business Reports Loading State
 // ============================================
 
 import { SkeletonStats, SkeletonCard, Skeleton } from '@/components/ui';

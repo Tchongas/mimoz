@@ -1,7 +1,7 @@
 // ============================================
 // MIMOZ - Code Validation API
 // ============================================
-// POST /api/codes/validate - Validate a gift card code
+// POST /api/codes/validate - Lookup a gift card code and return details
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
@@ -56,48 +56,80 @@ export async function POST(request: Request) {
 
     const supabase = await createClient();
 
-    // Check if code was already validated (optional - depends on business logic)
-    // For now, we allow multiple validations of the same code
-    // Uncomment below to prevent duplicate validations:
-    /*
-    const { data: existing } = await supabase
-      .from('code_validations')
-      .select('id')
-      .eq('code', code)
+    // Look up the gift card
+    const { data: giftCard, error: lookupError } = await supabase
+      .from('gift_cards')
+      .select('*')
+      .eq('code', code.toUpperCase())
       .eq('business_id', businessId)
       .single();
 
-    if (existing) {
+    if (lookupError || !giftCard) {
       return NextResponse.json(
-        { error: 'Este código já foi validado' },
-        { status: 400 }
+        { error: 'Código não encontrado', valid: false },
+        { status: 404 }
       );
     }
-    */
 
-    // Insert validation record
-    const { data, error } = await supabase
+    // Check status
+    if (giftCard.status === 'REDEEMED') {
+      return NextResponse.json({
+        valid: false,
+        error: 'Este vale-presente já foi totalmente utilizado',
+        giftCard: {
+          code: giftCard.code,
+          status: giftCard.status,
+          amount_cents: giftCard.amount_cents,
+          balance_cents: 0,
+        },
+      });
+    }
+
+    if (giftCard.status === 'EXPIRED' || new Date(giftCard.expires_at) < new Date()) {
+      return NextResponse.json({
+        valid: false,
+        error: 'Este vale-presente expirou',
+        giftCard: {
+          code: giftCard.code,
+          status: 'EXPIRED',
+          expires_at: giftCard.expires_at,
+        },
+      });
+    }
+
+    if (giftCard.status === 'CANCELLED') {
+      return NextResponse.json({
+        valid: false,
+        error: 'Este vale-presente foi cancelado',
+        giftCard: {
+          code: giftCard.code,
+          status: giftCard.status,
+        },
+      });
+    }
+
+    // Log the validation lookup
+    await supabase
       .from('code_validations')
       .insert({
         code: code.toUpperCase(),
         business_id: businessId,
         cashier_id: user.id,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error validating code:', error);
-      return NextResponse.json(
-        { error: 'Erro ao validar código' },
-        { status: 500 }
-      );
-    }
+        gift_card_id: giftCard.id,
+      });
 
     return NextResponse.json({
-      success: true,
-      message: 'Código validado com sucesso',
-      data,
+      valid: true,
+      message: 'Código válido',
+      giftCard: {
+        id: giftCard.id,
+        code: giftCard.code,
+        status: giftCard.status,
+        amount_cents: giftCard.amount_cents,
+        balance_cents: giftCard.balance_cents,
+        recipient_name: giftCard.recipient_name,
+        expires_at: giftCard.expires_at,
+      },
     });
   } catch (error) {
     console.error('Unexpected error:', error);
