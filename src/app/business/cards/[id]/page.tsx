@@ -67,6 +67,7 @@ export default async function EditTemplatePage({ params }: EditTemplatePageProps
             amount_cents: template.amount_cents,
             valid_days: template.valid_days,
             is_active: template.is_active,
+            card_color: template.card_color,
           }}
         />
       </div>
