@@ -4,7 +4,7 @@
 
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { Card, CardContent, Badge } from '@/components/ui';
+import { Card, CardContent } from '@/components/ui';
 import { ArrowLeft, Plus, Gift, CreditCard } from 'lucide-react';
 import Link from 'next/link';
 import { formatCurrency, formatDate } from '@/lib/utils';
@@ -166,9 +166,9 @@ export default async function AdminBusinessCardsPage({ params }: PageProps) {
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-2">
                       <h3 className="font-semibold text-slate-900">{template.name}</h3>
-                      <Badge className={template.is_active ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-800'}>
+                      <span className={template.is_active ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-800'}>
                         {template.is_active ? 'Ativo' : 'Inativo'}
-                      </Badge>
+                      </span>
                     </div>
                     <p className="text-2xl font-bold text-slate-900 mb-2">
                       {formatCurrency(template.amount_cents)}
@@ -233,9 +233,9 @@ export default async function AdminBusinessCardsPage({ params }: PageProps) {
                         </span>
                       </td>
                       <td className="p-4">
-                        <Badge className={statusColors[card.status]}>
+                        <span className={statusColors[card.status]}>
                           {statusLabels[card.status]}
-                        </Badge>
+                        </span>
                       </td>
                       <td className="p-4 text-sm text-slate-600">
                         {card.recipient_name || card.purchaser_name || '-'}
