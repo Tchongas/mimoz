@@ -59,11 +59,12 @@ export function PurchaseForm({ businessId, businessSlug, templateId, amount, acc
         throw new Error(data.error || 'Erro ao processar compra');
       }
 
-      // Redirect to Stripe Checkout or success page
+      // Redirect to payment page or success page
       if (data.checkoutUrl) {
+        // AbacatePay payment link - redirect to payment
         window.location.href = data.checkoutUrl;
       } else if (data.giftCardCode) {
-        // For testing without Stripe - redirect to success
+        // Dev mode without payment - redirect to success directly
         router.push(`/store/${businessSlug}/success?code=${data.giftCardCode}`);
       }
     } catch (err) {

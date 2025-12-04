@@ -264,22 +264,30 @@ A whitelabel webpage generator for businesses to sell gift cards. This system in
   - Template color overrides business default
   - Color picker in template form with preview
 
-### Phase 6: Payment Integration 🔜
-- [ ] **Stripe Connect setup**
-  - Platform account configuration
-  - Connected accounts for businesses
-  - OAuth flow for business onboarding
-- [ ] **Stripe Checkout integration**
-  - Create checkout sessions
-  - Handle success/cancel redirects
-  - Metadata for order tracking
-- [ ] **Webhook handling** `/api/webhooks/stripe`
-  - checkout.session.completed → create gift card
-  - payment_intent.succeeded → update order
-  - charge.refunded → handle refunds
-- [ ] **Platform fees**
-  - Application fee on each transaction
-  - Fee configuration per business (future)
+### Phase 6: Payment Integration (AbacatePay) ✅
+- [x] **AbacatePay integration**
+  - Gateway-agnostic types (`src/lib/payments/types.ts`)
+  - AbacatePay client (`src/lib/payments/abacatepay.ts`)
+  - Full TypeScript support
+  - Easy to swap to another gateway
+- [x] **Checkout flow**
+  - Create pending gift card
+  - Create AbacatePay billing (PIX payment link)
+  - Redirect to payment page
+  - Dev mode fallback (no payment required)
+- [x] **Webhook handling** `/api/webhooks/abacatepay`
+  - `billing.paid` → activate gift card
+  - HMAC signature verification
+  - URL secret verification (alternative)
+- [x] **Database migration**
+  - `payment_provider_id` for webhook matching
+  - `payment_status`, `payment_method`, `payment_fee_cents`
+  - `paid_at` timestamp
+- [x] **Documentation** (`docs/PAYMENTS.md`)
+  - Architecture overview
+  - Environment setup
+  - Usage examples
+  - Troubleshooting guide
 
 ### Phase 7: Gift Card Delivery 🔜
 - [ ] **Email delivery** (Resend)
