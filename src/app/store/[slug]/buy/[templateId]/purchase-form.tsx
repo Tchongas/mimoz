@@ -212,7 +212,7 @@ export function PurchaseForm({ businessId, businessSlug, templateId, amount, acc
       </button>
 
       <p className="text-xs text-slate-500 text-center">
-        Pagamento seguro processado por Stripe
+        Pagamento seguro via PIX
       </p>
     </form>
   );

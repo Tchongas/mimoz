@@ -17,11 +17,8 @@ import { z } from 'zod';
 import { createBilling, isDevMode } from '@/lib/payments';
 
 const checkoutSchema = z.object({
-  // businessId is BIGINT in database, accept string or number
-  businessId: z.union([
-    z.string().regex(/^\d+$/).transform(Number),
-    z.number().int().positive(),
-  ]),
+  // businessId is BIGINT in database - coerce to number
+  businessId: z.coerce.number().int().positive(),
   templateId: z.string().uuid(),
   purchaserName: z.string().min(2, 'Nome é obrigatório'),
   purchaserEmail: z.string().email('Email inválido'),
@@ -59,8 +56,12 @@ export async function POST(request: NextRequest) {
     const validation = checkoutSchema.safeParse(body);
 
     if (!validation.success) {
+      console.error('[Checkout] Validation failed:', validation.error.issues);
       return NextResponse.json(
-        { error: validation.error.issues[0].message },
+        { 
+          error: validation.error.issues[0].message,
+          field: validation.error.issues[0].path.join('.'),
+        },
         { status: 400 }
       );
     }
