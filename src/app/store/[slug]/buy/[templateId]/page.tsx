@@ -139,7 +139,7 @@ export default async function BuyPage({ params }: BuyPageProps) {
                 Finalizar Compra
               </h2>
               <PurchaseForm 
-                businessId={String(business.id)}
+                businessId={business.id}
                 businessSlug={business.slug}
                 templateId={template.id}
                 amount={template.amount_cents}

@@ -17,8 +17,8 @@ import { z } from 'zod';
 import { createBilling, isDevMode } from '@/lib/payments';
 
 const checkoutSchema = z.object({
-  // businessId is BIGINT in database - coerce to number
-  businessId: z.coerce.number().int().positive(),
+  // businessId is UUID in businesses table
+  businessId: z.string().uuid(),
   templateId: z.string().uuid(),
   purchaserName: z.string().min(2, 'Nome é obrigatório'),
   purchaserEmail: z.string().email('Email inválido'),
