@@ -16,10 +16,22 @@ interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
+// Hex color validation regex
+const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+
 // Validation schema for updating a business
 const updateBusinessSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').optional(),
   slug: z.string().min(2, 'Slug deve ter pelo menos 2 caracteres').optional(),
+  // Customization fields
+  description: z.string().nullable().optional(),
+  primary_color: z.string().regex(hexColorRegex, 'Cor inválida').optional(),
+  secondary_color: z.string().regex(hexColorRegex, 'Cor inválida').optional(),
+  gift_card_color: z.string().regex(hexColorRegex, 'Cor inválida').optional(),
+  contact_email: z.string().email('Email inválido').nullable().optional(),
+  contact_phone: z.string().nullable().optional(),
+  website: z.string().url('URL inválida').nullable().optional(),
+  logo_url: z.string().url('URL inválida').nullable().optional(),
 });
 
 export async function GET(request: Request, context: RouteContext) {
@@ -81,13 +93,32 @@ export async function PATCH(request: Request, context: RouteContext) {
       );
     }
 
-    const { name, slug: providedSlug } = validation.data;
+    const { 
+      name, 
+      slug: providedSlug,
+      description,
+      primary_color,
+      secondary_color,
+      gift_card_color,
+      contact_email,
+      contact_phone,
+      website,
+      logo_url,
+    } = validation.data;
     const supabase = await createClient();
 
     // Build update object
     const updateData: Record<string, unknown> = {};
     if (name !== undefined) updateData.name = name;
     if (providedSlug !== undefined) updateData.slug = slugify(providedSlug);
+    if (description !== undefined) updateData.description = description;
+    if (primary_color !== undefined) updateData.primary_color = primary_color;
+    if (secondary_color !== undefined) updateData.secondary_color = secondary_color;
+    if (gift_card_color !== undefined) updateData.gift_card_color = gift_card_color;
+    if (contact_email !== undefined) updateData.contact_email = contact_email;
+    if (contact_phone !== undefined) updateData.contact_phone = contact_phone;
+    if (website !== undefined) updateData.website = website;
+    if (logo_url !== undefined) updateData.logo_url = logo_url;
 
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json(

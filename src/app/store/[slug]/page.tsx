@@ -5,7 +5,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { Gift, ShoppingBag } from 'lucide-react';
+import { Gift, ShoppingBag, Mail, Phone, Globe } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
 interface StorePageProps {
@@ -16,6 +16,14 @@ interface Business {
   id: string;
   name: string;
   slug: string;
+  description: string | null;
+  logo_url: string | null;
+  primary_color: string | null;
+  secondary_color: string | null;
+  gift_card_color: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  website: string | null;
 }
 
 interface GiftCardTemplate {
@@ -26,13 +34,20 @@ interface GiftCardTemplate {
   image_url: string | null;
 }
 
+// Default colors
+const DEFAULT_COLORS = {
+  primary: '#1e3a5f',
+  secondary: '#2563eb',
+  giftCard: '#1e3a5f',
+};
+
 async function getStoreData(slug: string) {
   const supabase = await createClient();
 
-  // Get business by slug
+  // Get business by slug with customization fields
   const { data: business, error: bizError } = await supabase
     .from('businesses')
-    .select('id, name, slug')
+    .select('id, name, slug, description, logo_url, primary_color, secondary_color, gift_card_color, contact_email, contact_phone, website')
     .eq('slug', slug)
     .single();
 
@@ -64,6 +79,11 @@ export default async function StorePage({ params }: StorePageProps) {
 
   const { business, templates } = data;
 
+  // Get colors with fallbacks
+  const primaryColor = business.primary_color || DEFAULT_COLORS.primary;
+  const secondaryColor = business.secondary_color || DEFAULT_COLORS.secondary;
+  const giftCardColor = business.gift_card_color || DEFAULT_COLORS.giftCard;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       {/* Header */}
@@ -71,24 +91,48 @@ export default async function StorePage({ params }: StorePageProps) {
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-slate-900 rounded-lg flex items-center justify-center">
-                <Gift className="w-5 h-5 text-white" />
-              </div>
+              {business.logo_url ? (
+                <img 
+                  src={business.logo_url} 
+                  alt={business.name} 
+                  className="w-10 h-10 rounded-lg object-cover"
+                />
+              ) : (
+                <div 
+                  className="w-10 h-10 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: primaryColor }}
+                >
+                  <Gift className="w-5 h-5 text-white" />
+                </div>
+              )}
               <h1 className="text-xl font-bold text-slate-900">{business.name}</h1>
+            </div>
+            {/* Contact Links */}
+            <div className="hidden sm:flex items-center gap-4 text-sm text-slate-500">
+              {business.contact_email && (
+                <a href={`mailto:${business.contact_email}`} className="flex items-center gap-1 hover:text-slate-700">
+                  <Mail className="w-4 h-4" />
+                  <span className="hidden md:inline">{business.contact_email}</span>
+                </a>
+              )}
+              {business.website && (
+                <a href={business.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-slate-700">
+                  <Globe className="w-4 h-4" />
+                </a>
+              )}
             </div>
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="bg-slate-900 text-white py-16">
+      <section className="text-white py-16" style={{ backgroundColor: primaryColor }}>
         <div className="max-w-6xl mx-auto px-4 text-center">
           <h2 className="text-4xl font-bold mb-4">
             Presenteie quem você ama
           </h2>
-          <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-            Escolha o valor perfeito e envie um vale-presente digital instantaneamente.
-            Válido em qualquer unidade {business.name}.
+          <p className="text-xl opacity-80 max-w-2xl mx-auto">
+            {business.description || `Escolha o valor perfeito e envie um vale-presente digital instantaneamente. Válido em qualquer unidade ${business.name}.`}
           </p>
         </div>
       </section>
@@ -120,16 +164,19 @@ export default async function StorePage({ params }: StorePageProps) {
                 >
                   <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden transition-all duration-200 hover:shadow-xl hover:border-slate-300 hover:-translate-y-1">
                     {/* Card Image/Gradient */}
-                    <div className="h-40 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center relative">
+                    <div 
+                      className="h-40 flex items-center justify-center relative"
+                      style={{ backgroundColor: giftCardColor }}
+                    >
                       <div className="text-center">
                         <p className="text-4xl font-bold text-white">
                           {formatCurrency(template.amount_cents)}
                         </p>
-                        <p className="text-slate-400 text-sm mt-1">Vale-Presente</p>
+                        <p className="text-white/60 text-sm mt-1">Vale-Presente</p>
                       </div>
                       {/* Decorative elements */}
-                      <div className="absolute top-4 right-4 w-20 h-20 bg-white/5 rounded-full" />
-                      <div className="absolute bottom-4 left-4 w-12 h-12 bg-white/5 rounded-full" />
+                      <div className="absolute top-4 right-4 w-20 h-20 bg-white/10 rounded-full" />
+                      <div className="absolute bottom-4 left-4 w-12 h-12 bg-white/10 rounded-full" />
                     </div>
 
                     {/* Card Content */}
@@ -146,7 +193,10 @@ export default async function StorePage({ params }: StorePageProps) {
                         <span className="text-2xl font-bold text-slate-900">
                           {formatCurrency(template.amount_cents)}
                         </span>
-                        <span className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium group-hover:bg-slate-800 transition-colors">
+                        <span 
+                          className="inline-flex items-center gap-2 px-4 py-2 text-white rounded-lg text-sm font-medium transition-opacity hover:opacity-90"
+                          style={{ backgroundColor: secondaryColor }}
+                        >
                           <ShoppingBag className="w-4 h-4" />
                           Comprar
                         </span>

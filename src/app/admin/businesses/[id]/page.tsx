@@ -6,10 +6,11 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui';
 import { BusinessForm } from '@/components/forms';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, Gift, CreditCard } from 'lucide-react';
 import Link from 'next/link';
 import type { Business } from '@/types';
 import { DeleteBusinessButton } from './delete-button';
+import { formatCurrency } from '@/lib/utils';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -34,7 +35,7 @@ async function getBusiness(id: string): Promise<Business | null> {
 async function getBusinessStats(id: string) {
   const supabase = await createClient();
   
-  const [usersResult, validationsResult] = await Promise.all([
+  const [usersResult, validationsResult, templatesResult, giftCardsResult] = await Promise.all([
     supabase
       .from('profiles')
       .select('id', { count: 'exact', head: true })
@@ -43,11 +44,27 @@ async function getBusinessStats(id: string) {
       .from('code_validations')
       .select('id', { count: 'exact', head: true })
       .eq('business_id', id),
+    supabase
+      .from('gift_card_templates')
+      .select('id', { count: 'exact', head: true })
+      .eq('business_id', id),
+    supabase
+      .from('gift_cards')
+      .select('id, amount_cents, status')
+      .eq('business_id', id),
   ]);
+
+  const giftCards = giftCardsResult.data || [];
+  const totalRevenue = giftCards.reduce((sum, card) => sum + (card.amount_cents || 0), 0);
+  const activeCards = giftCards.filter(card => card.status === 'ACTIVE').length;
 
   return {
     totalUsers: usersResult.count || 0,
     totalValidations: validationsResult.count || 0,
+    totalTemplates: templatesResult.count || 0,
+    totalGiftCards: giftCards.length,
+    activeCards,
+    totalRevenue,
   };
 }
 
@@ -81,7 +98,7 @@ export default async function AdminEditBusinessPage({ params }: PageProps) {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
             <p className="text-sm text-slate-500">Usuários</p>
@@ -94,15 +111,46 @@ export default async function AdminEditBusinessPage({ params }: PageProps) {
             <p className="text-2xl font-bold text-slate-900">{stats.totalValidations}</p>
           </CardContent>
         </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-sm text-slate-500">Vale-Presentes</p>
+            <p className="text-2xl font-bold text-slate-900">{stats.totalGiftCards}</p>
+            <p className="text-xs text-slate-500">{stats.activeCards} ativos</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-sm text-slate-500">Receita Total</p>
+            <p className="text-2xl font-bold text-emerald-600">{formatCurrency(stats.totalRevenue)}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="flex gap-3">
+        <Link
+          href={`/admin/businesses/${id}/cards`}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          <Gift className="w-4 h-4" />
+          Gerenciar Vale-Presentes
+        </Link>
+        <Link
+          href={`/store/${business.slug}`}
+          target="_blank"
+          className="flex items-center gap-2 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+        >
+          Ver Loja
+        </Link>
       </div>
 
       {/* Form Card */}
-      <Card className="max-w-2xl">
+      <Card>
         <CardHeader>
           <CardTitle>Dados da Empresa</CardTitle>
         </CardHeader>
         <CardContent>
-          <BusinessForm business={business} mode="edit" />
+          <BusinessForm business={business} mode="edit" showCustomization />
         </CardContent>
       </Card>
     </div>

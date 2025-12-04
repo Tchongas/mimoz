@@ -205,38 +205,56 @@ A whitelabel webpage generator for businesses to sell gift cards. This system in
 - [x] Optimistic navigation (useTransition)
 - [x] Loading states for all pages
 
-### Phase 4: Gift Card System 🔄
-- [ ] **Database migration** for gift_card_templates, gift_cards, orders, redemptions
-- [ ] **Gift card templates CRUD** (business owner creates card types)
+### Phase 4: Gift Card System ✅
+- [x] **Database migration** for gift_card_templates, gift_cards, orders, redemptions
+- [x] **Gift card templates CRUD** (business owner creates card types)
   - Create/edit template form
-  - Set amounts, descriptions, images
+  - Set amounts, descriptions, validity
   - Activate/deactivate templates
-- [ ] **Gift card code generation**
+- [x] **Gift card code generation**
   - Secure random code generator (MIMO-XXXX-XXXX format)
-  - QR code generation (qrcode.react)
-  - Collision prevention
-- [ ] **Admin gift cards management**
-  - View all cards across businesses
-  - Manual card creation (for promotions)
-  - Card status management
+  - Collision prevention in database
+- [x] **Admin gift cards management**
+  - View all cards for any business
+  - Stats (revenue, active cards, templates)
+  - Link from business edit page
+- [x] **Business owner gift cards page**
+  - `/business/cards` - List templates with stats
+  - `/business/cards/new` - Create new template
+  - `/business/cards/[id]` - Edit template
 
-### Phase 5: Public Store Pages 🔜
-- [ ] **Store landing page** `/store/[slug]`
-  - Business branding (logo, colors)
+### Phase 5: Public Store Pages ✅
+- [x] **Store landing page** `/store/[slug]`
+  - Business branding (logo, colors from customization)
   - Gift card catalog display
   - Responsive design
-- [ ] **Gift card detail page** `/store/[slug]/cards/[id]`
-  - Card preview
-  - Recipient form (name, email, message)
-  - Add to cart / Buy now
-- [ ] **Cart system**
-  - Add/remove items
-  - Persist in localStorage or session
-  - Cart summary
-- [ ] **Checkout page** `/store/[slug]/checkout`
-  - Customer info form
-  - Order summary
-  - Stripe Checkout redirect
+  - Contact info display
+- [x] **Gift card purchase page** `/store/[slug]/buy/[templateId]`
+  - Card preview with customized colors
+  - Purchaser/recipient form
+  - Personal message
+- [x] **Checkout API** `/api/store/checkout`
+  - Creates gift card with unique code
+  - Creates order record
+  - Returns gift card code
+- [x] **Success page** `/store/[slug]/success`
+  - Display gift card code
+  - Copy to clipboard button
+  - Card details summary
+
+### Phase 5.5: Business Customization ✅
+- [x] **Database migration** for customization fields
+  - primary_color, secondary_color, gift_card_color
+  - description, contact_email, contact_phone, website
+  - logo_url (ready for future upload)
+- [x] **Admin business edit** with customization
+  - Color pickers with live preview
+  - Contact information fields
+- [x] **Store pages** apply customization
+  - Header uses primary_color
+  - Buttons use secondary_color
+  - Gift cards use gift_card_color
+  - Business description in hero
 
 ### Phase 6: Payment Integration 🔜
 - [ ] **Stripe Connect setup**
@@ -281,16 +299,18 @@ A whitelabel webpage generator for businesses to sell gift cards. This system in
   - Full audit trail
   - Filter by date, cashier, card
 
-### Phase 9: Business Customization 🔜
-- [ ] **Store branding**
-  - Logo upload (Supabase Storage)
-  - Primary/secondary colors
-  - Custom domain mapping (future)
-- [ ] **Gift card templates**
+### Phase 9: Advanced Customization 🔜
+- [ ] **Logo upload** (Supabase Storage)
+  - Image upload component
+  - Storage bucket setup
+  - Image optimization
+- [ ] **Custom domains** (future)
+  - Domain mapping
+  - SSL certificates
+- [ ] **Gift card images**
   - Custom images per template
   - Seasonal/promotional cards
-  - Limited time offers
-- [ ] **Business settings**
+- [ ] **Advanced settings**
   - Notification preferences
   - Receipt customization
   - Operating hours (future)

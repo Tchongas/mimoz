@@ -9,6 +9,15 @@ export interface Business {
   id: string;
   name: string;
   slug: string;
+  logo_url: string | null;
+  primary_color: string | null;
+  secondary_color: string | null;
+  gift_card_color: string | null;
+  description: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  address: string | null;
+  website: string | null;
   created_at: string;
   updated_at: string;
 }
