@@ -23,8 +23,6 @@ const checkoutSchema = z.object({
   // businessId is UUID in businesses table
   businessId: z.string().uuid(),
   templateId: z.string().uuid(),
-  // Purchaser phone (required for payment gateway)
-  purchaserPhone: z.string().min(10, 'Telefone inválido').max(15),
   // Recipient info - only required if isGift is true
   recipientName: z.string().optional().default(''),
   recipientEmail: z.string().optional().default(''),
@@ -111,7 +109,6 @@ export async function POST(request: NextRequest) {
     const {
       businessId,
       templateId,
-      purchaserPhone,
       recipientName,
       recipientEmail,
       recipientMessage,
@@ -212,6 +209,8 @@ export async function POST(request: NextRequest) {
 
       try {
         // Create AbacatePay billing
+        // Note: We don't pass customer object - AbacatePay will collect customer info on their checkout page
+        // If we pass customer, ALL fields are required (name, cellphone, email, taxId)
         const billing = await createBilling({
           frequency: 'ONE_TIME',
           methods: ['PIX'],
@@ -224,17 +223,14 @@ export async function POST(request: NextRequest) {
           }],
           completionUrl: `${successUrl}?code=${encodeURIComponent(giftCard.code)}`,
           returnUrl: storeUrl,
-          customer: {
-            email: purchaserEmail,
-            name: purchaserName,
-            cellphone: purchaserPhone,
-          },
           externalId: giftCard.id,
           metadata: {
             giftCardId: giftCard.id,
             giftCardCode: giftCard.code,
             businessId,
             templateId,
+            purchaserEmail,
+            purchaserName,
           },
         });
 

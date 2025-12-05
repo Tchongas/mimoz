@@ -37,16 +37,17 @@ export interface BillingProduct {
 
 /**
  * Customer metadata for billing
+ * Note: If passing customer to AbacatePay, ALL fields are required
  */
 export interface CustomerMetadata {
-  /** Customer email (required) */
+  /** Customer email (required if passing customer) */
   email: string;
-  /** Customer name (optional) */
-  name?: string;
-  /** Customer phone (required by AbacatePay) */
+  /** Customer name (required if passing customer) */
+  name: string;
+  /** Customer phone (required if passing customer) */
   cellphone: string;
-  /** Customer tax ID - CPF or CNPJ (optional) */
-  taxId?: string;
+  /** Customer tax ID - CPF or CNPJ (required if passing customer) */
+  taxId: string;
 }
 
 /**
@@ -73,8 +74,13 @@ export interface CreateBillingRequest {
   completionUrl: string;
   /** URL to redirect if user clicks "back" */
   returnUrl: string;
-  /** Customer data - will be created if doesn't exist */
-  customer: CustomerMetadata;
+  /** 
+   * Customer data - optional. If passed, ALL fields are required.
+   * If not passed, AbacatePay will collect customer info on checkout page.
+   */
+  customer?: CustomerMetadata;
+  /** Existing customer ID (alternative to customer object) */
+  customerId?: string;
   /** Your external ID for this billing (optional) */
   externalId?: string;
   /** Additional metadata (optional) */

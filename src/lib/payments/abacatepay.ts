@@ -146,12 +146,16 @@ export async function createBilling(req: CreateBillingRequest): Promise<Billing>
       })),
       returnUrl: req.returnUrl,
       completionUrl: req.completionUrl,
-      customer: {
-        email: req.customer.email,
-        name: req.customer.name,
-        cellphone: req.customer.cellphone,
-        taxId: req.customer.taxId,
-      },
+      // Customer is optional - if not passed, AbacatePay collects info on checkout
+      ...(req.customer && {
+        customer: {
+          email: req.customer.email,
+          name: req.customer.name,
+          cellphone: req.customer.cellphone,
+          taxId: req.customer.taxId,
+        },
+      }),
+      ...(req.customerId && { customerId: req.customerId }),
       externalId: req.externalId,
       metadata: req.metadata,
     },
