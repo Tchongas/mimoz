@@ -43,8 +43,8 @@ export interface CustomerMetadata {
   email: string;
   /** Customer name (optional) */
   name?: string;
-  /** Customer phone (optional) */
-  cellphone?: string;
+  /** Customer phone (required by AbacatePay) */
+  cellphone: string;
   /** Customer tax ID - CPF or CNPJ (optional) */
   taxId?: string;
 }

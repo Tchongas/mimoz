@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input, Label, Alert, Spinner } from '@/components/ui';
 import { formatCurrency } from '@/lib/utils';
-import { Gift, Mail, MessageSquare, CreditCard } from 'lucide-react';
+import { Gift, Mail, MessageSquare, CreditCard, Phone } from 'lucide-react';
 
 interface PurchaseFormProps {
   businessId: string;
@@ -24,6 +24,9 @@ export function PurchaseForm({ businessId, businessSlug, templateId, amount, acc
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Purchaser phone (required for payment)
+  const [purchaserPhone, setPurchaserPhone] = useState('');
 
   // Recipient info (only needed if sending as gift)
   const [isGift, setIsGift] = useState(false);
@@ -43,6 +46,7 @@ export function PurchaseForm({ businessId, businessSlug, templateId, amount, acc
         body: JSON.stringify({
           businessId,
           templateId,
+          purchaserPhone: purchaserPhone.replace(/\D/g, ''), // Remove non-digits
           recipientName: isGift ? recipientName : '',
           recipientEmail: isGift ? recipientEmail : '',
           recipientMessage: isGift ? recipientMessage : null,
@@ -81,6 +85,26 @@ export function PurchaseForm({ businessId, businessSlug, templateId, amount, acc
       {error && (
         <Alert variant="error">{error}</Alert>
       )}
+
+      {/* Phone Number */}
+      <div className="space-y-2">
+        <Label htmlFor="purchaserPhone" required>
+          <span className="flex items-center gap-2">
+            <Phone className="w-4 h-4" />
+            Seu telefone
+          </span>
+        </Label>
+        <Input
+          id="purchaserPhone"
+          type="tel"
+          value={purchaserPhone}
+          onChange={(e) => setPurchaserPhone(e.target.value)}
+          placeholder="(11) 99999-9999"
+          required
+          disabled={isLoading}
+        />
+        <p className="text-xs text-slate-500">Necessário para o pagamento via PIX</p>
+      </div>
 
       {/* Gift Toggle */}
       <div>

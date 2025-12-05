@@ -23,6 +23,8 @@ const checkoutSchema = z.object({
   // businessId is UUID in businesses table
   businessId: z.string().uuid(),
   templateId: z.string().uuid(),
+  // Purchaser phone (required for payment gateway)
+  purchaserPhone: z.string().min(10, 'Telefone inválido').max(15),
   // Recipient info - only required if isGift is true
   recipientName: z.string().optional().default(''),
   recipientEmail: z.string().optional().default(''),
@@ -109,6 +111,7 @@ export async function POST(request: NextRequest) {
     const {
       businessId,
       templateId,
+      purchaserPhone,
       recipientName,
       recipientEmail,
       recipientMessage,
@@ -224,6 +227,7 @@ export async function POST(request: NextRequest) {
           customer: {
             email: purchaserEmail,
             name: purchaserName,
+            cellphone: purchaserPhone,
           },
           externalId: giftCard.id,
           metadata: {
