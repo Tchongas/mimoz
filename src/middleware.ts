@@ -64,6 +64,18 @@ export async function middleware(request: NextRequest) {
 
   const { user, supabase, response } = sessionResult;
 
+  // Helper to create redirect with cookies preserved
+  const redirectWithCookies = (url: URL) => {
+    const redirectResponse = NextResponse.redirect(url);
+    // Copy all cookies from the session response to preserve auth state
+    response.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value, {
+        ...cookie,
+      });
+    });
+    return redirectResponse;
+  };
+
   // Allow public routes
   if (PUBLIC_ROUTES.some((route) => pathname.startsWith(route))) {
     // If user is logged in and trying to access login, redirect to dashboard
@@ -78,7 +90,7 @@ export async function middleware(request: NextRequest) {
       const role = profile?.role || 'CUSTOMER';
       const dashboard = ROLE_DASHBOARDS[role] || '/account';
       
-      return NextResponse.redirect(new URL(dashboard, request.url));
+      return redirectWithCookies(new URL(dashboard, request.url));
     }
     return response;
   }
@@ -87,7 +99,7 @@ export async function middleware(request: NextRequest) {
   if (!user) {
     const loginUrl = new URL('/auth/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(loginUrl);
+    return redirectWithCookies(loginUrl);
   }
 
   // Get user's role from profile
@@ -99,7 +111,7 @@ export async function middleware(request: NextRequest) {
 
   if (!profile) {
     // Profile not found - redirect to error page
-    return NextResponse.redirect(new URL('/auth/error?error=no_profile', request.url));
+    return redirectWithCookies(new URL('/auth/error?error=no_profile', request.url));
   }
 
   const userRole = profile.role;
@@ -108,7 +120,7 @@ export async function middleware(request: NextRequest) {
   // Check if user needs a business assigned (only for BUSINESS_OWNER and CASHIER)
   if (BUSINESS_REQUIRED_ROLES.includes(userRole) && !userBusinessId) {
     if (!pathname.startsWith('/auth/no-business')) {
-      return NextResponse.redirect(new URL('/auth/no-business', request.url));
+      return redirectWithCookies(new URL('/auth/no-business', request.url));
     }
     return response;
   }
@@ -118,8 +130,8 @@ export async function middleware(request: NextRequest) {
     if (pathname.startsWith(routePrefix)) {
       if (!allowedRoles.includes(userRole)) {
         // Redirect to user's appropriate dashboard
-        const dashboard = ROLE_DASHBOARDS[userRole] || '/cashier';
-        return NextResponse.redirect(new URL(dashboard, request.url));
+        const dashboard = ROLE_DASHBOARDS[userRole] || '/account';
+        return redirectWithCookies(new URL(dashboard, request.url));
       }
       break;
     }
@@ -128,7 +140,7 @@ export async function middleware(request: NextRequest) {
   // Root path redirect based on role
   if (pathname === '/') {
     const dashboard = ROLE_DASHBOARDS[userRole] || '/account';
-    return NextResponse.redirect(new URL(dashboard, request.url));
+    return redirectWithCookies(new URL(dashboard, request.url));
   }
 
   return response;
