@@ -23,11 +23,21 @@ const checkoutSchema = z.object({
   // businessId is UUID in businesses table
   businessId: z.string().uuid(),
   templateId: z.string().uuid(),
-  // Recipient info (purchaser info comes from auth)
-  recipientName: z.string().min(2, 'Nome do destinatário é obrigatório'),
-  recipientEmail: z.string().email('Email do destinatário inválido'),
+  // Recipient info - only required if isGift is true
+  recipientName: z.string().optional().default(''),
+  recipientEmail: z.string().optional().default(''),
   recipientMessage: z.string().nullable().optional(),
   isGift: z.boolean().default(false),
+}).refine((data) => {
+  // If it's a gift, require recipient name and email
+  if (data.isGift) {
+    return data.recipientName && data.recipientName.length >= 2 && 
+           data.recipientEmail && data.recipientEmail.includes('@');
+  }
+  return true;
+}, {
+  message: 'Nome e email do destinatário são obrigatórios para presentes',
+  path: ['recipientEmail'],
 });
 
 // Generate unique gift card code
