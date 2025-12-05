@@ -186,6 +186,7 @@ export async function POST(request: NextRequest) {
           template_id: templateId,
           code: code!,
           amount_cents: template.amount_cents,
+          original_amount_cents: template.amount_cents,
           balance_cents: template.amount_cents,
           status: 'PENDING', // Will be activated by webhook
           purchaser_user_id: user.id, // Link to authenticated user
@@ -281,6 +282,7 @@ export async function POST(request: NextRequest) {
           template_id: templateId,
           code: code!,
           amount_cents: template.amount_cents,
+          original_amount_cents: template.amount_cents,
           balance_cents: template.amount_cents,
           status: 'ACTIVE', // Active immediately for testing
           purchaser_user_id: user.id, // Link to authenticated user
