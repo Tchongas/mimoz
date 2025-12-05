@@ -6,13 +6,15 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 
-// Routes that don't require authentication
+// Routes that don't require authentication (or handle auth themselves)
 const PUBLIC_ROUTES = [
   '/auth/login',
   '/auth/callback',
   '/auth/error',
+  '/auth/no-business',
   '/setup', // Setup page when not configured
-  '/store', // Public store pages (future)
+  '/store', // Public store pages
+  '/api',   // API routes handle their own auth
 ];
 
 // Routes that require specific roles
@@ -20,6 +22,7 @@ const ROLE_ROUTES: Record<string, string[]> = {
   '/admin': ['ADMIN'],
   '/business': ['ADMIN', 'BUSINESS_OWNER'],
   '/cashier': ['ADMIN', 'BUSINESS_OWNER', 'CASHIER'],
+  '/account': ['CUSTOMER', 'ADMIN'], // Customer account pages
 };
 
 // Role to dashboard mapping
@@ -27,7 +30,11 @@ const ROLE_DASHBOARDS: Record<string, string> = {
   ADMIN: '/admin',
   BUSINESS_OWNER: '/business',
   CASHIER: '/cashier',
+  CUSTOMER: '/account',
 };
+
+// Roles that require a business_id
+const BUSINESS_REQUIRED_ROLES = ['BUSINESS_OWNER', 'CASHIER'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -68,8 +75,8 @@ export async function middleware(request: NextRequest) {
         .eq('id', user.id)
         .single();
 
-      const role = profile?.role || 'CASHIER';
-      const dashboard = ROLE_DASHBOARDS[role] || '/cashier';
+      const role = profile?.role || 'CUSTOMER';
+      const dashboard = ROLE_DASHBOARDS[role] || '/account';
       
       return NextResponse.redirect(new URL(dashboard, request.url));
     }
@@ -98,8 +105,8 @@ export async function middleware(request: NextRequest) {
   const userRole = profile.role;
   const userBusinessId = profile.business_id;
 
-  // Check if user needs a business assigned
-  if (userRole !== 'ADMIN' && !userBusinessId) {
+  // Check if user needs a business assigned (only for BUSINESS_OWNER and CASHIER)
+  if (BUSINESS_REQUIRED_ROLES.includes(userRole) && !userBusinessId) {
     if (!pathname.startsWith('/auth/no-business')) {
       return NextResponse.redirect(new URL('/auth/no-business', request.url));
     }
@@ -120,7 +127,7 @@ export async function middleware(request: NextRequest) {
 
   // Root path redirect based on role
   if (pathname === '/') {
-    const dashboard = ROLE_DASHBOARDS[userRole] || '/cashier';
+    const dashboard = ROLE_DASHBOARDS[userRole] || '/account';
     return NextResponse.redirect(new URL(dashboard, request.url));
   }
 
