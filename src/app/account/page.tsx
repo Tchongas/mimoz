@@ -1,12 +1,12 @@
 // ============================================
-// MIMOZ - My Purchases Page
+// MIMOZ - My Gift Cards Page
 // ============================================
-// Shows all gift cards purchased by the user
+// Shows gift cards purchased by the user AND received as gifts
 
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { Gift, Calendar, Store, ExternalLink } from 'lucide-react';
+import { Gift, Calendar, Store, ExternalLink, ShoppingBag, Inbox } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
 // Status badge colors
@@ -18,7 +18,7 @@ const statusColors: Record<string, { bg: string; text: string; label: string }> 
   CANCELLED: { bg: 'bg-red-100', text: 'text-red-800', label: 'Cancelado' },
 };
 
-export default async function MyPurchasesPage() {
+export default async function MyGiftCardsPage() {
   const supabase = await createClient();
   
   // Get current user
@@ -28,8 +28,17 @@ export default async function MyPurchasesPage() {
     redirect('/auth/login');
   }
   
-  // Get user's purchased gift cards
-  const { data: giftCards, error } = await supabase
+  // Get user's profile for email
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('email')
+    .eq('id', user.id)
+    .single();
+  
+  const userEmail = profile?.email || user.email;
+  
+  // Get gift cards purchased by user
+  const { data: purchasedCards } = await supabase
     .from('gift_cards')
     .select(`
       id,
@@ -39,6 +48,7 @@ export default async function MyPurchasesPage() {
       status,
       recipient_name,
       recipient_email,
+      purchaser_user_id,
       purchased_at,
       expires_at,
       gift_card_templates (
@@ -52,22 +62,48 @@ export default async function MyPurchasesPage() {
     .eq('purchaser_user_id', user.id)
     .order('purchased_at', { ascending: false });
   
-  if (error) {
-    console.error('Error fetching gift cards:', error);
-  }
+  // Get gift cards received (where recipient_email matches user's email)
+  const { data: receivedCards } = await supabase
+    .from('gift_cards')
+    .select(`
+      id,
+      code,
+      amount_cents,
+      balance_cents,
+      status,
+      recipient_name,
+      recipient_email,
+      purchaser_name,
+      purchaser_user_id,
+      purchased_at,
+      expires_at,
+      gift_card_templates (
+        name,
+        businesses (
+          name,
+          slug
+        )
+      )
+    `)
+    .eq('recipient_email', userEmail)
+    .neq('purchaser_user_id', user.id) // Exclude self-purchases
+    .order('purchased_at', { ascending: false });
   
-  const purchases = giftCards || [];
+  const purchases = purchasedCards || [];
+  const received = receivedCards || [];
+  
+  const hasNoCards = purchases.length === 0 && received.length === 0;
   
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Minhas Compras</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Meus Vale-Presentes</h1>
         <p className="text-slate-500 mt-1">
-          Veja todos os vale-presentes que você comprou
+          Vale-presentes que você comprou ou recebeu
         </p>
       </div>
       
-      {purchases.length === 0 ? (
+      {hasNoCards ? (
         <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
           <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Gift className="w-8 h-8 text-slate-400" />
@@ -87,100 +123,151 @@ export default async function MyPurchasesPage() {
           </Link>
         </div>
       ) : (
-        <div className="space-y-4">
-          {purchases.map((card) => {
-            const template = card.gift_card_templates as unknown as { name: string; businesses: { name: string; slug: string } } | null;
-            const business = template?.businesses;
-            const status = statusColors[card.status] || statusColors.ACTIVE;
-            const expiresAt = new Date(card.expires_at);
-            const isExpired = expiresAt < new Date() && card.status === 'ACTIVE';
-            
-            return (
-              <div
-                key={card.id}
-                className="bg-white rounded-xl border border-slate-200 p-6 hover:border-slate-300 transition-colors"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                  {/* Card Info */}
-                  <div className="flex-1">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-slate-900 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Gift className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-slate-900">
-                          {business?.name || 'Vale-Presente'}
-                        </h3>
-                        <p className="text-sm text-slate-500">
-                          {template?.name || 'Gift Card'}
-                        </p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${status.bg} ${status.text}`}>
-                            {isExpired ? 'Expirado' : status.label}
-                          </span>
-                          {card.recipient_name && card.recipient_email !== user.email && (
-                            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                              Presente
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Recipient info if gift */}
-                    {card.recipient_name && card.recipient_email !== user.email && (
-                      <div className="mt-4 p-3 bg-slate-50 rounded-lg">
-                        <p className="text-sm text-slate-600">
-                          <span className="font-medium">Para:</span> {card.recipient_name}
-                        </p>
-                        <p className="text-sm text-slate-500">{card.recipient_email}</p>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Value and Code */}
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-slate-900">
-                      {formatCurrency(card.amount_cents)}
-                    </p>
-                    {card.balance_cents !== card.amount_cents && (
-                      <p className="text-sm text-slate-500">
-                        Saldo: {formatCurrency(card.balance_cents)}
-                      </p>
-                    )}
-                    <div className="mt-2 p-2 bg-slate-100 rounded-lg">
-                      <p className="text-xs text-slate-500 mb-1">Código</p>
-                      <p className="font-mono font-bold text-slate-900">{card.code}</p>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Footer */}
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
-                  <div className="flex items-center gap-4 text-sm text-slate-500">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4" />
-                      Comprado em {new Date(card.purchased_at).toLocaleDateString('pt-BR')}
-                    </span>
-                    <span>
-                      Válido até {expiresAt.toLocaleDateString('pt-BR')}
-                    </span>
-                  </div>
-                  {business?.slug && (
-                    <Link
-                      href={`/store/${business.slug}`}
-                      className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
-                    >
-                      Ver loja
-                      <ExternalLink className="w-4 h-4" />
-                    </Link>
-                  )}
-                </div>
+        <div className="space-y-8">
+          {/* Received Gift Cards */}
+          {received.length > 0 && (
+            <section>
+              <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                <Inbox className="w-5 h-5" />
+                Recebidos ({received.length})
+              </h2>
+              <div className="space-y-4">
+                {received.map((card) => (
+                  <GiftCardItem key={card.id} card={card} userEmail={userEmail} type="received" />
+                ))}
               </div>
-            );
-          })}
+            </section>
+          )}
+          
+          {/* Purchased Gift Cards */}
+          {purchases.length > 0 && (
+            <section>
+              <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                <ShoppingBag className="w-5 h-5" />
+                Comprados ({purchases.length})
+              </h2>
+              <div className="space-y-4">
+                {purchases.map((card) => (
+                  <GiftCardItem key={card.id} card={card} userEmail={userEmail} type="purchased" />
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       )}
+    </div>
+  );
+}
+
+// Gift Card Item Component
+function GiftCardItem({ 
+  card, 
+  userEmail, 
+  type 
+}: { 
+  card: any; 
+  userEmail: string | undefined; 
+  type: 'purchased' | 'received';
+}) {
+  const template = card.gift_card_templates as unknown as { name: string; businesses: { name: string; slug: string } } | null;
+  const business = template?.businesses;
+  const status = statusColors[card.status] || statusColors.ACTIVE;
+  const expiresAt = new Date(card.expires_at);
+  const isExpired = expiresAt < new Date() && card.status === 'ACTIVE';
+  const isGift = type === 'purchased' && card.recipient_email !== userEmail;
+  
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 p-6 hover:border-slate-300 transition-colors">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        {/* Card Info */}
+        <div className="flex-1">
+          <div className="flex items-start gap-4">
+            <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
+              type === 'received' ? 'bg-purple-600' : 'bg-slate-900'
+            }`}>
+              <Gift className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-slate-900">
+                {business?.name || 'Vale-Presente'}
+              </h3>
+              <p className="text-sm text-slate-500">
+                {template?.name || 'Gift Card'}
+              </p>
+              <div className="flex items-center gap-2 mt-2">
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${status.bg} ${status.text}`}>
+                  {isExpired ? 'Expirado' : status.label}
+                </span>
+                {type === 'received' && (
+                  <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                    Presente recebido
+                  </span>
+                )}
+                {isGift && (
+                  <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                    Enviado como presente
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          {/* Recipient/Sender info */}
+          {type === 'purchased' && isGift && (
+            <div className="mt-4 p-3 bg-slate-50 rounded-lg">
+              <p className="text-sm text-slate-600">
+                <span className="font-medium">Para:</span> {card.recipient_name}
+              </p>
+              <p className="text-sm text-slate-500">{card.recipient_email}</p>
+            </div>
+          )}
+          {type === 'received' && card.purchaser_name && (
+            <div className="mt-4 p-3 bg-purple-50 rounded-lg">
+              <p className="text-sm text-purple-700">
+                <span className="font-medium">De:</span> {card.purchaser_name}
+              </p>
+            </div>
+          )}
+        </div>
+        
+        {/* Value and Code */}
+        <div className="text-right">
+          <p className="text-2xl font-bold text-slate-900">
+            {formatCurrency(card.amount_cents)}
+          </p>
+          {card.balance_cents !== card.amount_cents && (
+            <p className="text-sm text-slate-500">
+              Saldo: {formatCurrency(card.balance_cents)}
+            </p>
+          )}
+          <div className="mt-2 p-2 bg-slate-100 rounded-lg">
+            <p className="text-xs text-slate-500 mb-1">Código</p>
+            <p className="font-mono font-bold text-slate-900">{card.code}</p>
+          </div>
+        </div>
+      </div>
+      
+      {/* Footer */}
+      <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
+        <div className="flex items-center gap-4 text-sm text-slate-500">
+          <span className="flex items-center gap-1">
+            <Calendar className="w-4 h-4" />
+            {new Date(card.purchased_at).toLocaleDateString('pt-BR')}
+          </span>
+          <span>
+            Válido até {expiresAt.toLocaleDateString('pt-BR')}
+          </span>
+        </div>
+        {business?.slug && (
+          <Link
+            href={`/store/${business.slug}`}
+            className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
+          >
+            Ver loja
+            <ExternalLink className="w-4 h-4" />
+          </Link>
+        )}
+      </div>
     </div>
   );
 }

@@ -87,7 +87,7 @@ export default async function AccountLayout({ children }: AccountLayoutProps) {
                     className="flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-slate-50 rounded-lg transition-colors"
                   >
                     <ShoppingBag className="w-5 h-5" />
-                    <span className="font-medium">Minhas Compras</span>
+                    <span className="font-medium">Meus Vale-Presentes</span>
                   </Link>
                 </li>
                 <li>

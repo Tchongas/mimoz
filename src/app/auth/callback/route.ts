@@ -2,10 +2,17 @@
 // MIMOZ - OAuth Callback Route
 // ============================================
 // Handles the OAuth callback from Google
+// 
+// Role-based redirects:
+// - ADMIN → /admin
+// - BUSINESS_OWNER → /business (requires business_id)
+// - CASHIER → /cashier (requires business_id)
+// - CUSTOMER → /account (no business needed)
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getRoleDashboard } from '@/lib/auth';
+import type { Role } from '@/types';
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -31,7 +38,7 @@ export async function GET(request: Request) {
       return NextResponse.redirect(`${origin}/auth/login?error=auth_failed`);
     }
 
-    // Get user and their role
+    // Get user
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
@@ -39,25 +46,45 @@ export async function GET(request: Request) {
     }
 
     // Get user's profile to determine redirect
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role, business_id')
-      .eq('id', user.id)
-      .single();
+    // Retry a few times in case trigger hasn't run yet
+    let profile = null;
+    for (let i = 0; i < 3; i++) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('role, business_id')
+        .eq('id', user.id)
+        .single();
+      
+      if (data) {
+        profile = data;
+        break;
+      }
+      
+      // Wait before retry
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
 
-    // If no profile exists yet, it will be created by the trigger
-    // Default role is now CUSTOMER for new signups
-    const role = profile?.role || 'CUSTOMER';
+    // Determine role
+    // - If profile exists, use its role
+    // - If no profile yet (trigger delay), default to CUSTOMER
+    const role: Role = (profile?.role as Role) || 'CUSTOMER';
     const businessId = profile?.business_id;
 
-    // Check if business-related roles need a business assigned
-    // ADMIN and CUSTOMER don't need a business
-    if (role !== 'ADMIN' && role !== 'CUSTOMER' && !businessId) {
+    // Roles that require a business assignment
+    const businessRequiredRoles: Role[] = ['BUSINESS_OWNER', 'CASHIER'];
+    
+    if (businessRequiredRoles.includes(role) && !businessId) {
+      // Staff member without business assignment
       return NextResponse.redirect(`${origin}/auth/no-business`);
     }
 
-    // Redirect to requested page or role-based dashboard
-    const destination = redirectTo || getRoleDashboard(role);
+    // If there's a redirect URL (e.g., from store purchase flow), use it
+    if (redirectTo) {
+      return NextResponse.redirect(`${origin}${redirectTo}`);
+    }
+
+    // Otherwise, redirect to role-based dashboard
+    const destination = getRoleDashboard(role);
     return NextResponse.redirect(`${origin}${destination}`);
   }
 
