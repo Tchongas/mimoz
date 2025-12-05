@@ -6,17 +6,21 @@ import { requireBusiness } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui';
 import { CodeValidationForm } from './code-validation-form';
-import { CheckCircle, XCircle, Clock } from 'lucide-react';
+import { CheckCircle, DollarSign, Clock, TrendingUp } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
-async function getRecentValidations(cashierId: string, businessId: string) {
+async function getRecentRedemptions(cashierId: string, businessId: string) {
   const supabase = await createClient();
   
   const { data } = await supabase
-    .from('code_validations')
-    .select('*')
+    .from('redemptions')
+    .select(`
+      *,
+      gift_cards(code, recipient_name)
+    `)
     .eq('cashier_id', cashierId)
     .eq('business_id', businessId)
-    .order('validated_at', { ascending: false })
+    .order('redeemed_at', { ascending: false })
     .limit(10);
 
   return data || [];
@@ -26,27 +30,30 @@ async function getTodayStats(cashierId: string, businessId: string) {
   const supabase = await createClient();
   const today = new Date().toISOString().split('T')[0];
   
-  const { count } = await supabase
-    .from('code_validations')
-    .select('id', { count: 'exact', head: true })
+  const { data } = await supabase
+    .from('redemptions')
+    .select('amount_cents')
     .eq('cashier_id', cashierId)
     .eq('business_id', businessId)
-    .gte('validated_at', today);
+    .gte('redeemed_at', today);
 
-  return count || 0;
+  const count = data?.length || 0;
+  const totalAmount = data?.reduce((sum, r) => sum + r.amount_cents, 0) || 0;
+
+  return { count, totalAmount };
 }
 
 export default async function CashierPage() {
   const user = await requireBusiness();
-  const recentValidations = await getRecentValidations(user.id, user.businessId);
-  const todayCount = await getTodayStats(user.id, user.businessId);
+  const recentRedemptions = await getRecentRedemptions(user.id, user.businessId);
+  const todayStats = await getTodayStats(user.id, user.businessId);
 
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Validar Código</h1>
-        <p className="text-slate-500">Digite o código do gift card para validar</p>
+        <h1 className="text-2xl font-bold text-slate-900">Validar Vale-Presente</h1>
+        <p className="text-slate-500">Digite o código para validar e descontar créditos</p>
       </div>
 
       {/* Stats */}
@@ -55,11 +62,11 @@ export default async function CashierPage() {
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-green-100 rounded-lg">
-                <CheckCircle className="w-5 h-5 text-green-600" />
+                <TrendingUp className="w-5 h-5 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-slate-500">Validações Hoje</p>
-                <p className="text-xl font-bold text-slate-900">{todayCount}</p>
+                <p className="text-sm text-slate-500">Resgates Hoje</p>
+                <p className="text-xl font-bold text-slate-900">{todayStats.count}</p>
               </div>
             </div>
           </CardContent>
@@ -68,14 +75,12 @@ export default async function CashierPage() {
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-100 rounded-lg">
-                <Clock className="w-5 h-5 text-blue-600" />
+                <DollarSign className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-slate-500">Última Validação</p>
+                <p className="text-sm text-slate-500">Total Descontado</p>
                 <p className="text-xl font-bold text-slate-900">
-                  {recentValidations[0] 
-                    ? new Date(recentValidations[0].validated_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-                    : '-'}
+                  {formatCurrency(todayStats.totalAmount)}
                 </p>
               </div>
             </div>
@@ -85,11 +90,15 @@ export default async function CashierPage() {
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-purple-100 rounded-lg">
-                <XCircle className="w-5 h-5 text-purple-600" />
+                <Clock className="w-5 h-5 text-purple-600" />
               </div>
               <div>
-                <p className="text-sm text-slate-500">Total Histórico</p>
-                <p className="text-xl font-bold text-slate-900">{recentValidations.length}+</p>
+                <p className="text-sm text-slate-500">Último Resgate</p>
+                <p className="text-xl font-bold text-slate-900">
+                  {recentRedemptions[0] 
+                    ? new Date(recentRedemptions[0].redeemed_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+                    : '-'}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -106,20 +115,20 @@ export default async function CashierPage() {
         </CardContent>
       </Card>
 
-      {/* Recent Validations */}
+      {/* Recent Redemptions */}
       <Card>
         <CardHeader>
-          <CardTitle>Minhas Validações Recentes</CardTitle>
+          <CardTitle>Meus Resgates Recentes</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          {recentValidations.length === 0 ? (
+          {recentRedemptions.length === 0 ? (
             <div className="p-8 text-center">
               <Clock className="w-12 h-12 text-slate-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-slate-900 mb-1">
-                Nenhuma validação ainda
+                Nenhum resgate ainda
               </h3>
               <p className="text-slate-500">
-                Suas validações aparecerão aqui
+                Seus resgates aparecerão aqui
               </p>
             </div>
           ) : (
@@ -131,29 +140,38 @@ export default async function CashierPage() {
                       Código
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                      Data/Hora
+                      Cliente
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                      Status
+                      Data/Hora
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Valor
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Saldo Após
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
-                  {recentValidations.map((validation) => (
-                    <tr key={validation.id} className="hover:bg-slate-50">
+                  {recentRedemptions.map((redemption) => (
+                    <tr key={redemption.id} className="hover:bg-slate-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <code className="px-2 py-1 bg-slate-100 rounded text-sm text-slate-700">
-                          {validation.code}
+                          {redemption.gift_cards?.code}
                         </code>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                        {new Date(validation.validated_at).toLocaleString('pt-BR')}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                        {redemption.gift_cards?.recipient_name || '-'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                          <CheckCircle className="w-3 h-3" />
-                          Validado
-                        </span>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                        {new Date(redemption.redeemed_at).toLocaleString('pt-BR')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-green-600">
+                        - {formatCurrency(redemption.amount_cents)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-slate-600">
+                        {formatCurrency(redemption.balance_after)}
                       </td>
                     </tr>
                   ))}

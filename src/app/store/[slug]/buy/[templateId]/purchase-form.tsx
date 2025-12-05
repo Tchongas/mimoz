@@ -61,12 +61,13 @@ export function PurchaseForm({ businessId, businessSlug, templateId, amount, acc
         throw new Error(data.error || 'Erro ao processar compra');
       }
 
-      // Redirect to our payment page where user chooses PIX or Card
-      if (data.paymentPageUrl) {
-        router.push(data.paymentPageUrl);
-      } else if (data.giftCardId) {
-        // Fallback - redirect to payment page by ID
-        router.push(`/gift-cards/payment/${data.giftCardId}`);
+      // Redirect to payment page or success page
+      if (data.checkoutUrl) {
+        // AbacatePay payment link - redirect to payment
+        window.location.href = data.checkoutUrl;
+      } else if (data.giftCardCode) {
+        // Dev mode without payment - redirect to success directly
+        router.push(`/store/${businessSlug}/success?code=${data.giftCardCode}`);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
@@ -180,7 +181,7 @@ export function PurchaseForm({ businessId, businessSlug, templateId, amount, acc
       </button>
 
       <p className="text-xs text-slate-500 text-center">
-        Pagamento seguro via PIX ou Cartão
+        Pagamento seguro via PIX
       </p>
     </form>
   );
