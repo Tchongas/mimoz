@@ -11,13 +11,14 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import {
+import { 
+  parseWebhookEvent, 
+  verifyWebhookSecret, 
   verifyWebhookSignature,
-  verifyWebhookSecret,
-  parseWebhookEvent,
-  getBilling,
+  type BillingPaidEvent,
+  type BillingPaidEventData,
 } from '@/lib/payments';
-import type { BillingPaidEvent, BillingPaidEventData } from '@/lib/payments';
+import { createPaymentAuditLog } from '@/lib/services/audit-log';
 
 /**
  * POST /api/webhooks/abacatepay
@@ -131,13 +132,18 @@ async function handleBillingPaid(event: BillingPaidEvent) {
     return;
   }
 
+  const now = new Date().toISOString();
+
   // Activate the gift card
   const { error: updateError } = await supabase
     .from('gift_cards')
     .update({
       status: 'ACTIVE',
+      payment_status: 'COMPLETED',
       payment_method: payment.method.toLowerCase(),
       payment_fee_cents: payment.fee,
+      payment_completed_at: now,
+      activated_at: now,
     })
     .eq('id', pendingCard.id);
 
@@ -145,6 +151,30 @@ async function handleBillingPaid(event: BillingPaidEvent) {
     console.error('[Webhook] Failed to activate gift card:', updateError);
     throw updateError;
   }
+
+  // Log payment completed
+  await createPaymentAuditLog({
+    giftCardId: pendingCard.id,
+    businessId: pendingCard.business_id,
+    userId: pendingCard.purchaser_user_id,
+    eventType: 'PAYMENT_COMPLETED',
+    paymentMethod: payment.method as 'PIX' | 'CARD',
+    paymentProviderId: pixQrCode?.id,
+    amountCents: payment.amount,
+    feeCents: payment.fee,
+    previousStatus: 'PENDING',
+    newStatus: 'ACTIVE',
+  });
+
+  // Log card activation
+  await createPaymentAuditLog({
+    giftCardId: pendingCard.id,
+    businessId: pendingCard.business_id,
+    userId: pendingCard.purchaser_user_id,
+    eventType: 'CARD_ACTIVATED',
+    amountCents: pendingCard.amount_cents,
+    newStatus: 'ACTIVE',
+  });
 
   console.log('[Webhook] Gift card activated:', {
     id: pendingCard.id,

@@ -108,6 +108,27 @@ export async function POST(request: Request) {
       });
     }
 
+    // Check for pending payment - still show card info but mark as not redeemable
+    if (giftCard.status === 'PENDING' || giftCard.payment_status === 'PENDING') {
+      return NextResponse.json({
+        valid: true, // Valid code, but not redeemable
+        message: 'Código encontrado - aguardando pagamento',
+        giftCard: {
+          id: giftCard.id,
+          code: giftCard.code,
+          status: giftCard.status,
+          payment_status: giftCard.payment_status || 'PENDING',
+          amount_cents: giftCard.amount_cents,
+          original_amount_cents: giftCard.original_amount_cents,
+          balance_cents: giftCard.balance_cents,
+          recipient_name: giftCard.recipient_name,
+          recipient_email: giftCard.recipient_email,
+          purchaser_name: giftCard.purchaser_name,
+          expires_at: giftCard.expires_at,
+        },
+      });
+    }
+
     // Log the validation lookup
     await supabase
       .from('code_validations')
@@ -125,9 +146,13 @@ export async function POST(request: Request) {
         id: giftCard.id,
         code: giftCard.code,
         status: giftCard.status,
+        payment_status: giftCard.payment_status,
         amount_cents: giftCard.amount_cents,
+        original_amount_cents: giftCard.original_amount_cents,
         balance_cents: giftCard.balance_cents,
         recipient_name: giftCard.recipient_name,
+        recipient_email: giftCard.recipient_email,
+        purchaser_name: giftCard.purchaser_name,
         expires_at: giftCard.expires_at,
       },
     });

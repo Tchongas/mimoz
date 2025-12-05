@@ -17,7 +17,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
-import { createBilling, isDevMode } from '@/lib/payments';
 
 const checkoutSchema = z.object({
   // businessId is UUID in businesses table
@@ -167,154 +166,60 @@ export async function POST(request: NextRequest) {
 
     // Build URLs for payment flow
     const baseUrl = getBaseUrl(request);
-    const storeUrl = `${baseUrl}/store/${business.slug}`;
-    const successUrl = `${baseUrl}/store/${business.slug}/success`;
 
-    // Check if AbacatePay is configured
-    const usePaymentGateway = !!process.env.ABACATEPAY_API_KEY;
+    // ========================================
+    // CREATE PENDING GIFT CARD
+    // ========================================
+    // Card is created in PENDING status and will be activated after payment
+    
+    const { data: giftCard, error: giftCardError } = await supabase
+      .from('gift_cards')
+      .insert({
+        business_id: businessId,
+        template_id: templateId,
+        code: code!,
+        amount_cents: template.amount_cents,
+        original_amount_cents: template.amount_cents,
+        balance_cents: template.amount_cents,
+        status: 'PENDING',
+        payment_status: 'PENDING',
+        purchaser_user_id: user.id,
+        purchaser_email: purchaserEmail,
+        purchaser_name: purchaserName,
+        recipient_email: finalRecipientEmail,
+        recipient_name: finalRecipientName,
+        recipient_message: recipientMessage || null,
+        expires_at: expiresAt.toISOString(),
+      })
+      .select()
+      .single();
 
-    if (usePaymentGateway) {
-      // ========================================
-      // PRODUCTION FLOW: Create pending card and payment link
-      // ========================================
-      
-      // Create pending gift card (will be activated by webhook)
-      const { data: giftCard, error: giftCardError } = await supabase
-        .from('gift_cards')
-        .insert({
-          business_id: businessId,
-          template_id: templateId,
-          code: code!,
-          amount_cents: template.amount_cents,
-          original_amount_cents: template.amount_cents,
-          balance_cents: template.amount_cents,
-          status: 'PENDING', // Will be activated by webhook
-          purchaser_user_id: user.id, // Link to authenticated user
-          purchaser_email: purchaserEmail,
-          purchaser_name: purchaserName,
-          recipient_email: finalRecipientEmail,
-          recipient_name: finalRecipientName,
-          recipient_message: recipientMessage || null,
-          expires_at: expiresAt.toISOString(),
-        })
-        .select()
-        .single();
-
-      if (giftCardError) {
-        console.error('Error creating gift card:', giftCardError);
-        return NextResponse.json(
-          { error: 'Erro ao criar vale-presente' },
-          { status: 500 }
-        );
-      }
-
-      try {
-        // Create AbacatePay billing
-        const billing = await createBilling({
-          frequency: 'ONE_TIME',
-          methods: ['PIX'],
-          products: [{
-            externalId: giftCard.id,
-            name: `Vale-Presente ${business.name} - ${template.name}`,
-            description: template.description || undefined,
-            quantity: 1,
-            price: template.amount_cents,
-          }],
-          completionUrl: `${successUrl}?code=${encodeURIComponent(giftCard.code)}`,
-          returnUrl: storeUrl,
-          customer: {
-            email: purchaserEmail,
-            name: purchaserName,
-          },
-          externalId: giftCard.id,
-          metadata: {
-            giftCardId: giftCard.id,
-            giftCardCode: giftCard.code,
-            businessId,
-            templateId,
-            recipientEmail: finalRecipientEmail,
-            recipientName: finalRecipientName,
-          },
-        });
-
-        // Update gift card with payment provider ID for webhook matching
-        await supabase
-          .from('gift_cards')
-          .update({ payment_provider_id: billing.id })
-          .eq('id', giftCard.id);
-
-        console.log('[Checkout] Created billing:', {
-          billingId: billing.id,
-          giftCardId: giftCard.id,
-          amount: template.amount_cents,
-          devMode: billing.devMode,
-        });
-
-        // Return payment URL for redirect
-        return NextResponse.json({
-          success: true,
-          checkoutUrl: billing.url,
-          billingId: billing.id,
-          devMode: billing.devMode,
-        });
-
-      } catch (paymentError) {
-        // If payment creation fails, delete the pending gift card
-        console.error('Error creating payment:', paymentError);
-        await supabase.from('gift_cards').delete().eq('id', giftCard.id);
-        
-        return NextResponse.json(
-          { error: 'Erro ao criar pagamento. Tente novamente.' },
-          { status: 500 }
-        );
-      }
-
-    } else {
-      // ========================================
-      // DEV/TEST FLOW: Create active card directly (no payment)
-      // ========================================
-      console.warn('[Checkout] ABACATEPAY_API_KEY not set, creating card without payment');
-
-      const { data: giftCard, error: giftCardError } = await supabase
-        .from('gift_cards')
-        .insert({
-          business_id: businessId,
-          template_id: templateId,
-          code: code!,
-          amount_cents: template.amount_cents,
-          original_amount_cents: template.amount_cents,
-          balance_cents: template.amount_cents,
-          status: 'ACTIVE', // Active immediately for testing
-          purchaser_user_id: user.id, // Link to authenticated user
-          purchaser_email: purchaserEmail,
-          purchaser_name: purchaserName,
-          recipient_email: finalRecipientEmail,
-          recipient_name: finalRecipientName,
-          recipient_message: recipientMessage || null,
-          expires_at: expiresAt.toISOString(),
-        })
-        .select()
-        .single();
-
-      if (giftCardError) {
-        console.error('Error creating gift card:', giftCardError);
-        return NextResponse.json(
-          { 
-            error: 'Erro ao criar vale-presente',
-            details: process.env.NODE_ENV === 'development' ? giftCardError.message : undefined,
-          },
-          { status: 500 }
-        );
-      }
-
-      // Return success with code (no payment redirect)
-      return NextResponse.json({
-        success: true,
-        giftCardCode: giftCard.code,
-        giftCardId: giftCard.id,
-        devMode: true,
-      });
+    if (giftCardError) {
+      console.error('Error creating gift card:', giftCardError);
+      return NextResponse.json(
+        { 
+          error: 'Erro ao criar vale-presente',
+          details: process.env.NODE_ENV === 'development' ? giftCardError.message : undefined,
+        },
+        { status: 500 }
+      );
     }
+
+    console.log('[Checkout] Created pending gift card:', {
+      giftCardId: giftCard.id,
+      code: giftCard.code,
+      amount: template.amount_cents,
+    });
+
+    // Redirect to our payment page where user chooses PIX or Card
+    const paymentPageUrl = `${baseUrl}/gift-cards/payment/${giftCard.id}`;
+
+    return NextResponse.json({
+      success: true,
+      paymentPageUrl,
+      giftCardId: giftCard.id,
+      giftCardCode: giftCard.code,
+    });
 
   } catch (error) {
     console.error('Checkout error:', error);

@@ -7,6 +7,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionUser } from '@/lib/auth';
 import { hasPermission, canAccessBusiness, PERMISSIONS } from '@/lib/rbac';
+import { createRedemptionAuditLog } from '@/lib/services/audit-log';
 import { z } from 'zod';
 
 const redeemSchema = z.object({
@@ -99,7 +100,7 @@ export async function POST(request: Request) {
     const newStatus = balanceAfter === 0 ? 'REDEEMED' : 'ACTIVE';
 
     // Create redemption record
-    const { error: redemptionError } = await supabase
+    const { data: redemption, error: redemptionError } = await supabase
       .from('redemptions')
       .insert({
         gift_card_id: giftCardId,
@@ -109,7 +110,9 @@ export async function POST(request: Request) {
         balance_before: balanceBefore,
         balance_after: balanceAfter,
         notes: notes || null,
-      });
+      })
+      .select()
+      .single();
 
     if (redemptionError) {
       console.error('Error creating redemption:', redemptionError);
@@ -118,6 +121,21 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
+
+    // Create audit log
+    await createRedemptionAuditLog({
+      redemptionId: redemption.id,
+      giftCardId,
+      businessId,
+      cashierId: user.id,
+      amountCents,
+      balanceBefore,
+      balanceAfter,
+      cardOwnerName: giftCard.recipient_name || giftCard.purchaser_name,
+      cardOwnerEmail: giftCard.recipient_email || giftCard.purchaser_email,
+      eventType: 'REDEMPTION',
+      notes: notes || null,
+    });
 
     // Update gift card balance
     const updateData: Record<string, unknown> = {

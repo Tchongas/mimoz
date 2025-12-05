@@ -2,6 +2,9 @@
 // MIMOZ - Type Definitions
 // ============================================
 
+// Re-export gift card types
+export * from './gift-cards';
+
 // Database Types
 export type Role = 'ADMIN' | 'BUSINESS_OWNER' | 'CASHIER' | 'CUSTOMER';
 
