@@ -21,7 +21,7 @@ A whitelabel webpage generator for businesses to sell gift cards. This system in
 | Styling | TailwindCSS v4 | Utility-first CSS |
 | Auth | Supabase Auth (Google OAuth) | Authentication |
 | Database | Supabase PostgreSQL | Data storage with RLS |
-| Payments | Stripe | Payment processing |
+| Payments | AbacatePay | PIX payment processing (Brazil) |
 | Email | Resend | Transactional emails |
 | QR Codes | qrcode.react | Gift card QR generation |
 | PDF | @react-pdf/renderer | Gift card PDF generation |
@@ -114,7 +114,7 @@ A whitelabel webpage generator for businesses to sell gift cards. This system in
 | code | text UNIQUE | Redemption code (e.g., MIMO-XXXX-XXXX) |
 | amount_cents | integer | Original value |
 | balance_cents | integer | Remaining balance |
-| status | text | ACTIVE, REDEEMED, EXPIRED, CANCELLED |
+| status | text | PENDING, ACTIVE, REDEEMED, EXPIRED, CANCELLED |
 | purchaser_email | text | Buyer email |
 | purchaser_name | text | Buyer name |
 | recipient_email | text | Gift recipient email |
@@ -130,8 +130,7 @@ A whitelabel webpage generator for businesses to sell gift cards. This system in
 | id | uuid PK | Unique identifier |
 | business_id | uuid FK | Business |
 | gift_card_id | uuid FK | Purchased card |
-| stripe_payment_intent_id | text | Stripe reference |
-| stripe_checkout_session_id | text | Checkout session |
+| payment_provider_id | text | AbacatePay billing ID |
 | amount_cents | integer | Total charged |
 | platform_fee_cents | integer | Mimoz fee |
 | status | text | PENDING, PAID, FAILED, REFUNDED |
@@ -144,12 +143,50 @@ A whitelabel webpage generator for businesses to sell gift cards. This system in
 |--------|------|-------------|
 | id | uuid PK | Unique identifier |
 | gift_card_id | uuid FK | Gift card |
+| business_id | uuid FK | Business |
 | cashier_id | uuid FK | Who processed |
 | amount_cents | integer | Amount redeemed |
 | balance_before | integer | Balance before |
 | balance_after | integer | Balance after |
 | notes | text | Optional notes |
-| redeemed_at | timestamp | Redemption time |
+| created_at | timestamp | Redemption time |
+
+**redemption_audit_logs** (audit trail)
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid PK | Unique identifier |
+| redemption_id | uuid FK | Redemption record |
+| gift_card_id | uuid FK | Gift card |
+| business_id | uuid FK | Business |
+| cashier_id | uuid FK | Who processed |
+| event_type | text | REDEMPTION_CREATED, etc. |
+| amount_cents | integer | Amount redeemed |
+| balance_before | integer | Balance before |
+| balance_after | integer | Balance after |
+| metadata | jsonb | Additional data |
+| created_at | timestamp | Event time |
+
+---
+
+## Database Migrations
+
+| Migration | Description |
+|-----------|-------------|
+| 001_initial_schema.sql | Core tables (businesses, profiles, user_invites) |
+| 002_rls_policies.sql | Row Level Security policies |
+| 003_code_validations.sql | Code validation tracking |
+| 004_business_customization.sql | Business branding fields |
+| 005_gift_cards.sql | Gift cards and templates |
+| 006_template_customization.sql | Per-template colors |
+| 007_orders.sql | Order tracking |
+| 008_payment_fields.sql | Payment provider fields |
+| 009_purchaser_user_id.sql | Link cards to users |
+| 010_customer_role.sql | CUSTOMER role support |
+| 011_customer_permissions.sql | Customer RLS policies |
+| 012_customer_system_fix.sql | Customer system fixes |
+| 013_fix_anon_access.sql | Anonymous store access |
+| 014_add_original_amount.sql | Track original card value |
+| 015_payment_audit_logs.sql | Audit logging tables |
 
 ---
 
@@ -302,18 +339,28 @@ A whitelabel webpage generator for businesses to sell gift cards. This system in
   - Apple Wallet pass
   - Google Pay pass
 
-### Phase 8: Redemption Flow 🔜
-- [ ] **Enhanced validation screen**
-  - Scan QR code (camera access)
-  - Manual code entry
-  - Show card details and balance
-- [ ] **Partial redemption**
-  - Enter redemption amount
-  - Update remaining balance
-  - Print/email receipt
-- [ ] **Redemption history**
-  - Full audit trail
-  - Filter by date, cashier, card
+### Phase 8: Redemption Flow ✅
+- [x] **Cashier validation page** `/cashier`
+  - Manual code entry with auto-uppercase
+  - Real-time validation feedback
+  - Show card details (balance, owner, expiration, status)
+  - Color-coded status indicators
+- [x] **Partial/Full redemption**
+  - Enter custom redemption amount
+  - Quick-select buttons (full amount, common values)
+  - Balance validation (can't redeem more than available)
+  - Auto-mark as REDEEMED when balance reaches zero
+- [x] **Redemption stats & history**
+  - Today's redemption count and total amount
+  - Recent redemptions table with details
+  - Balance before/after tracking
+- [x] **Audit logging**
+  - `redemption_audit_logs` table
+  - Tracks all redemption events
+  - Cashier, amount, timestamps
+- [x] **API endpoints**
+  - `POST /api/codes/validate` - Validate code, return card details
+  - `POST /api/codes/redeem` - Process redemption, update balance
 
 ### Phase 9: Advanced Customization 🔜
 - [ ] **Logo upload** (Supabase Storage)
@@ -331,7 +378,20 @@ A whitelabel webpage generator for businesses to sell gift cards. This system in
   - Receipt customization
   - Operating hours (future)
 
-### Phase 10: Advanced Features 🔮
+### Phase 10: Customer Portal 🔜
+- [ ] **My Cards page** `/my-cards`
+  - List purchased gift cards
+  - Show balance and status
+  - View redemption history per card
+- [ ] **Card details page** `/my-cards/[id]`
+  - Full card information
+  - QR code display
+  - Share options (WhatsApp, Email)
+- [ ] **Purchase history**
+  - All past purchases
+  - Download receipts
+
+### Phase 11: Advanced Features 🔮
 - [ ] **Analytics dashboard**
   - Sales charts (Recharts)
   - Revenue tracking
@@ -354,10 +414,11 @@ A whitelabel webpage generator for businesses to sell gift cards. This system in
 
 ## Tech Decisions
 
-### Payments: Stripe
-- **Why:** Industry standard, excellent docs, Brazil support (PIX, cards)
-- **Connect:** Each business gets a connected account
-- **Fees:** Platform takes application fee per transaction
+### Payments: AbacatePay
+- **Why:** Brazilian-focused, simple PIX integration, competitive fees
+- **Methods:** PIX (instant payment), Card support available
+- **Flow:** Create billing → Redirect to payment page → Webhook on completion
+- **Dev Mode:** When API key not set, cards created directly without payment
 
 ### Email: Resend
 - **Why:** Modern API, great deliverability, React email templates
@@ -384,9 +445,9 @@ A whitelabel webpage generator for businesses to sell gift cards. This system in
 - [x] API routes validate session + role
 - [x] No client-side role checks for security
 - [x] Business isolation enforced at DB level
-- [ ] Stripe webhook signature verification
+- [x] AbacatePay webhook HMAC signature verification
+- [x] Gift card code entropy (secure random, no confusing chars)
 - [ ] Rate limiting on public endpoints
-- [ ] Gift card code entropy (secure random)
 - [ ] Input sanitization on all forms
 - [ ] CSRF protection on mutations
 
@@ -400,12 +461,11 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 
-# Stripe
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+# AbacatePay (Payment Gateway)
+ABACATEPAY_API_KEY=           # API key from AbacatePay dashboard
+ABACATEPAY_WEBHOOK_SECRET=    # Optional: secret for webhook URL validation
 
-# Resend
+# Resend (Email - Future)
 RESEND_API_KEY=
 
 # App
@@ -443,12 +503,12 @@ NEXT_PUBLIC_APP_URL=
 |--------|----------|-------------|
 | GET | /api/store/[slug] | Get store info |
 | GET | /api/store/[slug]/cards | List available cards |
-| POST | /api/store/[slug]/checkout | Create checkout session |
+| POST | /api/store/checkout | Create gift card + payment billing |
 
 ### Webhook APIs
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | /api/webhooks/stripe | Handle Stripe events |
+| POST | /api/webhooks/abacatepay | Handle AbacatePay billing.paid events |
 
 ### Validation APIs
 | Method | Endpoint | Description |
@@ -456,3 +516,60 @@ NEXT_PUBLIC_APP_URL=
 | POST | /api/codes/validate | Validate gift card |
 | POST | /api/codes/redeem | Redeem amount |
 | GET | /api/codes/history | Validation history |
+
+---
+
+## Current TODO / Known Issues
+
+### High Priority
+- [ ] **QR Code scanning** - Add camera-based QR scanning to cashier page
+- [ ] **Email notifications** - Set up Resend for purchase confirmations and gift card delivery
+- [ ] **Business analytics page** - Currently returns 404, needs implementation
+
+### Medium Priority
+- [ ] **Rate limiting** - Add rate limiting to public endpoints (store, checkout)
+- [ ] **Input validation** - Strengthen server-side validation on all forms
+- [ ] **Error boundaries** - Add React error boundaries for better UX
+- [ ] **Loading states** - Some pages missing proper loading skeletons
+
+### Low Priority / Future
+- [ ] **Logo upload** - Supabase Storage integration for business logos
+- [ ] **PDF receipts** - Generate downloadable gift card PDFs
+- [ ] **Multi-language** - i18n support (currently Portuguese only)
+- [ ] **Dark mode** - Theme toggle support
+
+### Technical Debt
+- [ ] Remove unused imports across codebase
+- [ ] Consolidate duplicate type definitions
+- [ ] Add comprehensive error logging
+- [ ] Write unit tests for critical flows
+
+---
+
+## File Structure
+
+```
+src/
+├── app/
+│   ├── admin/           # Admin dashboard pages
+│   ├── business/        # Business owner pages
+│   ├── cashier/         # Cashier validation pages
+│   ├── store/[slug]/    # Public store pages
+│   ├── auth/            # Authentication pages
+│   ├── api/             # API routes
+│   │   ├── admin/       # Admin APIs
+│   │   ├── business/    # Business APIs
+│   │   ├── store/       # Public store APIs
+│   │   ├── codes/       # Validation/redemption APIs
+│   │   └── webhooks/    # Payment webhooks
+│   └── my-cards/        # Customer portal (future)
+├── components/
+│   ├── ui/              # Reusable UI components
+│   └── layouts/         # Dashboard layouts
+├── lib/
+│   ├── supabase/        # Supabase client utilities
+│   ├── payments/        # Payment gateway integration
+│   ├── services/        # Business logic services
+│   └── utils/           # Helper functions
+└── types/               # TypeScript type definitions
+```

@@ -4,7 +4,6 @@
 // Shows gift cards purchased by the user AND received as gifts
 
 import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Gift, Calendar, Store, ExternalLink, ShoppingBag, Inbox } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
@@ -21,11 +20,12 @@ const statusColors: Record<string, { bg: string; text: string; label: string }> 
 export default async function MyGiftCardsPage() {
   const supabase = await createClient();
   
-  // Get current user
+  // Get current user - middleware already handles auth redirect
   const { data: { user } } = await supabase.auth.getUser();
   
+  // User is guaranteed by middleware, but handle edge case gracefully
   if (!user) {
-    redirect('/auth/login');
+    return null;
   }
   
   // Get user's profile for email

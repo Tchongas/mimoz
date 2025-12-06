@@ -143,9 +143,15 @@ export default async function BuyPage({ params }: BuyPageProps) {
               </div>
             )}
 
-            <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
-              <h3 className="font-medium text-blue-900 mb-2">Como funciona</h3>
-              <ul className="text-blue-700 text-sm space-y-2">
+            <div 
+              className="mt-6 p-4 rounded-xl border"
+              style={{ 
+                backgroundColor: `${giftCardColor}10`, 
+                borderColor: `${giftCardColor}30` 
+              }}
+            >
+              <h3 className="font-medium mb-2" style={{ color: giftCardColor }}>Como funciona</h3>
+              <ul className="text-sm space-y-2" style={{ color: `${giftCardColor}cc` }}>
                 <li>• Após a compra, você receberá o código por email</li>
                 <li>• O destinatário também receberá uma cópia</li>
                 <li>• Válido por {template.valid_days} dias após a compra</li>

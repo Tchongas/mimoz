@@ -33,6 +33,7 @@ interface GiftCardTemplate {
   description: string | null;
   amount_cents: number;
   image_url: string | null;
+  card_color: string | null;
 }
 
 // Default colors
@@ -59,7 +60,7 @@ async function getStoreData(slug: string) {
   // Get active gift card templates
   const { data: templates } = await supabase
     .from('gift_card_templates')
-    .select('id, name, description, amount_cents, image_url')
+    .select('id, name, description, amount_cents, image_url, card_color')
     .eq('business_id', business.id)
     .eq('is_active', true)
     .order('amount_cents', { ascending: true });
@@ -195,7 +196,7 @@ export default async function StorePage({ params }: StorePageProps) {
                     {/* Card Image/Gradient */}
                     <div 
                       className="h-40 flex items-center justify-center relative"
-                      style={{ backgroundColor: giftCardColor }}
+                      style={{ backgroundColor: template.card_color || giftCardColor }}
                     >
                       <div className="text-center">
                         <p className="text-4xl font-bold text-white">

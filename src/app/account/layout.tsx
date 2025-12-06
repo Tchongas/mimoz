@@ -3,7 +3,6 @@
 // ============================================
 // Layout for customer account pages (purchases, settings)
 
-import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { Gift, User, LogOut, ShoppingBag, Settings } from 'lucide-react';
@@ -15,18 +14,14 @@ interface AccountLayoutProps {
 export default async function AccountLayout({ children }: AccountLayoutProps) {
   const supabase = await createClient();
   
-  // Check authentication
+  // Get current user - middleware already handles auth redirect
   const { data: { user } } = await supabase.auth.getUser();
   
-  if (!user) {
-    redirect('/auth/login');
-  }
-  
-  // Get user profile
+  // Get user profile (user is guaranteed by middleware)
   const { data: profile } = await supabase
     .from('profiles')
     .select('full_name, email, avatar_url')
-    .eq('id', user.id)
+    .eq('id', user?.id)
     .single();
   
   const displayName = profile?.full_name || user.email?.split('@')[0] || 'Usuário';

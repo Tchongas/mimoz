@@ -14,6 +14,11 @@ interface SuccessPageProps {
   searchParams: Promise<{ code?: string }>;
 }
 
+// Default colors
+const DEFAULT_COLORS = {
+  giftCard: '#1e3a5f',
+};
+
 async function getGiftCardData(code: string) {
   const supabase = await createClient();
 
@@ -21,7 +26,8 @@ async function getGiftCardData(code: string) {
     .from('gift_cards')
     .select(`
       *,
-      business:businesses(id, name, slug)
+      business:businesses(id, name, slug, gift_card_color),
+      template:gift_card_templates(card_color)
     `)
     .eq('code', code)
     .single();
@@ -42,6 +48,9 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
   if (!giftCard || giftCard.business?.slug !== slug) {
     notFound();
   }
+
+  // Get gift card color with fallbacks
+  const giftCardColor = giftCard.template?.card_color || giftCard.business?.gift_card_color || DEFAULT_COLORS.giftCard;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
@@ -73,7 +82,10 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
         </div>
 
         {/* Gift Card Display */}
-        <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8 text-white mb-8 relative overflow-hidden">
+        <div 
+          className="rounded-2xl p-8 text-white mb-8 relative overflow-hidden"
+          style={{ backgroundColor: giftCardColor }}
+        >
           {/* Decorative elements */}
           <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
@@ -128,9 +140,15 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
         </div>
 
         {giftCard.recipient_message && (
-          <div className="bg-blue-50 rounded-xl border border-blue-100 p-4 mb-8">
-            <p className="text-sm text-blue-700 mb-1">Mensagem:</p>
-            <p className="text-blue-900 italic">"{giftCard.recipient_message}"</p>
+          <div 
+            className="rounded-xl border p-4 mb-8"
+            style={{ 
+              backgroundColor: `${giftCardColor}10`, 
+              borderColor: `${giftCardColor}30` 
+            }}
+          >
+            <p className="text-sm mb-1" style={{ color: `${giftCardColor}cc` }}>Mensagem:</p>
+            <p className="italic" style={{ color: giftCardColor }}>"{giftCard.recipient_message}"</p>
           </div>
         )}
 

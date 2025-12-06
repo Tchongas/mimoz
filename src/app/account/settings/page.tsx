@@ -4,17 +4,17 @@
 // User can view and update their profile settings
 
 import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
 import { User, Mail, Shield } from 'lucide-react';
 
 export default async function AccountSettingsPage() {
   const supabase = await createClient();
   
-  // Get current user
+  // Get current user - middleware already handles auth redirect
   const { data: { user } } = await supabase.auth.getUser();
   
+  // User is guaranteed by middleware, but handle edge case gracefully
   if (!user) {
-    redirect('/auth/login');
+    return null;
   }
   
   // Get user profile
