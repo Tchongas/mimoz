@@ -19,6 +19,8 @@ import {
   type BillingPaidEventData,
 } from '@/lib/payments';
 import { createPaymentAuditLog } from '@/lib/services/audit-log';
+import { sendGiftCardEmails, type GiftCardEmailData } from '@/lib/email';
+import { formatCurrency } from '@/lib/utils';
 
 /**
  * POST /api/webhooks/abacatepay
@@ -182,10 +184,74 @@ async function handleBillingPaid(event: BillingPaidEvent) {
     amount: pendingCard.amount_cents,
   });
 
-  // TODO: Send confirmation emails
-  // - Email to purchaser with receipt
-  // - Email to recipient with gift card code
-  // This will be implemented in Phase 7 (Email Delivery)
+  // Send confirmation emails
+  await sendGiftCardNotifications(pendingCard, supabase);
+}
+
+/**
+ * Send email notifications for activated gift card
+ */
+async function sendGiftCardNotifications(giftCard: any, supabase: any) {
+  try {
+    // Get business info
+    const { data: business } = await supabase
+      .from('businesses')
+      .select('name, slug, gift_card_color')
+      .eq('id', giftCard.business_id)
+      .single();
+
+    // Get purchaser info
+    const { data: purchaser } = await supabase
+      .from('profiles')
+      .select('full_name, email')
+      .eq('id', giftCard.purchaser_user_id)
+      .single();
+
+    if (!business || !purchaser) {
+      console.error('[Webhook] Missing business or purchaser info for email');
+      return;
+    }
+
+    // Get template info for card color
+    const template = giftCard.gift_card_templates;
+    const cardColor = template?.card_color || business.gift_card_color || '#1e3a5f';
+
+    // Format expiration date
+    const expiresAt = new Date(giftCard.expires_at).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    });
+
+    // Build email data
+    const emailData: GiftCardEmailData = {
+      code: giftCard.code,
+      amount: giftCard.amount_cents,
+      amountFormatted: formatCurrency(giftCard.amount_cents),
+      expiresAt,
+      validDays: template?.valid_days || 365,
+      businessName: business.name,
+      businessSlug: business.slug,
+      templateName: template?.name || 'Vale-Presente',
+      cardColor,
+      recipientName: giftCard.recipient_name,
+      recipientEmail: giftCard.recipient_email,
+      purchaserName: purchaser.full_name || purchaser.email.split('@')[0],
+      purchaserEmail: purchaser.email,
+      message: giftCard.recipient_message || undefined,
+    };
+
+    // Send emails
+    const results = await sendGiftCardEmails(emailData);
+    
+    console.log('[Webhook] Email results:', {
+      purchaser: results.purchaser.success ? 'sent' : results.purchaser.error,
+      recipient: results.recipient ? (results.recipient.success ? 'sent' : results.recipient.error) : 'same as purchaser',
+    });
+  } catch (error) {
+    // Don't throw - email failure shouldn't fail the webhook
+    console.error('[Webhook] Failed to send emails:', error);
+  }
 }
 
 /**

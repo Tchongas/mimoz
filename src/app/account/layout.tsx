@@ -24,7 +24,7 @@ export default async function AccountLayout({ children }: AccountLayoutProps) {
     .eq('id', user?.id)
     .single();
   
-  const displayName = profile?.full_name || user.email?.split('@')[0] || 'Usuário';
+  const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Usuário';
   
   return (
     <div className="min-h-screen bg-slate-50">
