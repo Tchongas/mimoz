@@ -4,9 +4,10 @@
 // Shows gift cards purchased by the user AND received as gifts
 
 import { createClient } from '@/lib/supabase/server';
-import Link from 'next/link';
-import { Gift, Store, ShoppingBag, Inbox } from 'lucide-react';
+import { ShoppingBag, Inbox } from 'lucide-react';
 import { GiftCardWithModal } from './gift-card-modal';
+import { AccountHeader } from './components/AccountHeader';
+import { EmptyState } from './components/EmptyState';
 
 export default async function MyGiftCardsPage() {
   const supabase = await createClient();
@@ -90,33 +91,11 @@ export default async function MyGiftCardsPage() {
   const hasNoCards = purchases.length === 0 && received.length === 0;
   
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Meus Vale-Presentes</h1>
-        <p className="text-slate-500 mt-1">
-          Vale-presentes que você comprou ou recebeu
-        </p>
-      </div>
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <AccountHeader totalPurchased={purchases.length} totalReceived={received.length} />
       
       {hasNoCards ? (
-        <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
-          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Gift className="w-8 h-8 text-slate-400" />
-          </div>
-          <h2 className="text-lg font-medium text-slate-900 mb-2">
-            Nenhuma compra ainda
-          </h2>
-          <p className="text-slate-500 mb-6">
-            Você ainda não comprou nenhum vale-presente.
-          </p>
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
-          >
-            <Store className="w-4 h-4" />
-            Explorar lojas
-          </Link>
-        </div>
+        <EmptyState />
       ) : (
         <div className="space-y-8">
           {/* Received Gift Cards */}

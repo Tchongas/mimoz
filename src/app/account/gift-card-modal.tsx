@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 // ============================================
 // MIMOZ - Gift Card Modal Component
@@ -6,6 +6,7 @@
 // Shows gift card in a popup for cashier scanning
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { X, Gift, Sparkles, Copy, Check, Calendar, Store } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
@@ -321,6 +322,16 @@ export function GiftCardWithModal({ card, userEmail, type }: GiftCardWithModalPr
               Válido até {expiresAt.toLocaleDateString('pt-BR')}
             </span>
           </div>
+          {business && (
+            <Link
+              href={`/store/${business.slug}`}
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors"
+            >
+              <Store className="w-3 h-3" />
+              Ir para a loja
+            </Link>
+          )}
         </div>
       </div>
 

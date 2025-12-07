@@ -83,7 +83,7 @@ export default async function BuyPage({ params }: BuyPageProps) {
   const isAuthenticated = !!user;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex flex-col">
       {/* Header */}
       <PageHeader
         slug={slug}
@@ -92,7 +92,7 @@ export default async function BuyPage({ params }: BuyPageProps) {
       />
 
       {/* Content */}
-      <main className="max-w-4xl mx-auto px-4 py-8">
+      <main className="flex-1 max-w-4xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
           {/* Card Preview */}
           <GiftCardPreviewSection
