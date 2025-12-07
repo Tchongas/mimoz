@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { Gift, ShoppingBag, Mail, Phone, Globe, User } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { LoginButton } from '@/app/auth/login/login-button';
+import Footer from '@/components/ui/footer';
 
 interface StorePageProps {
   params: Promise<{ slug: string }>;
@@ -241,16 +242,7 @@ export default async function StorePage({ params }: StorePageProps) {
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-100 border-t border-slate-200 py-8 mt-12">
-        <div className="max-w-6xl mx-auto px-4 text-center">
-          <p className="text-slate-500 text-sm">
-            Vale-presentes digitais por {business.name}
-          </p>
-          <p className="text-slate-400 text-xs mt-2">
-            Powered by Mimoz
-          </p>
-        </div>
-      </footer>
+      <Footer/>
     </div>
   );
 }

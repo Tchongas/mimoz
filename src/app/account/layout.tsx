@@ -72,31 +72,6 @@ export default async function AccountLayout({ children }: AccountLayoutProps) {
       
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Sidebar Navigation */}
-          <aside className="w-full md:w-64 flex-shrink-0">
-            <nav className="bg-white rounded-xl border border-slate-200 p-2">
-              <ul className="space-y-1">
-                <li>
-                  <Link
-                    href="/account"
-                    className="flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-slate-50 rounded-lg transition-colors"
-                  >
-                    <ShoppingBag className="w-5 h-5" />
-                    <span className="font-medium">Meus Vale-Presentes</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/account/settings"
-                    className="flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-slate-50 rounded-lg transition-colors"
-                  >
-                    <Settings className="w-5 h-5" />
-                    <span className="font-medium">Configurações</span>
-                  </Link>
-                </li>
-              </ul>
-            </nav>
-          </aside>
           
           {/* Main Content */}
           <main className="flex-1">
