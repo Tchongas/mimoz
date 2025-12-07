@@ -223,16 +223,6 @@ export function GiftCardWithModal({ card, userEmail, type }: GiftCardWithModalPr
     businesses: { name: string; slug: string } 
   } | null;
   const business = template?.businesses;
-  
-  const statusColors: Record<string, { bg: string; text: string; label: string }> = {
-    PENDING: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pendente' },
-    ACTIVE: { bg: 'bg-green-100', text: 'text-green-800', label: 'Ativo' },
-    REDEEMED: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Resgatado' },
-    EXPIRED: { bg: 'bg-slate-100', text: 'text-slate-800', label: 'Expirado' },
-    CANCELLED: { bg: 'bg-red-100', text: 'text-red-800', label: 'Cancelado' },
-  };
-  
-  const status = statusColors[card.status] || statusColors.ACTIVE;
   const expiresAt = new Date(card.expires_at);
   const isExpired = expiresAt < new Date() && card.status === 'ACTIVE';
   const isGift = type === 'purchased' && card.recipient_email !== userEmail;
@@ -262,9 +252,6 @@ export function GiftCardWithModal({ card, userEmail, type }: GiftCardWithModalPr
                   {template?.name || 'Gift Card'}
                 </p>
                 <div className="flex items-center gap-2 mt-2">
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${status.bg} ${status.text}`}>
-                    {isExpired ? 'Expirado' : status.label}
-                  </span>
                   {type === 'received' && (
                     <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                       Presente recebido
@@ -273,6 +260,16 @@ export function GiftCardWithModal({ card, userEmail, type }: GiftCardWithModalPr
                   {isGift && (
                     <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                       Enviado como presente
+                    </span>
+                  )}
+                  {isExpired && (
+                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                      Expirado
+                    </span>
+                  )}
+                  {card.balance_cents === 0 && !isExpired && (
+                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+                      Esgotado
                     </span>
                   )}
                 </div>
@@ -300,11 +297,11 @@ export function GiftCardWithModal({ card, userEmail, type }: GiftCardWithModalPr
           {/* Value and hint */}
           <div className="text-right">
             <p className="text-2xl font-bold text-slate-900">
-              {formatCurrency(card.amount_cents)}
+              {formatCurrency(card.balance_cents)}
             </p>
             {card.balance_cents !== card.amount_cents && (
-              <p className="text-sm text-slate-500">
-                Saldo: {formatCurrency(card.balance_cents)}
+              <p className="text-sm text-slate-400 line-through">
+                {formatCurrency(card.amount_cents)}
               </p>
             )}
             <p className="text-xs text-slate-400 mt-2 group-hover:text-slate-600 transition-colors">

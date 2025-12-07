@@ -31,6 +31,9 @@ export async function GET(request: Request) {
   if (code) {
     const cookieStore = await cookies();
     
+    // Track cookies that need to be set on the response
+    const cookiesToSetOnResponse: { name: string; value: string; options: any }[] = [];
+    
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -41,12 +44,24 @@ export async function GET(request: Request) {
           },
           setAll(cookiesToSet) {
             cookiesToSet.forEach(({ name, value, options }) => {
+              // Store for later - we'll set them on the redirect response
+              cookiesToSetOnResponse.push({ name, value, options });
+              // Also set on cookieStore for subsequent operations
               cookieStore.set(name, value, options);
             });
           },
         },
       }
     );
+    
+    // Helper to create redirect with cookies
+    const redirectWithCookies = (url: string) => {
+      const response = NextResponse.redirect(url);
+      cookiesToSetOnResponse.forEach(({ name, value, options }) => {
+        response.cookies.set(name, value, options);
+      });
+      return response;
+    };
     
     // Exchange code for session - this sets the cookies
     const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
@@ -60,7 +75,7 @@ export async function GET(request: Request) {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      return NextResponse.redirect(`${origin}/auth/login?error=auth_failed`);
+      return redirectWithCookies(`${origin}/auth/login?error=auth_failed`);
     }
 
     // Get user's profile to determine redirect
@@ -93,17 +108,17 @@ export async function GET(request: Request) {
     
     if (businessRequiredRoles.includes(role) && !businessId) {
       // Staff member without business assignment
-      return NextResponse.redirect(`${origin}/auth/no-business`);
+      return redirectWithCookies(`${origin}/auth/no-business`);
     }
 
     // If there's a redirect URL (e.g., from store purchase flow), use it
     if (redirectTo) {
-      return NextResponse.redirect(`${origin}${redirectTo}`);
+      return redirectWithCookies(`${origin}${redirectTo}`);
     }
 
     // Otherwise, redirect to role-based dashboard
     const destination = getRoleDashboard(role);
-    return NextResponse.redirect(`${origin}${destination}`);
+    return redirectWithCookies(`${origin}${destination}`);
   }
 
   // No code provided
