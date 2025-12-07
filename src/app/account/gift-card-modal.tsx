@@ -232,10 +232,10 @@ export function GiftCardWithModal({ card, userEmail, type }: GiftCardWithModalPr
   return (
     <>
       <div 
-        className="bg-white rounded-xl border border-slate-200 p-6 hover:border-slate-300 hover:shadow-md transition-all cursor-pointer group"
+        className="bg-white rounded-2xl border border-slate-200 p-4 md:p-5 hover:border-slate-300 hover:shadow-md transition-all cursor-pointer group"
         onClick={() => setIsOpen(true)}
       >
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           {/* Card Info */}
           <div className="flex-1">
             <div className="flex items-start gap-4">
@@ -296,7 +296,7 @@ export function GiftCardWithModal({ card, userEmail, type }: GiftCardWithModalPr
           </div>
           
           {/* Value and hint */}
-          <div className="text-right">
+          <div className="text-right md:min-w-[140px]">
             <p className="text-2xl font-bold text-slate-900">
               {formatCurrency(card.balance_cents)}
             </p>
@@ -312,8 +312,8 @@ export function GiftCardWithModal({ card, userEmail, type }: GiftCardWithModalPr
         </div>
         
         {/* Footer */}
-        <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
-          <div className="flex items-center gap-4 text-sm text-slate-500">
+        <div className="mt-4 pt-4 border-t border-slate-100 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500">
             <span className="flex items-center gap-1">
               <Calendar className="w-4 h-4" />
               {new Date(card.purchased_at).toLocaleDateString('pt-BR')}
