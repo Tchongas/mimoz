@@ -49,7 +49,7 @@ async function getBusinessEarnings(): Promise<BusinessEarnings[]> {
       .from('gift_cards')
       .select('id, amount_cents, payment_fee_cents, purchased_at, status')
       .eq('business_id', business.id)
-      .in('status', ['ACTIVE', 'PARTIALLY_USED', 'REDEEMED']);
+      .in('status', ['ACTIVE', 'REDEEMED']);
     
     const cards = giftCards || [];
     const totalSales = cards.length;

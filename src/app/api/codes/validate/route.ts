@@ -71,9 +71,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check status - only ACTIVE and PARTIALLY_USED can be redeemed
-    const validStatuses = ['ACTIVE', 'PARTIALLY_USED'];
-    
+    // Check status - only ACTIVE cards can be redeemed
     if (giftCard.status === 'REDEEMED') {
       return NextResponse.json({
         valid: false,
@@ -110,11 +108,11 @@ export async function POST(request: Request) {
       });
     }
     
-    // Final check - must be in valid status
-    if (!validStatuses.includes(giftCard.status)) {
+    // Final check - must be ACTIVE
+    if (giftCard.status !== 'ACTIVE') {
       return NextResponse.json({
         valid: false,
-        error: `Status inválido: ${giftCard.status}`,
+        error: `Vale-presente não está ativo (status: ${giftCard.status})`,
         giftCard: {
           code: giftCard.code,
           status: giftCard.status,
