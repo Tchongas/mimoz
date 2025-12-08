@@ -39,28 +39,29 @@ async function getTemplates(businessId: string): Promise<GiftCardTemplate[]> {
 async function getStats(businessId: string) {
   const supabase = await createClient();
 
-  const [totalCards, activeCards, totalRevenue] = await Promise.all([
+  const [totalCardsResult, activeCardsResult, allCardsResult] = await Promise.all([
     supabase
       .from('gift_cards')
       .select('id', { count: 'exact', head: true })
-      .eq('business_id', businessId),
+      .eq('business_id', businessId)
+      .in('status', ['ACTIVE', 'REDEEMED']),
     supabase
       .from('gift_cards')
       .select('id', { count: 'exact', head: true })
       .eq('business_id', businessId)
       .eq('status', 'ACTIVE'),
     supabase
-      .from('orders')
+      .from('gift_cards')
       .select('amount_cents')
       .eq('business_id', businessId)
-      .eq('status', 'PAID'),
+      .in('status', ['ACTIVE', 'REDEEMED']),
   ]);
 
-  const revenue = (totalRevenue.data || []).reduce((sum, o) => sum + o.amount_cents, 0);
+  const revenue = (allCardsResult.data || []).reduce((sum, c) => sum + (c.amount_cents || 0), 0);
 
   return {
-    totalCards: totalCards.count || 0,
-    activeCards: activeCards.count || 0,
+    totalCards: totalCardsResult.count || 0,
+    activeCards: activeCardsResult.count || 0,
     revenue,
   };
 }

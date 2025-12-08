@@ -51,28 +51,32 @@ async function getReportsData() {
   const businessStats: BusinessStats[] = await Promise.all(
     businesses.map(async (business) => {
       const [total, todayCards, week, prevWeek, month] = await Promise.all([
-        // Total sales
+        // Total sales (only completed)
         supabase
           .from('gift_cards')
           .select('id, amount_cents')
-          .eq('business_id', business.id),
+          .eq('business_id', business.id)
+          .in('status', ['ACTIVE', 'REDEEMED']),
         // Today
         supabase
           .from('gift_cards')
           .select('id, amount_cents')
           .eq('business_id', business.id)
+          .in('status', ['ACTIVE', 'REDEEMED'])
           .gte('purchased_at', todayStr),
         // This week
         supabase
           .from('gift_cards')
           .select('id, amount_cents')
           .eq('business_id', business.id)
+          .in('status', ['ACTIVE', 'REDEEMED'])
           .gte('purchased_at', weekAgo),
         // Previous week (for trend)
         supabase
           .from('gift_cards')
           .select('id, amount_cents')
           .eq('business_id', business.id)
+          .in('status', ['ACTIVE', 'REDEEMED'])
           .gte('purchased_at', twoWeeksAgo)
           .lt('purchased_at', weekAgo),
         // This month
@@ -80,6 +84,7 @@ async function getReportsData() {
           .from('gift_cards')
           .select('id, amount_cents')
           .eq('business_id', business.id)
+          .in('status', ['ACTIVE', 'REDEEMED'])
           .gte('purchased_at', monthAgo),
       ]);
 

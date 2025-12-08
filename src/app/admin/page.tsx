@@ -15,10 +15,11 @@ async function getStats() {
   const [businessesResult, usersResult, giftCardsResult, todayGiftCardsResult] = await Promise.all([
     supabase.from('businesses').select('id', { count: 'exact', head: true }),
     supabase.from('profiles').select('id', { count: 'exact', head: true }),
-    supabase.from('gift_cards').select('id, amount_cents'),
+    supabase.from('gift_cards').select('id, amount_cents').in('status', ['ACTIVE', 'REDEEMED']),
     supabase
       .from('gift_cards')
       .select('id, amount_cents')
+      .in('status', ['ACTIVE', 'REDEEMED'])
       .gte('purchased_at', today),
   ]);
 

@@ -47,7 +47,8 @@ async function getBusinessStats(id: string) {
     supabase
       .from('gift_cards')
       .select('id, amount_cents, status')
-      .eq('business_id', id),
+      .eq('business_id', id)
+      .in('status', ['ACTIVE', 'REDEEMED']),
   ]);
 
   const giftCards = giftCardsResult.data || [];

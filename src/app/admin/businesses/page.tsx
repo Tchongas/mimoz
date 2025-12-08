@@ -36,7 +36,8 @@ async function getBusinessesWithStats(): Promise<BusinessWithStats[]> {
       const { data: giftCards } = await supabase
         .from('gift_cards')
         .select('id, amount_cents')
-        .eq('business_id', business.id);
+        .eq('business_id', business.id)
+        .in('status', ['ACTIVE', 'REDEEMED']);
       
       const cards = giftCards || [];
       return {
