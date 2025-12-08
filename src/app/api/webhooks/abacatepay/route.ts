@@ -97,39 +97,81 @@ export async function POST(request: NextRequest) {
  * Creates the gift card after successful payment
  */
 async function handleBillingPaid(event: BillingPaidEvent) {
-  const { payment, pixQrCode } = event.data as BillingPaidEventData;
+  const { payment, pixQrCode, billing } = event.data as BillingPaidEventData;
   
   console.log('[Webhook] Processing billing.paid:', {
     amount: payment.amount,
     fee: payment.fee,
     method: payment.method,
     pixId: pixQrCode?.id,
+    billingId: billing?.id,
+    billingExternalId: billing?.products?.[0]?.externalId,
   });
 
-  // We need to get the billing details to find our order
-  // The pixQrCode.id can be used to look up the billing
-  // Or we can use the externalId we set when creating the billing
-  
-  // For now, we'll need to look up the pending order by the billing ID
-  // This requires us to store the billing ID when creating the checkout
-  
   const supabase = await createClient();
 
-  // Find the pending gift card order by the AbacatePay billing ID
-  // We store this in the gift_cards table when creating the checkout
-  const { data: pendingCard, error: findError } = await supabase
-    .from('gift_cards')
-    .select('*, gift_card_templates(*)')
-    .eq('payment_provider_id', pixQrCode?.id || '')
-    .eq('status', 'PENDING')
-    .single();
+  // Try multiple ways to find the pending gift card:
+  // 1. By billing.id (what we store as payment_provider_id)
+  // 2. By billing.products[0].externalId (the gift card ID we set)
+  // 3. By pixQrCode.id (fallback)
+  
+  let pendingCard = null;
+  let findError = null;
 
-  if (findError || !pendingCard) {
-    // Try to find by looking at recent pending cards
-    // This is a fallback if we don't have the exact ID match
-    console.warn('[Webhook] Could not find pending card by payment_provider_id:', pixQrCode?.id);
+  // Method 1: Try billing.id first (this is what we store)
+  if (billing?.id) {
+    const result = await supabase
+      .from('gift_cards')
+      .select('*, gift_card_templates(*)')
+      .eq('payment_provider_id', billing.id)
+      .eq('status', 'PENDING')
+      .single();
     
-    // Log for debugging - in production you'd want better tracking
+    if (!result.error && result.data) {
+      pendingCard = result.data;
+      console.log('[Webhook] Found card by billing.id:', billing.id);
+    }
+  }
+
+  // Method 2: Try externalId (gift card ID)
+  if (!pendingCard && billing?.products?.[0]?.externalId) {
+    const giftCardId = billing.products[0].externalId;
+    const result = await supabase
+      .from('gift_cards')
+      .select('*, gift_card_templates(*)')
+      .eq('id', giftCardId)
+      .eq('status', 'PENDING')
+      .single();
+    
+    if (!result.error && result.data) {
+      pendingCard = result.data;
+      console.log('[Webhook] Found card by externalId:', giftCardId);
+    }
+  }
+
+  // Method 3: Try pixQrCode.id (legacy fallback)
+  if (!pendingCard && pixQrCode?.id) {
+    const result = await supabase
+      .from('gift_cards')
+      .select('*, gift_card_templates(*)')
+      .eq('payment_provider_id', pixQrCode.id)
+      .eq('status', 'PENDING')
+      .single();
+    
+    if (!result.error && result.data) {
+      pendingCard = result.data;
+      console.log('[Webhook] Found card by pixQrCode.id:', pixQrCode.id);
+    } else {
+      findError = result.error;
+    }
+  }
+
+  if (!pendingCard) {
+    console.error('[Webhook] Could not find pending card. Tried:', {
+      billingId: billing?.id,
+      externalId: billing?.products?.[0]?.externalId,
+      pixQrCodeId: pixQrCode?.id,
+    });
     console.log('[Webhook] Payment received but no matching order found. Amount:', payment.amount);
     return;
   }
