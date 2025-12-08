@@ -23,6 +23,74 @@ export interface Business {
   website: string | null;
   created_at: string;
   updated_at: string;
+  
+  // Header customization
+  header_bg_color: string | null;
+  header_text_color: string | null;
+  header_style: 'solid' | 'transparent' | 'gradient' | null;
+  show_header_contact: boolean | null;
+  logo_link_url: string | null;
+  
+  // Hero section customization
+  hero_title: string | null;
+  hero_subtitle: string | null;
+  hero_bg_type: 'color' | 'gradient' | 'image' | null;
+  hero_bg_color: string | null;
+  hero_bg_gradient_start: string | null;
+  hero_bg_gradient_end: string | null;
+  hero_bg_image_url: string | null;
+  hero_text_color: string | null;
+  hero_overlay_opacity: number | null;
+  hero_cta_text: string | null;
+  hero_cta_color: string | null;
+  show_hero_section: boolean | null;
+  
+  // Products section customization
+  products_title: string | null;
+  products_bg_color: string | null;
+  products_layout: 'grid' | 'list' | 'carousel' | null;
+  products_columns: number | null;
+  show_product_description: boolean | null;
+  card_style: 'elevated' | 'flat' | 'bordered' | null;
+  
+  // Features section
+  show_features_section: boolean | null;
+  features_title: string | null;
+  features_bg_color: string | null;
+  feature_1_icon: string | null;
+  feature_1_title: string | null;
+  feature_1_description: string | null;
+  feature_2_icon: string | null;
+  feature_2_title: string | null;
+  feature_2_description: string | null;
+  feature_3_icon: string | null;
+  feature_3_title: string | null;
+  feature_3_description: string | null;
+  
+  // Testimonials section
+  show_testimonials_section: boolean | null;
+  testimonials_title: string | null;
+  testimonials_bg_color: string | null;
+  
+  // Footer customization
+  footer_bg_color: string | null;
+  footer_text_color: string | null;
+  footer_text: string | null;
+  show_footer_contact: boolean | null;
+  show_footer_social: boolean | null;
+  social_facebook: string | null;
+  social_instagram: string | null;
+  social_whatsapp: string | null;
+  whatsapp_number: string | null;
+  
+  // General store settings
+  page_bg_color: string | null;
+  font_family: 'Inter' | 'Poppins' | 'Roboto' | 'Open Sans' | 'Lato' | 'Montserrat' | null;
+  border_radius: 'none' | 'small' | 'rounded' | 'large' | 'full' | null;
+  favicon_url: string | null;
+  og_image_url: string | null;
+  meta_title: string | null;
+  meta_description: string | null;
 }
 
 export interface Profile {

@@ -4,9 +4,9 @@
 
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui';
-import { BusinessForm } from '@/components/forms';
-import { ArrowLeft, Gift } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui';
+import { BusinessForm, StoreCustomizationForm } from '@/components/forms';
+import { ArrowLeft, Gift, Store, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import type { Business } from '@/types';
 import { DeleteBusinessButton } from './delete-button';
@@ -136,6 +136,7 @@ export default async function AdminEditBusinessPage({ params }: PageProps) {
           target="_blank"
           className="flex items-center gap-2 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
         >
+          <ExternalLink className="w-4 h-4" />
           Ver Loja
         </Link>
       </div>
@@ -147,6 +148,22 @@ export default async function AdminEditBusinessPage({ params }: PageProps) {
         </CardHeader>
         <CardContent>
           <BusinessForm business={business} mode="edit" showCustomization />
+        </CardContent>
+      </Card>
+
+      {/* Store Customization */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Store className="w-5 h-5" />
+            Personalização da Loja
+          </CardTitle>
+          <CardDescription>
+            Configure a aparência completa da loja virtual desta empresa
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <StoreCustomizationForm business={business} />
         </CardContent>
       </Card>
     </div>

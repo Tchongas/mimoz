@@ -21,6 +21,7 @@ import {
   FileText,
   Wallet,
   Gift,
+  Store,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -43,6 +44,7 @@ const NAV_ITEMS: Record<Role, NavItem[]> = {
     { title: 'Visão Geral', href: '/business', icon: LayoutDashboard },
     { title: 'Validar Código', href: '/business/validate', icon: QrCode },
     { title: 'Vale-Presentes', href: '/business/cards', icon: Gift },
+    { title: 'Minha Loja', href: '/business/store', icon: Store },
     { title: 'Relatórios', href: '/business/reports', icon: BarChart3 },
     { title: 'Configurações', href: '/business/settings', icon: Settings },
   ],

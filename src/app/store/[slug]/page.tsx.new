@@ -5,6 +5,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { 
   Gift, 
   ShoppingBag, 
@@ -46,6 +47,7 @@ interface Business {
   // Header
   header_bg_color: string | null;
   header_text_color: string | null;
+  header_style: string | null;
   show_header_contact: boolean | null;
   logo_link_url: string | null;
   
@@ -66,6 +68,7 @@ interface Business {
   // Products
   products_title: string | null;
   products_bg_color: string | null;
+  products_layout: string | null;
   products_columns: number | null;
   show_product_description: boolean | null;
   card_style: string | null;
@@ -96,6 +99,7 @@ interface Business {
   
   // General
   page_bg_color: string | null;
+  font_family: string | null;
   border_radius: string | null;
   meta_title: string | null;
   meta_description: string | null;
@@ -149,7 +153,6 @@ const RADIUS_MAP: Record<string, string> = {
 async function getStoreData(slug: string) {
   const supabase = await createClient();
 
-  // Get business by slug with all customization fields
   const { data: business, error: bizError } = await supabase
     .from('businesses')
     .select('*')
@@ -160,7 +163,6 @@ async function getStoreData(slug: string) {
     return null;
   }
 
-  // Get active gift card templates
   const { data: templates } = await supabase
     .from('gift_card_templates')
     .select('id, name, description, amount_cents, image_url, card_color')
@@ -169,8 +171,24 @@ async function getStoreData(slug: string) {
     .order('amount_cents', { ascending: true });
 
   return {
-    business,
+    business: business as Business,
     templates: templates || [],
+  };
+}
+
+export async function generateMetadata({ params }: StorePageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const data = await getStoreData(slug);
+  
+  if (!data) {
+    return { title: 'Loja não encontrada' };
+  }
+
+  const { business } = data;
+  
+  return {
+    title: business.meta_title || `Vale-Presente ${business.name}`,
+    description: business.meta_description || business.description || `Compre vale-presentes digitais de ${business.name}`,
   };
 }
 
@@ -179,6 +197,7 @@ export default async function StorePage({ params }: StorePageProps) {
   const supabase = await createClient();
   
   const { data: { user } } = await supabase.auth.getUser();
+  
   const data = await getStoreData(slug);
 
   if (!data) {
@@ -196,7 +215,7 @@ export default async function StorePage({ params }: StorePageProps) {
   const heroTitle = business.hero_title || 'Presenteie quem você ama';
   const heroSubtitle = business.hero_subtitle || business.description || `Escolha o valor perfeito e envie um vale-presente digital instantaneamente. Válido em qualquer unidade ${business.name}.`;
   const heroBgType = business.hero_bg_type || 'color';
-  const heroBgColor = business.hero_bg_color || business.primary_color || DEFAULTS.heroBgColor;
+  const heroBgColor = business.hero_bg_color || DEFAULTS.heroBgColor;
   const heroBgGradientStart = business.hero_bg_gradient_start || DEFAULTS.heroBgColor;
   const heroBgGradientEnd = business.hero_bg_gradient_end || '#3b82f6';
   const heroTextColor = business.hero_text_color || DEFAULTS.heroTextColor;
@@ -206,6 +225,7 @@ export default async function StorePage({ params }: StorePageProps) {
   
   const productsTitle = business.products_title || 'Escolha seu Vale-Presente';
   const productsBgColor = business.products_bg_color || DEFAULTS.productsBgColor;
+  const productsLayout = business.products_layout || 'grid';
   const productsColumns = business.products_columns ?? 3;
   const showProductDescription = business.show_product_description ?? true;
   const cardStyle = business.card_style || 'elevated';
@@ -244,9 +264,12 @@ export default async function StorePage({ params }: StorePageProps) {
   // Card style classes
   const getCardClasses = () => {
     switch (cardStyle) {
-      case 'flat': return 'bg-white';
-      case 'bordered': return 'bg-white border-2 border-slate-200';
-      default: return 'bg-white shadow-lg hover:shadow-xl';
+      case 'flat':
+        return 'bg-white';
+      case 'bordered':
+        return 'bg-white border-2 border-slate-200';
+      default: // elevated
+        return 'bg-white shadow-lg hover:shadow-xl';
     }
   };
 
@@ -293,9 +316,16 @@ export default async function StorePage({ params }: StorePageProps) {
               {business.logo_link_url ? (
                 <a href={business.logo_link_url} target="_blank" rel="noopener noreferrer">
                   {business.logo_url ? (
-                    <img src={business.logo_url} alt={business.name} className={`h-10 w-auto object-contain ${radiusClass}`} />
+                    <img 
+                      src={business.logo_url} 
+                      alt={business.name} 
+                      className={`h-10 w-auto object-contain ${radiusClass}`}
+                    />
                   ) : (
-                    <div className={`w-10 h-10 flex items-center justify-center ${radiusClass}`} style={{ backgroundColor: giftCardColor }}>
+                    <div 
+                      className={`w-10 h-10 flex items-center justify-center ${radiusClass}`}
+                      style={{ backgroundColor: giftCardColor }}
+                    >
                       <Gift className="w-5 h-5 text-white" />
                     </div>
                   )}
@@ -303,19 +333,29 @@ export default async function StorePage({ params }: StorePageProps) {
               ) : (
                 <>
                   {business.logo_url ? (
-                    <img src={business.logo_url} alt={business.name} className={`h-10 w-auto object-contain ${radiusClass}`} />
+                    <img 
+                      src={business.logo_url} 
+                      alt={business.name} 
+                      className={`h-10 w-auto object-contain ${radiusClass}`}
+                    />
                   ) : (
-                    <div className={`w-10 h-10 flex items-center justify-center ${radiusClass}`} style={{ backgroundColor: giftCardColor }}>
+                    <div 
+                      className={`w-10 h-10 flex items-center justify-center ${radiusClass}`}
+                      style={{ backgroundColor: giftCardColor }}
+                    >
                       <Gift className="w-5 h-5 text-white" />
                     </div>
                   )}
                 </>
               )}
-              <h1 className="text-xl font-bold" style={{ color: headerTextColor }}>{business.name}</h1>
+              <h1 className="text-xl font-bold" style={{ color: headerTextColor }}>
+                {business.name}
+              </h1>
             </div>
 
             {/* Right side */}
             <div className="flex items-center gap-4">
+              {/* Contact Links */}
               {showHeaderContact && (
                 <div className="hidden sm:flex items-center gap-4 text-sm" style={{ color: headerTextColor }}>
                   {business.contact_email && (
@@ -327,6 +367,7 @@ export default async function StorePage({ params }: StorePageProps) {
                   {business.contact_phone && (
                     <a href={`tel:${business.contact_phone}`} className="flex items-center gap-1 opacity-70 hover:opacity-100">
                       <Phone className="w-4 h-4" />
+                      <span className="hidden md:inline">{business.contact_phone}</span>
                     </a>
                   )}
                   {business.website && (
@@ -337,13 +378,22 @@ export default async function StorePage({ params }: StorePageProps) {
                 </div>
               )}
               
+              {/* Account Link */}
               {user ? (
-                <Link href="/account" className={`flex items-center gap-2 px-3 py-2 text-sm font-medium hover:opacity-80 ${radiusClass}`} style={{ color: headerTextColor }}>
+                <Link
+                  href="/account"
+                  className={`flex items-center gap-2 px-3 py-2 text-sm font-medium hover:opacity-80 ${radiusClass}`}
+                  style={{ color: headerTextColor }}
+                >
                   <User className="w-4 h-4" />
                   <span className="hidden sm:inline">Minha Conta</span>
                 </Link>
               ) : (
-                <Link href={`/auth/login?redirect=/store/${slug}`} className={`flex items-center gap-2 px-3 py-2 text-sm font-medium text-white ${radiusClass}`} style={{ backgroundColor: secondaryColor }}>
+                <Link
+                  href={`/auth/login?redirect=/store/${slug}`}
+                  className={`flex items-center gap-2 px-3 py-2 text-sm font-medium text-white ${radiusClass}`}
+                  style={{ backgroundColor: secondaryColor }}
+                >
                   <User className="w-4 h-4" />
                   <span className="hidden sm:inline">Entrar</span>
                 </Link>
@@ -357,13 +407,32 @@ export default async function StorePage({ params }: StorePageProps) {
         {/* Hero Section */}
         {showHeroSection && (
           <section className="relative py-16 md:py-24" style={getHeroStyle()}>
+            {/* Overlay for image backgrounds */}
             {heroBgType === 'image' && business.hero_bg_image_url && (
-              <div className="absolute inset-0 bg-black" style={{ opacity: heroOverlayOpacity / 100 }} />
+              <div 
+                className="absolute inset-0 bg-black"
+                style={{ opacity: heroOverlayOpacity / 100 }}
+              />
             )}
+            
             <div className="relative max-w-6xl mx-auto px-4 text-center">
-              <h2 className="text-3xl md:text-5xl font-bold mb-4" style={{ color: heroTextColor }}>{heroTitle}</h2>
-              <p className="text-lg md:text-xl max-w-2xl mx-auto mb-8" style={{ color: heroTextColor, opacity: 0.9 }}>{heroSubtitle}</p>
-              <a href="#produtos" className={`inline-flex items-center gap-2 px-6 py-3 text-white font-semibold ${radiusClass} transition-transform hover:scale-105`} style={{ backgroundColor: heroCtaColor }}>
+              <h2 
+                className="text-3xl md:text-5xl font-bold mb-4"
+                style={{ color: heroTextColor }}
+              >
+                {heroTitle}
+              </h2>
+              <p 
+                className="text-lg md:text-xl max-w-2xl mx-auto mb-8"
+                style={{ color: heroTextColor, opacity: 0.9 }}
+              >
+                {heroSubtitle}
+              </p>
+              <a
+                href="#produtos"
+                className={`inline-flex items-center gap-2 px-6 py-3 text-white font-semibold ${radiusClass} transition-transform hover:scale-105`}
+                style={{ backgroundColor: heroCtaColor }}
+              >
                 {heroCtaText}
                 <ChevronRight className="w-5 h-5" />
               </a>
@@ -374,35 +443,63 @@ export default async function StorePage({ params }: StorePageProps) {
         {/* Products Section */}
         <section id="produtos" className="py-12 md:py-16" style={{ backgroundColor: productsBgColor }}>
           <div className="max-w-6xl mx-auto px-4">
-            <h3 className="text-2xl md:text-3xl font-bold text-slate-900 mb-8 text-center">{productsTitle}</h3>
+            <h3 className="text-2xl md:text-3xl font-bold text-slate-900 mb-8 text-center">
+              {productsTitle}
+            </h3>
 
             {templates.length === 0 ? (
               <div className="text-center py-16">
                 <Gift className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                <h4 className="text-xl font-medium text-slate-900 mb-2">Em breve!</h4>
-                <p className="text-slate-500">Estamos preparando nossos vale-presentes. Volte em breve!</p>
+                <h4 className="text-xl font-medium text-slate-900 mb-2">
+                  Em breve!
+                </h4>
+                <p className="text-slate-500">
+                  Estamos preparando nossos vale-presentes. Volte em breve!
+                </p>
               </div>
             ) : (
               <div className={`grid ${getGridCols()} gap-6`}>
                 {templates.map((template) => (
-                  <Link key={template.id} href={`/store/${slug}/buy/${template.id}`} className="group">
+                  <Link
+                    key={template.id}
+                    href={`/store/${slug}/buy/${template.id}`}
+                    className="group"
+                  >
                     <div className={`${getCardClasses()} ${radiusClass} overflow-hidden transition-all duration-200 hover:-translate-y-1`}>
-                      <div className="h-40 flex items-center justify-center relative" style={{ backgroundColor: template.card_color || giftCardColor }}>
+                      {/* Card Image/Gradient */}
+                      <div 
+                        className="h-40 flex items-center justify-center relative"
+                        style={{ backgroundColor: template.card_color || giftCardColor }}
+                      >
                         <div className="text-center">
-                          <p className="text-4xl font-bold text-white">{formatCurrency(template.amount_cents)}</p>
+                          <p className="text-4xl font-bold text-white">
+                            {formatCurrency(template.amount_cents)}
+                          </p>
                           <p className="text-white/60 text-sm mt-1">Vale-Presente</p>
                         </div>
+                        {/* Decorative elements */}
                         <div className="absolute top-4 right-4 w-20 h-20 bg-white/10 rounded-full" />
                         <div className="absolute bottom-4 left-4 w-12 h-12 bg-white/10 rounded-full" />
                       </div>
+
+                      {/* Card Content */}
                       <div className="p-6">
-                        <h4 className="text-lg font-semibold text-slate-900 mb-2">{template.name}</h4>
+                        <h4 className="text-lg font-semibold text-slate-900 mb-2">
+                          {template.name}
+                        </h4>
                         {showProductDescription && template.description && (
-                          <p className="text-slate-500 text-sm mb-4 line-clamp-2">{template.description}</p>
+                          <p className="text-slate-500 text-sm mb-4 line-clamp-2">
+                            {template.description}
+                          </p>
                         )}
                         <div className="flex items-center justify-between">
-                          <span className="text-2xl font-bold text-slate-900">{formatCurrency(template.amount_cents)}</span>
-                          <span className={`inline-flex items-center gap-2 px-4 py-2 text-white text-sm font-medium ${radiusClass}`} style={{ backgroundColor: secondaryColor }}>
+                          <span className="text-2xl font-bold text-slate-900">
+                            {formatCurrency(template.amount_cents)}
+                          </span>
+                          <span 
+                            className={`inline-flex items-center gap-2 px-4 py-2 text-white text-sm font-medium transition-opacity hover:opacity-90 ${radiusClass}`}
+                            style={{ backgroundColor: secondaryColor }}
+                          >
                             <ShoppingBag className="w-4 h-4" />
                             Comprar
                           </span>
@@ -420,17 +517,27 @@ export default async function StorePage({ params }: StorePageProps) {
         {showFeaturesSection && (
           <section className="py-12 md:py-16" style={{ backgroundColor: featuresBgColor }}>
             <div className="max-w-6xl mx-auto px-4">
-              <h3 className="text-2xl md:text-3xl font-bold text-slate-900 mb-10 text-center">{featuresTitle}</h3>
+              <h3 className="text-2xl md:text-3xl font-bold text-slate-900 mb-10 text-center">
+                {featuresTitle}
+              </h3>
+              
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {features.map((feature, index) => {
                   const IconComponent = ICON_MAP[feature.icon] || Gift;
                   return (
                     <div key={index} className="text-center">
-                      <div className={`w-16 h-16 mx-auto mb-4 flex items-center justify-center ${radiusClass}`} style={{ backgroundColor: secondaryColor }}>
+                      <div 
+                        className={`w-16 h-16 mx-auto mb-4 flex items-center justify-center ${radiusClass}`}
+                        style={{ backgroundColor: secondaryColor }}
+                      >
                         <IconComponent className="w-8 h-8 text-white" />
                       </div>
-                      <h4 className="text-lg font-semibold text-slate-900 mb-2">{feature.title}</h4>
-                      <p className="text-slate-600">{feature.description}</p>
+                      <h4 className="text-lg font-semibold text-slate-900 mb-2">
+                        {feature.title}
+                      </h4>
+                      <p className="text-slate-600">
+                        {feature.description}
+                      </p>
                     </div>
                   );
                 })}
@@ -448,15 +555,24 @@ export default async function StorePage({ params }: StorePageProps) {
             <div>
               <div className="flex items-center gap-3 mb-4">
                 {business.logo_url ? (
-                  <img src={business.logo_url} alt={business.name} className={`h-10 w-auto object-contain ${radiusClass}`} />
+                  <img 
+                    src={business.logo_url} 
+                    alt={business.name} 
+                    className={`h-10 w-auto object-contain ${radiusClass}`}
+                  />
                 ) : (
-                  <div className={`w-10 h-10 flex items-center justify-center ${radiusClass}`} style={{ backgroundColor: giftCardColor }}>
+                  <div 
+                    className={`w-10 h-10 flex items-center justify-center ${radiusClass}`}
+                    style={{ backgroundColor: giftCardColor }}
+                  >
                     <Gift className="w-5 h-5 text-white" />
                   </div>
                 )}
                 <span className="text-lg font-bold text-white">{business.name}</span>
               </div>
-              {business.footer_text && <p style={{ color: footerTextColor }}>{business.footer_text}</p>}
+              {business.footer_text && (
+                <p style={{ color: footerTextColor }}>{business.footer_text}</p>
+              )}
             </div>
 
             {/* Contact */}
@@ -466,17 +582,20 @@ export default async function StorePage({ params }: StorePageProps) {
                 <div className="space-y-2" style={{ color: footerTextColor }}>
                   {business.contact_email && (
                     <a href={`mailto:${business.contact_email}`} className="flex items-center gap-2 hover:text-white">
-                      <Mail className="w-4 h-4" />{business.contact_email}
+                      <Mail className="w-4 h-4" />
+                      {business.contact_email}
                     </a>
                   )}
                   {business.contact_phone && (
                     <a href={`tel:${business.contact_phone}`} className="flex items-center gap-2 hover:text-white">
-                      <Phone className="w-4 h-4" />{business.contact_phone}
+                      <Phone className="w-4 h-4" />
+                      {business.contact_phone}
                     </a>
                   )}
                   {business.website && (
                     <a href={business.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-white">
-                      <Globe className="w-4 h-4" />{business.website.replace(/^https?:\/\//, '')}
+                      <Globe className="w-4 h-4" />
+                      {business.website.replace(/^https?:\/\//, '')}
                     </a>
                   )}
                 </div>
@@ -489,17 +608,35 @@ export default async function StorePage({ params }: StorePageProps) {
                 <h4 className="text-white font-semibold mb-4">Redes Sociais</h4>
                 <div className="flex items-center gap-3">
                   {business.social_facebook && (
-                    <a href={business.social_facebook} target="_blank" rel="noopener noreferrer" className={`w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 ${radiusClass}`} style={{ color: footerTextColor }}>
+                    <a 
+                      href={business.social_facebook} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className={`w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 ${radiusClass}`}
+                      style={{ color: footerTextColor }}
+                    >
                       <Facebook className="w-5 h-5" />
                     </a>
                   )}
                   {business.social_instagram && (
-                    <a href={business.social_instagram} target="_blank" rel="noopener noreferrer" className={`w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 ${radiusClass}`} style={{ color: footerTextColor }}>
+                    <a 
+                      href={business.social_instagram} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className={`w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 ${radiusClass}`}
+                      style={{ color: footerTextColor }}
+                    >
                       <Instagram className="w-5 h-5" />
                     </a>
                   )}
                   {business.whatsapp_number && (
-                    <a href={`https://wa.me/${business.whatsapp_number}`} target="_blank" rel="noopener noreferrer" className={`w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 ${radiusClass}`} style={{ color: footerTextColor }}>
+                    <a 
+                      href={`https://wa.me/${business.whatsapp_number}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className={`w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 ${radiusClass}`}
+                      style={{ color: footerTextColor }}
+                    >
                       <MessageCircle className="w-5 h-5" />
                     </a>
                   )}
@@ -508,9 +645,14 @@ export default async function StorePage({ params }: StorePageProps) {
             )}
           </div>
 
+          {/* Bottom bar */}
           <div className="mt-8 pt-8 border-t border-white/10 text-center" style={{ color: footerTextColor }}>
-            <p className="text-sm">© {new Date().getFullYear()} {business.name}. Todos os direitos reservados.</p>
-            <p className="text-xs mt-2 opacity-60">Powered by <a href="https://mimoz.com.br" className="hover:text-white">Mimoz</a></p>
+            <p className="text-sm">
+              © {new Date().getFullYear()} {business.name}. Todos os direitos reservados.
+            </p>
+            <p className="text-xs mt-2 opacity-60">
+              Powered by <a href="https://mimoz.com.br" className="hover:text-white">Mimoz</a>
+            </p>
           </div>
         </div>
       </footer>
