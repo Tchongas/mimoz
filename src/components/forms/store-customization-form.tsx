@@ -218,6 +218,10 @@ export function StoreCustomizationForm({ business }: StoreCustomizationFormProps
   const [showHeaderContact, setShowHeaderContact] = useState(business.show_header_contact ?? true);
   const [logoLinkUrl, setLogoLinkUrl] = useState(business.logo_link_url || '');
   
+  // Header/Footer visibility
+  const [showHeader, setShowHeader] = useState(business.show_header ?? true);
+  const [showFooter, setShowFooter] = useState(business.show_footer ?? true);
+  
   // Hero settings
   const [heroTitle, setHeroTitle] = useState(business.hero_title || '');
   const [heroSubtitle, setHeroSubtitle] = useState(business.hero_subtitle || '');
@@ -228,31 +232,76 @@ export function StoreCustomizationForm({ business }: StoreCustomizationFormProps
   const [heroBgImageUrl, setHeroBgImageUrl] = useState(business.hero_bg_image_url || '');
   const [heroTextColor, setHeroTextColor] = useState(business.hero_text_color || '#ffffff');
   const [heroOverlayOpacity, setHeroOverlayOpacity] = useState(business.hero_overlay_opacity ?? 50);
-  const [heroCtaText, setHeroCtaText] = useState(business.hero_cta_text || 'Comprar Agora');
+  const [heroCtaText, setHeroCtaText] = useState(business.hero_cta_text || 'Ver Produtos');
+  const [heroCtaUrl, setHeroCtaUrl] = useState(business.hero_cta_url || '');
   const [heroCtaColor, setHeroCtaColor] = useState(business.hero_cta_color || '#2563eb');
   const [showHeroSection, setShowHeroSection] = useState(business.show_hero_section ?? true);
   
   // Products settings
-  const [productsTitle, setProductsTitle] = useState(business.products_title || 'Escolha seu Vale-Presente');
+  const [productsTitle, setProductsTitle] = useState(business.products_title || 'Nossos Produtos');
   const [productsBgColor, setProductsBgColor] = useState(business.products_bg_color || '#ffffff');
   const [productsLayout, setProductsLayout] = useState<string>(business.products_layout || 'grid');
   const [productsColumns, setProductsColumns] = useState(business.products_columns ?? 3);
   const [showProductDescription, setShowProductDescription] = useState(business.show_product_description ?? true);
   const [cardStyle, setCardStyle] = useState<string>(business.card_style || 'elevated');
   
-  // Features settings
-  const [showFeaturesSection, setShowFeaturesSection] = useState(business.show_features_section ?? true);
-  const [featuresTitle, setFeaturesTitle] = useState(business.features_title || 'Por que escolher nossos vale-presentes?');
-  const [featuresBgColor, setFeaturesBgColor] = useState(business.features_bg_color || '#f8fafc');
-  const [feature1Icon, setFeature1Icon] = useState(business.feature_1_icon || 'gift');
-  const [feature1Title, setFeature1Title] = useState(business.feature_1_title || 'Presente Perfeito');
-  const [feature1Description, setFeature1Description] = useState(business.feature_1_description || 'Ideal para qualquer ocasião especial');
-  const [feature2Icon, setFeature2Icon] = useState(business.feature_2_icon || 'clock');
-  const [feature2Title, setFeature2Title] = useState(business.feature_2_title || 'Entrega Instantânea');
-  const [feature2Description, setFeature2Description] = useState(business.feature_2_description || 'Receba por email imediatamente');
-  const [feature3Icon, setFeature3Icon] = useState(business.feature_3_icon || 'shield');
-  const [feature3Title, setFeature3Title] = useState(business.feature_3_title || '100% Seguro');
-  const [feature3Description, setFeature3Description] = useState(business.feature_3_description || 'Pagamento seguro via PIX');
+  // Section 1 (Intro/About - above products)
+  const [section1Enabled, setSection1Enabled] = useState(business.section1_enabled ?? false);
+  const [section1Title, setSection1Title] = useState(business.section1_title || '');
+  const [section1Subtitle, setSection1Subtitle] = useState(business.section1_subtitle || '');
+  const [section1Content, setSection1Content] = useState(business.section1_content || '');
+  const [section1BgColor, setSection1BgColor] = useState(business.section1_bg_color || '#ffffff');
+  const [section1TextColor, setSection1TextColor] = useState(business.section1_text_color || '#1e293b');
+  const [section1Layout, setSection1Layout] = useState<string>(business.section1_layout || 'centered');
+  const [section1ImageUrl, setSection1ImageUrl] = useState(business.section1_image_url || '');
+  const [section1CtaText, setSection1CtaText] = useState(business.section1_cta_text || '');
+  const [section1CtaUrl, setSection1CtaUrl] = useState(business.section1_cta_url || '');
+  const [section1CtaColor, setSection1CtaColor] = useState(business.section1_cta_color || '#2563eb');
+  
+  // Products section extra
+  const [productsSectionEnabled, setProductsSectionEnabled] = useState(business.products_section_enabled ?? true);
+  const [productsSubtitle, setProductsSubtitle] = useState(business.products_subtitle || '');
+  
+  // Section 2 (Benefits/Features - below products)
+  const [section2Enabled, setSection2Enabled] = useState(business.section2_enabled ?? true);
+  const [section2Type, setSection2Type] = useState<string>(business.section2_type || 'features');
+  const [section2Title, setSection2Title] = useState(business.section2_title || 'Por que nos escolher?');
+  const [section2Subtitle, setSection2Subtitle] = useState(business.section2_subtitle || '');
+  const [section2BgColor, setSection2BgColor] = useState(business.section2_bg_color || '#f8fafc');
+  const [section2TextColor, setSection2TextColor] = useState(business.section2_text_color || '#1e293b');
+  const [section2Item1Icon, setSection2Item1Icon] = useState(business.section2_item1_icon || 'star');
+  const [section2Item1Title, setSection2Item1Title] = useState(business.section2_item1_title || 'Qualidade');
+  const [section2Item1Description, setSection2Item1Description] = useState(business.section2_item1_description || 'Produtos e serviços de alta qualidade');
+  const [section2Item2Icon, setSection2Item2Icon] = useState(business.section2_item2_icon || 'clock');
+  const [section2Item2Title, setSection2Item2Title] = useState(business.section2_item2_title || 'Agilidade');
+  const [section2Item2Description, setSection2Item2Description] = useState(business.section2_item2_description || 'Atendimento rápido e eficiente');
+  const [section2Item3Icon, setSection2Item3Icon] = useState(business.section2_item3_icon || 'shield');
+  const [section2Item3Title, setSection2Item3Title] = useState(business.section2_item3_title || 'Segurança');
+  const [section2Item3Description, setSection2Item3Description] = useState(business.section2_item3_description || 'Sua satisfação é nossa prioridade');
+  const [section2Item4Icon, setSection2Item4Icon] = useState(business.section2_item4_icon || '');
+  const [section2Item4Title, setSection2Item4Title] = useState(business.section2_item4_title || '');
+  const [section2Item4Description, setSection2Item4Description] = useState(business.section2_item4_description || '');
+  
+  // Section 3 (Additional content)
+  const [section3Enabled, setSection3Enabled] = useState(business.section3_enabled ?? false);
+  const [section3Type, setSection3Type] = useState<string>(business.section3_type || 'text');
+  const [section3Title, setSection3Title] = useState(business.section3_title || '');
+  const [section3Subtitle, setSection3Subtitle] = useState(business.section3_subtitle || '');
+  const [section3Content, setSection3Content] = useState(business.section3_content || '');
+  const [section3BgColor, setSection3BgColor] = useState(business.section3_bg_color || '#ffffff');
+  const [section3TextColor, setSection3TextColor] = useState(business.section3_text_color || '#1e293b');
+  const [section3ImageUrl, setSection3ImageUrl] = useState(business.section3_image_url || '');
+  const [section3CtaText, setSection3CtaText] = useState(business.section3_cta_text || '');
+  const [section3CtaUrl, setSection3CtaUrl] = useState(business.section3_cta_url || '');
+  
+  // CTA Banner
+  const [ctaBannerEnabled, setCtaBannerEnabled] = useState(business.cta_banner_enabled ?? false);
+  const [ctaBannerTitle, setCtaBannerTitle] = useState(business.cta_banner_title || '');
+  const [ctaBannerSubtitle, setCtaBannerSubtitle] = useState(business.cta_banner_subtitle || '');
+  const [ctaBannerButtonText, setCtaBannerButtonText] = useState(business.cta_banner_button_text || 'Saiba Mais');
+  const [ctaBannerButtonUrl, setCtaBannerButtonUrl] = useState(business.cta_banner_button_url || '');
+  const [ctaBannerBgColor, setCtaBannerBgColor] = useState(business.cta_banner_bg_color || '#1e3a5f');
+  const [ctaBannerTextColor, setCtaBannerTextColor] = useState(business.cta_banner_text_color || '#ffffff');
   
   // Footer settings
   const [footerBgColor, setFooterBgColor] = useState(business.footer_bg_color || '#1e293b');
@@ -288,6 +337,10 @@ export function StoreCustomizationForm({ business }: StoreCustomizationFormProps
           // Business ID (for admin editing other businesses)
           business_id: business.id,
           
+          // Header/Footer visibility
+          show_header: showHeader,
+          show_footer: showFooter,
+          
           // Header
           header_bg_color: headerBgColor,
           header_text_color: headerTextColor,
@@ -306,30 +359,73 @@ export function StoreCustomizationForm({ business }: StoreCustomizationFormProps
           hero_text_color: heroTextColor,
           hero_overlay_opacity: heroOverlayOpacity,
           hero_cta_text: heroCtaText,
+          hero_cta_url: heroCtaUrl || null,
           hero_cta_color: heroCtaColor,
           show_hero_section: showHeroSection,
           
           // Products
           products_title: productsTitle,
+          products_subtitle: productsSubtitle || null,
           products_bg_color: productsBgColor,
           products_layout: productsLayout,
           products_columns: productsColumns,
           show_product_description: showProductDescription,
           card_style: cardStyle,
+          products_section_enabled: productsSectionEnabled,
           
-          // Features
-          show_features_section: showFeaturesSection,
-          features_title: featuresTitle,
-          features_bg_color: featuresBgColor,
-          feature_1_icon: feature1Icon,
-          feature_1_title: feature1Title,
-          feature_1_description: feature1Description,
-          feature_2_icon: feature2Icon,
-          feature_2_title: feature2Title,
-          feature_2_description: feature2Description,
-          feature_3_icon: feature3Icon,
-          feature_3_title: feature3Title,
-          feature_3_description: feature3Description,
+          // Section 1 (Intro/About)
+          section1_enabled: section1Enabled,
+          section1_title: section1Title || null,
+          section1_subtitle: section1Subtitle || null,
+          section1_content: section1Content || null,
+          section1_bg_color: section1BgColor,
+          section1_text_color: section1TextColor,
+          section1_layout: section1Layout,
+          section1_image_url: section1ImageUrl || null,
+          section1_cta_text: section1CtaText || null,
+          section1_cta_url: section1CtaUrl || null,
+          section1_cta_color: section1CtaColor,
+          
+          // Section 2 (Benefits/Features)
+          section2_enabled: section2Enabled,
+          section2_type: section2Type,
+          section2_title: section2Title || null,
+          section2_subtitle: section2Subtitle || null,
+          section2_bg_color: section2BgColor,
+          section2_text_color: section2TextColor,
+          section2_item1_icon: section2Item1Icon,
+          section2_item1_title: section2Item1Title,
+          section2_item1_description: section2Item1Description,
+          section2_item2_icon: section2Item2Icon,
+          section2_item2_title: section2Item2Title,
+          section2_item2_description: section2Item2Description,
+          section2_item3_icon: section2Item3Icon,
+          section2_item3_title: section2Item3Title,
+          section2_item3_description: section2Item3Description,
+          section2_item4_icon: section2Item4Icon || null,
+          section2_item4_title: section2Item4Title || null,
+          section2_item4_description: section2Item4Description || null,
+          
+          // Section 3 (Additional content)
+          section3_enabled: section3Enabled,
+          section3_type: section3Type,
+          section3_title: section3Title || null,
+          section3_subtitle: section3Subtitle || null,
+          section3_content: section3Content || null,
+          section3_bg_color: section3BgColor,
+          section3_text_color: section3TextColor,
+          section3_image_url: section3ImageUrl || null,
+          section3_cta_text: section3CtaText || null,
+          section3_cta_url: section3CtaUrl || null,
+          
+          // CTA Banner
+          cta_banner_enabled: ctaBannerEnabled,
+          cta_banner_title: ctaBannerTitle || null,
+          cta_banner_subtitle: ctaBannerSubtitle || null,
+          cta_banner_button_text: ctaBannerButtonText,
+          cta_banner_button_url: ctaBannerButtonUrl || null,
+          cta_banner_bg_color: ctaBannerBgColor,
+          cta_banner_text_color: ctaBannerTextColor,
           
           // Footer
           footer_bg_color: footerBgColor,
@@ -402,55 +498,76 @@ export function StoreCustomizationForm({ business }: StoreCustomizationFormProps
           hint="Afeta botões, cards e outros elementos"
           disabled={isLoading}
         />
+        <div className="pt-2 border-t border-slate-200 mt-4">
+          <p className="text-sm font-medium text-slate-700 mb-3">Visibilidade das Seções</p>
+          <div className="space-y-2">
+            <ToggleSwitch
+              label="Mostrar Cabeçalho"
+              checked={showHeader}
+              onChange={setShowHeader}
+              hint="Desative para ocultar o cabeçalho completamente"
+              disabled={isLoading}
+            />
+            <ToggleSwitch
+              label="Mostrar Rodapé"
+              checked={showFooter}
+              onChange={setShowFooter}
+              hint="Desative para ocultar o rodapé completamente"
+              disabled={isLoading}
+            />
+          </div>
+        </div>
       </CollapsibleSection>
 
       {/* Header Settings */}
-      <CollapsibleSection 
-        title="Cabeçalho" 
-        icon={<Layout className="w-5 h-5 text-blue-600" />}
-      >
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <ColorInput
-            label="Cor de Fundo"
-            value={headerBgColor}
-            onChange={setHeaderBgColor}
+      {showHeader && (
+        <CollapsibleSection 
+          title="Cabeçalho" 
+          icon={<Layout className="w-5 h-5 text-blue-600" />}
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <ColorInput
+              label="Cor de Fundo"
+              value={headerBgColor}
+              onChange={setHeaderBgColor}
+              disabled={isLoading}
+            />
+            <ColorInput
+              label="Cor do Texto"
+              value={headerTextColor}
+              onChange={setHeaderTextColor}
+              disabled={isLoading}
+            />
+          </div>
+          <SelectInput
+            label="Estilo do Cabeçalho"
+            value={headerStyle}
+            onChange={setHeaderStyle}
+            options={[
+              { value: 'solid', label: 'Sólido' },
+              { value: 'transparent', label: 'Transparente' },
+              { value: 'gradient', label: 'Gradiente' },
+            ]}
             disabled={isLoading}
           />
-          <ColorInput
-            label="Cor do Texto"
-            value={headerTextColor}
-            onChange={setHeaderTextColor}
+          <div className="space-y-1">
+            <Label>Link do Logo</Label>
+            <Input
+              value={logoLinkUrl}
+              onChange={(e) => setLogoLinkUrl(e.target.value)}
+              placeholder="https://seusite.com.br"
+              disabled={isLoading}
+            />
+            <p className="text-xs text-slate-500">URL para redirecionar ao clicar no logo</p>
+          </div>
+          <ToggleSwitch
+            label="Mostrar Contato no Cabeçalho"
+            checked={showHeaderContact}
+            onChange={setShowHeaderContact}
             disabled={isLoading}
           />
-        </div>
-        <SelectInput
-          label="Estilo do Cabeçalho"
-          value={headerStyle}
-          onChange={setHeaderStyle}
-          options={[
-            { value: 'solid', label: 'Sólido' },
-            { value: 'transparent', label: 'Transparente' },
-            { value: 'gradient', label: 'Gradiente' },
-          ]}
-          disabled={isLoading}
-        />
-        <div className="space-y-1">
-          <Label>Link do Logo</Label>
-          <Input
-            value={logoLinkUrl}
-            onChange={(e) => setLogoLinkUrl(e.target.value)}
-            placeholder="https://seusite.com.br"
-            disabled={isLoading}
-          />
-          <p className="text-xs text-slate-500">URL para redirecionar ao clicar no logo</p>
-        </div>
-        <ToggleSwitch
-          label="Mostrar Contato no Cabeçalho"
-          checked={showHeaderContact}
-          onChange={setShowHeaderContact}
-          disabled={isLoading}
-        />
-      </CollapsibleSection>
+        </CollapsibleSection>
+      )}
 
       {/* Hero Settings */}
       <CollapsibleSection 
@@ -559,22 +676,35 @@ export function StoreCustomizationForm({ business }: StoreCustomizationFormProps
               disabled={isLoading}
             />
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label>Texto do Botão CTA</Label>
-                <Input
-                  value={heroCtaText}
-                  onChange={(e) => setHeroCtaText(e.target.value)}
-                  placeholder="Comprar Agora"
+            <div className="p-4 bg-slate-50 rounded-lg space-y-3">
+              <p className="font-medium text-slate-700">Botão de Ação (CTA)</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label>Texto do Botão</Label>
+                  <Input
+                    value={heroCtaText}
+                    onChange={(e) => setHeroCtaText(e.target.value)}
+                    placeholder="Ver Produtos"
+                    disabled={isLoading}
+                  />
+                </div>
+                <ColorInput
+                  label="Cor do Botão"
+                  value={heroCtaColor}
+                  onChange={setHeroCtaColor}
                   disabled={isLoading}
                 />
               </div>
-              <ColorInput
-                label="Cor do Botão CTA"
-                value={heroCtaColor}
-                onChange={setHeroCtaColor}
-                disabled={isLoading}
-              />
+              <div className="space-y-1">
+                <Label>URL do Botão</Label>
+                <Input
+                  value={heroCtaUrl}
+                  onChange={(e) => setHeroCtaUrl(e.target.value)}
+                  placeholder="#produtos ou https://exemplo.com"
+                  disabled={isLoading}
+                />
+                <p className="text-xs text-slate-500">Use #produtos para rolar até os produtos, ou qualquer URL externa</p>
+              </div>
             </div>
           </>
         )}
@@ -644,106 +774,224 @@ export function StoreCustomizationForm({ business }: StoreCustomizationFormProps
         />
       </CollapsibleSection>
 
-      {/* Features Settings */}
+      {/* Section 1 - Intro/About */}
       <CollapsibleSection 
-        title="Seção de Benefícios" 
-        icon={<Star className="w-5 h-5 text-yellow-600" />}
+        title="Seção 1 - Introdução (acima dos produtos)" 
+        icon={<Layout className="w-5 h-5 text-teal-600" />}
       >
         <ToggleSwitch
-          label="Mostrar Seção de Benefícios"
-          checked={showFeaturesSection}
-          onChange={setShowFeaturesSection}
+          label="Ativar Seção de Introdução"
+          checked={section1Enabled}
+          onChange={setSection1Enabled}
+          hint="Aparece entre o Hero e os Produtos"
           disabled={isLoading}
         />
         
-        {showFeaturesSection && (
+        {section1Enabled && (
           <>
-            <div className="space-y-1">
-              <Label>Título da Seção</Label>
-              <Input
-                value={featuresTitle}
-                onChange={(e) => setFeaturesTitle(e.target.value)}
-                placeholder="Por que escolher nossos vale-presentes?"
-                disabled={isLoading}
-              />
-            </div>
-            <ColorInput
-              label="Cor de Fundo"
-              value={featuresBgColor}
-              onChange={setFeaturesBgColor}
+            <Input
+              value={section1Title}
+              onChange={(e) => setSection1Title(e.target.value)}
+              placeholder="Título da seção"
               disabled={isLoading}
             />
-            
-            {/* Feature 1 */}
-            <div className="p-4 bg-slate-50 rounded-lg space-y-3">
-              <p className="font-medium text-slate-700">Benefício 1</p>
-              <SelectInput
-                label="Ícone"
-                value={feature1Icon}
-                onChange={setFeature1Icon}
-                options={ICON_OPTIONS.map(i => ({ value: i.value, label: i.label }))}
+            <Input
+              value={section1Subtitle}
+              onChange={(e) => setSection1Subtitle(e.target.value)}
+              placeholder="Subtítulo (opcional)"
+              disabled={isLoading}
+            />
+            <div className="space-y-1">
+              <Label>Conteúdo</Label>
+              <textarea
+                value={section1Content}
+                onChange={(e) => setSection1Content(e.target.value)}
+                placeholder="Texto do conteúdo..."
                 disabled={isLoading}
-              />
-              <Input
-                value={feature1Title}
-                onChange={(e) => setFeature1Title(e.target.value)}
-                placeholder="Título"
-                disabled={isLoading}
-              />
-              <Input
-                value={feature1Description}
-                onChange={(e) => setFeature1Description(e.target.value)}
-                placeholder="Descrição"
-                disabled={isLoading}
+                rows={4}
+                className="w-full px-4 py-3 border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent disabled:bg-slate-50 disabled:cursor-not-allowed resize-none"
               />
             </div>
-            
-            {/* Feature 2 */}
+            <SelectInput
+              label="Layout"
+              value={section1Layout}
+              onChange={setSection1Layout}
+              options={[
+                { value: 'centered', label: 'Centralizado' },
+                { value: 'left', label: 'Alinhado à esquerda' },
+                { value: 'split', label: 'Dividido (texto + imagem)' },
+              ]}
+              disabled={isLoading}
+            />
+            <Input
+              value={section1ImageUrl}
+              onChange={(e) => setSection1ImageUrl(e.target.value)}
+              placeholder="URL da imagem (opcional)"
+              disabled={isLoading}
+            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <ColorInput label="Cor de Fundo" value={section1BgColor} onChange={setSection1BgColor} disabled={isLoading} />
+              <ColorInput label="Cor do Texto" value={section1TextColor} onChange={setSection1TextColor} disabled={isLoading} />
+            </div>
             <div className="p-4 bg-slate-50 rounded-lg space-y-3">
-              <p className="font-medium text-slate-700">Benefício 2</p>
-              <SelectInput
-                label="Ícone"
-                value={feature2Icon}
-                onChange={setFeature2Icon}
-                options={ICON_OPTIONS.map(i => ({ value: i.value, label: i.label }))}
-                disabled={isLoading}
-              />
-              <Input
-                value={feature2Title}
-                onChange={(e) => setFeature2Title(e.target.value)}
-                placeholder="Título"
-                disabled={isLoading}
-              />
-              <Input
-                value={feature2Description}
-                onChange={(e) => setFeature2Description(e.target.value)}
-                placeholder="Descrição"
-                disabled={isLoading}
-              />
+              <p className="font-medium text-slate-700">Botão de Ação (opcional)</p>
+              <Input value={section1CtaText} onChange={(e) => setSection1CtaText(e.target.value)} placeholder="Texto do botão" disabled={isLoading} />
+              <Input value={section1CtaUrl} onChange={(e) => setSection1CtaUrl(e.target.value)} placeholder="URL do botão" disabled={isLoading} />
+              <ColorInput label="Cor do Botão" value={section1CtaColor} onChange={setSection1CtaColor} disabled={isLoading} />
+            </div>
+          </>
+        )}
+      </CollapsibleSection>
+
+      {/* Section 2 - Benefits/Features */}
+      <CollapsibleSection 
+        title="Seção 2 - Benefícios (abaixo dos produtos)" 
+        icon={<Star className="w-5 h-5 text-yellow-600" />}
+      >
+        <ToggleSwitch
+          label="Ativar Seção de Benefícios"
+          checked={section2Enabled}
+          onChange={setSection2Enabled}
+          disabled={isLoading}
+        />
+        
+        {section2Enabled && (
+          <>
+            <SelectInput
+              label="Tipo de Seção"
+              value={section2Type}
+              onChange={setSection2Type}
+              options={[
+                { value: 'features', label: 'Ícones com texto' },
+                { value: 'text', label: 'Apenas texto' },
+              ]}
+              disabled={isLoading}
+            />
+            <Input
+              value={section2Title}
+              onChange={(e) => setSection2Title(e.target.value)}
+              placeholder="Título da seção"
+              disabled={isLoading}
+            />
+            <Input
+              value={section2Subtitle}
+              onChange={(e) => setSection2Subtitle(e.target.value)}
+              placeholder="Subtítulo (opcional)"
+              disabled={isLoading}
+            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <ColorInput label="Cor de Fundo" value={section2BgColor} onChange={setSection2BgColor} disabled={isLoading} />
+              <ColorInput label="Cor do Texto" value={section2TextColor} onChange={setSection2TextColor} disabled={isLoading} />
             </div>
             
-            {/* Feature 3 */}
+            {section2Type === 'features' && (
+              <>
+                {/* Item 1 */}
+                <div className="p-4 bg-slate-50 rounded-lg space-y-3">
+                  <p className="font-medium text-slate-700">Item 1</p>
+                  <SelectInput label="Ícone" value={section2Item1Icon} onChange={setSection2Item1Icon} options={ICON_OPTIONS.map(i => ({ value: i.value, label: i.label }))} disabled={isLoading} />
+                  <Input value={section2Item1Title} onChange={(e) => setSection2Item1Title(e.target.value)} placeholder="Título" disabled={isLoading} />
+                  <Input value={section2Item1Description} onChange={(e) => setSection2Item1Description(e.target.value)} placeholder="Descrição" disabled={isLoading} />
+                </div>
+                {/* Item 2 */}
+                <div className="p-4 bg-slate-50 rounded-lg space-y-3">
+                  <p className="font-medium text-slate-700">Item 2</p>
+                  <SelectInput label="Ícone" value={section2Item2Icon} onChange={setSection2Item2Icon} options={ICON_OPTIONS.map(i => ({ value: i.value, label: i.label }))} disabled={isLoading} />
+                  <Input value={section2Item2Title} onChange={(e) => setSection2Item2Title(e.target.value)} placeholder="Título" disabled={isLoading} />
+                  <Input value={section2Item2Description} onChange={(e) => setSection2Item2Description(e.target.value)} placeholder="Descrição" disabled={isLoading} />
+                </div>
+                {/* Item 3 */}
+                <div className="p-4 bg-slate-50 rounded-lg space-y-3">
+                  <p className="font-medium text-slate-700">Item 3</p>
+                  <SelectInput label="Ícone" value={section2Item3Icon} onChange={setSection2Item3Icon} options={ICON_OPTIONS.map(i => ({ value: i.value, label: i.label }))} disabled={isLoading} />
+                  <Input value={section2Item3Title} onChange={(e) => setSection2Item3Title(e.target.value)} placeholder="Título" disabled={isLoading} />
+                  <Input value={section2Item3Description} onChange={(e) => setSection2Item3Description(e.target.value)} placeholder="Descrição" disabled={isLoading} />
+                </div>
+                {/* Item 4 (optional) */}
+                <div className="p-4 bg-slate-50 rounded-lg space-y-3">
+                  <p className="font-medium text-slate-700">Item 4 (opcional)</p>
+                  <SelectInput label="Ícone" value={section2Item4Icon} onChange={setSection2Item4Icon} options={[{ value: '', label: 'Nenhum' }, ...ICON_OPTIONS.map(i => ({ value: i.value, label: i.label }))]} disabled={isLoading} />
+                  <Input value={section2Item4Title} onChange={(e) => setSection2Item4Title(e.target.value)} placeholder="Título" disabled={isLoading} />
+                  <Input value={section2Item4Description} onChange={(e) => setSection2Item4Description(e.target.value)} placeholder="Descrição" disabled={isLoading} />
+                </div>
+              </>
+            )}
+          </>
+        )}
+      </CollapsibleSection>
+
+      {/* Section 3 - Additional Content */}
+      <CollapsibleSection 
+        title="Seção 3 - Conteúdo Adicional" 
+        icon={<Type className="w-5 h-5 text-purple-600" />}
+      >
+        <ToggleSwitch
+          label="Ativar Seção Adicional"
+          checked={section3Enabled}
+          onChange={setSection3Enabled}
+          disabled={isLoading}
+        />
+        
+        {section3Enabled && (
+          <>
+            <SelectInput
+              label="Tipo de Seção"
+              value={section3Type}
+              onChange={setSection3Type}
+              options={[
+                { value: 'text', label: 'Texto' },
+                { value: 'cta', label: 'Call to Action' },
+              ]}
+              disabled={isLoading}
+            />
+            <Input value={section3Title} onChange={(e) => setSection3Title(e.target.value)} placeholder="Título" disabled={isLoading} />
+            <Input value={section3Subtitle} onChange={(e) => setSection3Subtitle(e.target.value)} placeholder="Subtítulo (opcional)" disabled={isLoading} />
+            {section3Type !== 'cta' && (
+              <textarea
+                value={section3Content}
+                onChange={(e) => setSection3Content(e.target.value)}
+                placeholder="Conteúdo..."
+                disabled={isLoading}
+                rows={4}
+                className="w-full px-4 py-3 border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent disabled:bg-slate-50 disabled:cursor-not-allowed resize-none"
+              />
+            )}
+            <Input value={section3ImageUrl} onChange={(e) => setSection3ImageUrl(e.target.value)} placeholder="URL da imagem (opcional)" disabled={isLoading} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <ColorInput label="Cor de Fundo" value={section3BgColor} onChange={setSection3BgColor} disabled={isLoading} />
+              <ColorInput label="Cor do Texto" value={section3TextColor} onChange={setSection3TextColor} disabled={isLoading} />
+            </div>
             <div className="p-4 bg-slate-50 rounded-lg space-y-3">
-              <p className="font-medium text-slate-700">Benefício 3</p>
-              <SelectInput
-                label="Ícone"
-                value={feature3Icon}
-                onChange={setFeature3Icon}
-                options={ICON_OPTIONS.map(i => ({ value: i.value, label: i.label }))}
-                disabled={isLoading}
-              />
-              <Input
-                value={feature3Title}
-                onChange={(e) => setFeature3Title(e.target.value)}
-                placeholder="Título"
-                disabled={isLoading}
-              />
-              <Input
-                value={feature3Description}
-                onChange={(e) => setFeature3Description(e.target.value)}
-                placeholder="Descrição"
-                disabled={isLoading}
-              />
+              <p className="font-medium text-slate-700">Botão de Ação</p>
+              <Input value={section3CtaText} onChange={(e) => setSection3CtaText(e.target.value)} placeholder="Texto do botão" disabled={isLoading} />
+              <Input value={section3CtaUrl} onChange={(e) => setSection3CtaUrl(e.target.value)} placeholder="URL do botão" disabled={isLoading} />
+            </div>
+          </>
+        )}
+      </CollapsibleSection>
+
+      {/* CTA Banner */}
+      <CollapsibleSection 
+        title="Banner de Chamada (CTA)" 
+        icon={<Zap className="w-5 h-5 text-orange-600" />}
+      >
+        <ToggleSwitch
+          label="Ativar Banner de Chamada"
+          checked={ctaBannerEnabled}
+          onChange={setCtaBannerEnabled}
+          hint="Um banner destacado para chamar atenção"
+          disabled={isLoading}
+        />
+        
+        {ctaBannerEnabled && (
+          <>
+            <Input value={ctaBannerTitle} onChange={(e) => setCtaBannerTitle(e.target.value)} placeholder="Título do banner" disabled={isLoading} />
+            <Input value={ctaBannerSubtitle} onChange={(e) => setCtaBannerSubtitle(e.target.value)} placeholder="Subtítulo (opcional)" disabled={isLoading} />
+            <Input value={ctaBannerButtonText} onChange={(e) => setCtaBannerButtonText(e.target.value)} placeholder="Texto do botão" disabled={isLoading} />
+            <Input value={ctaBannerButtonUrl} onChange={(e) => setCtaBannerButtonUrl(e.target.value)} placeholder="URL do botão" disabled={isLoading} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <ColorInput label="Cor de Fundo" value={ctaBannerBgColor} onChange={setCtaBannerBgColor} disabled={isLoading} />
+              <ColorInput label="Cor do Texto" value={ctaBannerTextColor} onChange={setCtaBannerTextColor} disabled={isLoading} />
             </div>
           </>
         )}

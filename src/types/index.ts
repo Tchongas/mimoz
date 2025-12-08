@@ -43,7 +43,12 @@ export interface Business {
   hero_overlay_opacity: number | null;
   hero_cta_text: string | null;
   hero_cta_color: string | null;
+  hero_cta_url: string | null;
   show_hero_section: boolean | null;
+  
+  // Header/Footer visibility
+  show_header: boolean | null;
+  show_footer: boolean | null;
   
   // Products section customization
   products_title: string | null;
@@ -53,9 +58,65 @@ export interface Business {
   show_product_description: boolean | null;
   card_style: 'elevated' | 'flat' | 'bordered' | null;
   
-  // Features section
-  show_features_section: boolean | null;
-  features_title: string | null;
+  // Products section extra
+  products_subtitle: string | null;
+  products_section_enabled: boolean | null;
+  
+  // Section 1 (Intro/About - above products)
+  section1_enabled: boolean | null;
+  section1_title: string | null;
+  section1_subtitle: string | null;
+  section1_content: string | null;
+  section1_bg_color: string | null;
+  section1_text_color: string | null;
+  section1_layout: 'centered' | 'left' | 'right' | 'split' | null;
+  section1_image_url: string | null;
+  section1_cta_text: string | null;
+  section1_cta_url: string | null;
+  section1_cta_color: string | null;
+  
+  // Section 2 (Benefits/Features - below products)
+  section2_enabled: boolean | null;
+  section2_type: 'features' | 'text' | 'cards' | 'stats' | null;
+  section2_title: string | null;
+  section2_subtitle: string | null;
+  section2_bg_color: string | null;
+  section2_text_color: string | null;
+  section2_item1_icon: string | null;
+  section2_item1_title: string | null;
+  section2_item1_description: string | null;
+  section2_item2_icon: string | null;
+  section2_item2_title: string | null;
+  section2_item2_description: string | null;
+  section2_item3_icon: string | null;
+  section2_item3_title: string | null;
+  section2_item3_description: string | null;
+  section2_item4_icon: string | null;
+  section2_item4_title: string | null;
+  section2_item4_description: string | null;
+  
+  // Section 3 (Additional content)
+  section3_enabled: boolean | null;
+  section3_type: 'features' | 'text' | 'cards' | 'gallery' | 'cta' | null;
+  section3_title: string | null;
+  section3_subtitle: string | null;
+  section3_content: string | null;
+  section3_bg_color: string | null;
+  section3_text_color: string | null;
+  section3_image_url: string | null;
+  section3_cta_text: string | null;
+  section3_cta_url: string | null;
+  
+  // CTA Banner
+  cta_banner_enabled: boolean | null;
+  cta_banner_title: string | null;
+  cta_banner_subtitle: string | null;
+  cta_banner_button_text: string | null;
+  cta_banner_button_url: string | null;
+  cta_banner_bg_color: string | null;
+  cta_banner_text_color: string | null;
+  
+  // Legacy features (kept for backwards compatibility)
   features_bg_color: string | null;
   feature_1_icon: string | null;
   feature_1_title: string | null;
