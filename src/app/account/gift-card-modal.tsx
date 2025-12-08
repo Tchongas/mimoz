@@ -156,30 +156,6 @@ export function GiftCardModal({ card, business, template, type, onClose }: GiftC
               </button>
             </div>
 
-            {/* Status and expiry */}
-            <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/10 text-sm">
-              <div className="flex items-center gap-2 text-white/60">
-                <Calendar className="w-4 h-4" />
-                <span>
-                  {isExpired 
-                    ? 'Expirado' 
-                    : `${daysRemaining} dias restantes`
-                  }
-                </span>
-              </div>
-              <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                card.status === 'ACTIVE' && !isExpired
-                  ? 'bg-green-500/20 text-green-200'
-                  : card.status === 'REDEEMED'
-                  ? 'bg-blue-500/20 text-blue-200'
-                  : 'bg-white/10 text-white/60'
-              }`}>
-                {card.status === 'ACTIVE' && !isExpired ? 'Ativo' : 
-                 card.status === 'REDEEMED' ? 'Resgatado' : 
-                 isExpired ? 'Expirado' : card.status}
-              </div>
-            </div>
-
             {/* Gift message if received */}
             {type === 'received' && card.purchaser_name && (
               <div className="mt-4 p-4 bg-white/10 rounded-xl">
@@ -201,7 +177,7 @@ export function GiftCardModal({ card, business, template, type, onClose }: GiftC
           className="mt-4 flex items-center justify-center gap-2 py-3 text-white/80 hover:text-white transition-colors text-sm"
         >
           <Store className="w-4 h-4" />
-          Visitar loja {business.name}
+          loja {business.name}
         </a>
       </div>
     </div>

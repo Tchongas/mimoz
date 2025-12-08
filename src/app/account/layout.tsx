@@ -27,11 +27,11 @@ export default async function AccountLayout({ children }: AccountLayoutProps) {
   const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Usuário';
   
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex flex-col">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+      <header className="bg-white/95 backdrop-blur border-b border-slate-200 sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-4 py-3 md:py-4">
+          <div className="flex items-center justify-between gap-3">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2">
               <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center">

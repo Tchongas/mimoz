@@ -29,10 +29,13 @@ It is meant to be **practical and copy‑pasteable**. When in doubt, follow the 
 
 ### 2.1 Root page container
 
-All public pages should use a full‑height background and center content in a constrained width:
+All public pages should use a full‑height **tinted** background and center content in a constrained width. Avoid pure white everywhere; use subtle gradients or soft neutrals:
 
-- **Page wrapper**
+- **Page wrapper (public flows like store, success, buy)**
   - `min-h-screen bg-gradient-to-b from-slate-50 to-white`
+- **Page wrapper (authenticated areas like /account, /admin)**
+  - `min-h-screen bg-slate-950/2.5 bg-[radial-gradient(circle_at_top,_rgba(148,163,184,0.18),_transparent_55%),_radial-gradient(circle_at_bottom,_rgba(148,163,184,0.12),_transparent_55%)]`
+  - This creates a very soft, desaturated vignette instead of a flat white.
 - **Content width**
   - Use `max-w-4xl` or `max-w-5xl` depending on the page type (forms vs dashboards).
   - Horizontal padding: `px-4` on mobile, rely on container width for larger screens.
@@ -60,11 +63,11 @@ export default function Page() {
 
 ### 2.2 Sticky header for public flows
 
-For flows like store pages and checkout, use a sticky, low‑contrast header:
+For flows like store pages and checkout, use a sticky header that is visually distinct from the page background but still light:
 
-- **Container**: `bg-white border-b border-slate-200 sticky top-0 z-10`
-- **Inner content**: `max-w-4xl mx-auto px-4 py-4`
-- **Layout**: `flex items-center gap-4`
+- **Container**: `bg-white/95 backdrop-blur border-b border-slate-200 sticky top-0 z-10`
+- **Inner content**: `max-w-4xl mx-auto px-4 py-3 md:py-4`
+- **Layout**: `flex items-center justify-between gap-3`
 
 The header usually includes:
 
@@ -139,13 +142,16 @@ Mimoz combines:
 
 ### 5.1 Neutrals
 
-Use `slate` as the default neutral:
+Use `slate` as the default neutral, but lean on **soft surfaces** instead of pure white blocks everywhere:
 
 - Primary text: `text-slate-900`
 - Secondary text: `text-slate-600`
 - Muted text: `text-slate-500`
 - Borders: `border-slate-200`
-- Subtle backgrounds: `bg-slate-50` or `bg-slate-100`
+- Subtle backgrounds:
+  - Page tint: `bg-slate-50` or a very light gradient
+  - Cards: `bg-white` on tinted backgrounds, or `bg-slate-50` on white backgrounds
+  - Sections: `bg-slate-50` / `bg-slate-100` for grouped content
 
 ### 5.2 Accent colors from business/template
 

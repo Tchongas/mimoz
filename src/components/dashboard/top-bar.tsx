@@ -40,7 +40,7 @@ export function TopBar({ user, businessName, onMenuClick }: TopBarProps) {
   };
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200 px-4 lg:px-6 flex items-center justify-between">
+    <header className="h-16 bg-white/95 backdrop-blur border-b border-slate-200 px-4 lg:px-6 flex items-center justify-between sticky top-0 z-10">
       {/* Left side - Menu button (mobile) + Business name */}
       <div className="flex items-center gap-4">
         <button
