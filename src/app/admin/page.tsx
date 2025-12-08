@@ -4,26 +4,34 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui';
-import { Building2, Users, QrCode, TrendingUp } from 'lucide-react';
+import { Building2, Users, Gift, DollarSign, TrendingUp } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 async function getStats() {
   const supabase = await createClient();
   
-  const [businessesResult, usersResult, validationsResult, todayValidationsResult] = await Promise.all([
+  const today = new Date().toISOString().split('T')[0];
+  
+  const [businessesResult, usersResult, giftCardsResult, todayGiftCardsResult] = await Promise.all([
     supabase.from('businesses').select('id', { count: 'exact', head: true }),
     supabase.from('profiles').select('id', { count: 'exact', head: true }),
-    supabase.from('code_validations').select('id', { count: 'exact', head: true }),
+    supabase.from('gift_cards').select('id, amount_cents'),
     supabase
-      .from('code_validations')
-      .select('id', { count: 'exact', head: true })
-      .gte('validated_at', new Date().toISOString().split('T')[0]),
+      .from('gift_cards')
+      .select('id, amount_cents')
+      .gte('purchased_at', today),
   ]);
 
+  const allCards = giftCardsResult.data || [];
+  const todayCards = todayGiftCardsResult.data || [];
+  
   return {
     totalBusinesses: businessesResult.count || 0,
     totalUsers: usersResult.count || 0,
-    totalValidations: validationsResult.count || 0,
-    todayValidations: todayValidationsResult.count || 0,
+    totalSales: allCards.length,
+    totalRevenue: allCards.reduce((sum, card) => sum + (card.amount_cents || 0), 0),
+    todaySales: todayCards.length,
+    todayRevenue: todayCards.reduce((sum, card) => sum + (card.amount_cents || 0), 0),
   };
 }
 
@@ -33,27 +41,27 @@ export default async function AdminDashboardPage() {
   const statCards = [
     {
       title: 'Total de Empresas',
-      value: stats.totalBusinesses,
+      value: stats.totalBusinesses.toString(),
       icon: Building2,
       color: 'bg-blue-500',
     },
     {
       title: 'Total de Usuários',
-      value: stats.totalUsers,
+      value: stats.totalUsers.toString(),
       icon: Users,
       color: 'bg-green-500',
     },
     {
-      title: 'Validações Totais',
-      value: stats.totalValidations,
-      icon: QrCode,
+      title: 'Vale-Presentes Vendidos',
+      value: stats.totalSales.toString(),
+      icon: Gift,
       color: 'bg-purple-500',
     },
     {
-      title: 'Validações Hoje',
-      value: stats.todayValidations,
-      icon: TrendingUp,
-      color: 'bg-amber-500',
+      title: 'Receita Total',
+      value: formatCurrency(stats.totalRevenue),
+      icon: DollarSign,
+      color: 'bg-emerald-500',
     },
   ];
 

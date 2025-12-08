@@ -4,14 +4,12 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui';
-import { formatDate } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 import { 
   BarChart3, 
-  TrendingUp, 
-  TrendingDown,
   Building2, 
-  Users, 
-  QrCode,
+  Gift, 
+  DollarSign,
   Calendar,
   ArrowUpRight,
   ArrowDownRight,
@@ -21,11 +19,14 @@ interface BusinessStats {
   id: string;
   name: string;
   slug: string;
-  totalValidations: number;
-  todayValidations: number;
-  weekValidations: number;
-  monthValidations: number;
-  userCount: number;
+  totalSales: number;
+  totalRevenue: number;
+  todaySales: number;
+  todayRevenue: number;
+  weekSales: number;
+  weekRevenue: number;
+  monthSales: number;
+  monthRevenue: number;
   trend: number; // percentage change from last week
 }
 
@@ -49,59 +50,63 @@ async function getReportsData() {
   // Get stats for each business
   const businessStats: BusinessStats[] = await Promise.all(
     businesses.map(async (business) => {
-      const [total, today, week, prevWeek, month, users] = await Promise.all([
-        // Total validations
+      const [total, todayCards, week, prevWeek, month] = await Promise.all([
+        // Total sales
         supabase
-          .from('code_validations')
-          .select('id', { count: 'exact', head: true })
+          .from('gift_cards')
+          .select('id, amount_cents')
           .eq('business_id', business.id),
         // Today
         supabase
-          .from('code_validations')
-          .select('id', { count: 'exact', head: true })
+          .from('gift_cards')
+          .select('id, amount_cents')
           .eq('business_id', business.id)
-          .gte('validated_at', todayStr),
+          .gte('purchased_at', todayStr),
         // This week
         supabase
-          .from('code_validations')
-          .select('id', { count: 'exact', head: true })
+          .from('gift_cards')
+          .select('id, amount_cents')
           .eq('business_id', business.id)
-          .gte('validated_at', weekAgo),
+          .gte('purchased_at', weekAgo),
         // Previous week (for trend)
         supabase
-          .from('code_validations')
-          .select('id', { count: 'exact', head: true })
+          .from('gift_cards')
+          .select('id, amount_cents')
           .eq('business_id', business.id)
-          .gte('validated_at', twoWeeksAgo)
-          .lt('validated_at', weekAgo),
+          .gte('purchased_at', twoWeeksAgo)
+          .lt('purchased_at', weekAgo),
         // This month
         supabase
-          .from('code_validations')
-          .select('id', { count: 'exact', head: true })
+          .from('gift_cards')
+          .select('id, amount_cents')
           .eq('business_id', business.id)
-          .gte('validated_at', monthAgo),
-        // User count
-        supabase
-          .from('profiles')
-          .select('id', { count: 'exact', head: true })
-          .eq('business_id', business.id),
+          .gte('purchased_at', monthAgo),
       ]);
 
-      const weekCount = week.count || 0;
-      const prevWeekCount = prevWeek.count || 0;
-      const trend = prevWeekCount > 0 
-        ? Math.round(((weekCount - prevWeekCount) / prevWeekCount) * 100)
-        : weekCount > 0 ? 100 : 0;
+      const totalCards = total.data || [];
+      const todayData = todayCards.data || [];
+      const weekData = week.data || [];
+      const prevWeekData = prevWeek.data || [];
+      const monthData = month.data || [];
+
+      const weekRevenue = weekData.reduce((sum, c) => sum + (c.amount_cents || 0), 0);
+      const prevWeekRevenue = prevWeekData.reduce((sum, c) => sum + (c.amount_cents || 0), 0);
+      const trend = prevWeekRevenue > 0 
+        ? Math.round(((weekRevenue - prevWeekRevenue) / prevWeekRevenue) * 100)
+        : weekRevenue > 0 ? 100 : 0;
 
       return {
         id: business.id,
         name: business.name,
         slug: business.slug,
-        totalValidations: total.count || 0,
-        todayValidations: today.count || 0,
-        weekValidations: weekCount,
-        monthValidations: month.count || 0,
-        userCount: users.count || 0,
+        totalSales: totalCards.length,
+        totalRevenue: totalCards.reduce((sum, c) => sum + (c.amount_cents || 0), 0),
+        todaySales: todayData.length,
+        todayRevenue: todayData.reduce((sum, c) => sum + (c.amount_cents || 0), 0),
+        weekSales: weekData.length,
+        weekRevenue,
+        monthSales: monthData.length,
+        monthRevenue: monthData.reduce((sum, c) => sum + (c.amount_cents || 0), 0),
         trend,
       };
     })
@@ -110,15 +115,18 @@ async function getReportsData() {
   // Calculate totals
   const totals = {
     businesses: businesses.length,
-    totalValidations: businessStats.reduce((sum, b) => sum + b.totalValidations, 0),
-    todayValidations: businessStats.reduce((sum, b) => sum + b.todayValidations, 0),
-    weekValidations: businessStats.reduce((sum, b) => sum + b.weekValidations, 0),
-    monthValidations: businessStats.reduce((sum, b) => sum + b.monthValidations, 0),
-    totalUsers: businessStats.reduce((sum, b) => sum + b.userCount, 0),
+    totalSales: businessStats.reduce((sum, b) => sum + b.totalSales, 0),
+    totalRevenue: businessStats.reduce((sum, b) => sum + b.totalRevenue, 0),
+    todaySales: businessStats.reduce((sum, b) => sum + b.todaySales, 0),
+    todayRevenue: businessStats.reduce((sum, b) => sum + b.todayRevenue, 0),
+    weekSales: businessStats.reduce((sum, b) => sum + b.weekSales, 0),
+    weekRevenue: businessStats.reduce((sum, b) => sum + b.weekRevenue, 0),
+    monthSales: businessStats.reduce((sum, b) => sum + b.monthSales, 0),
+    monthRevenue: businessStats.reduce((sum, b) => sum + b.monthRevenue, 0),
   };
 
-  // Sort by week validations (most active first)
-  businessStats.sort((a, b) => b.weekValidations - a.weekValidations);
+  // Sort by week revenue (most active first)
+  businessStats.sort((a, b) => b.weekRevenue - a.weekRevenue);
 
   return { businesses: businessStats, totals };
 }
@@ -154,11 +162,12 @@ export default async function AdminReportsPage() {
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-green-100">
-                  <QrCode className="w-5 h-5 text-green-600" />
+                  <Gift className="w-5 h-5 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500 uppercase">Hoje</p>
-                  <p className="text-2xl font-bold text-slate-900">{totals.todayValidations}</p>
+                  <p className="text-xs text-slate-500 uppercase">Vendas Hoje</p>
+                  <p className="text-2xl font-bold text-slate-900">{totals.todaySales}</p>
+                  <p className="text-xs text-emerald-600">{formatCurrency(totals.todayRevenue)}</p>
                 </div>
               </div>
             </CardContent>
@@ -171,7 +180,8 @@ export default async function AdminReportsPage() {
                 </div>
                 <div>
                   <p className="text-xs text-slate-500 uppercase">Esta Semana</p>
-                  <p className="text-2xl font-bold text-slate-900">{totals.weekValidations}</p>
+                  <p className="text-2xl font-bold text-slate-900">{totals.weekSales}</p>
+                  <p className="text-xs text-emerald-600">{formatCurrency(totals.weekRevenue)}</p>
                 </div>
               </div>
             </CardContent>
@@ -179,12 +189,13 @@ export default async function AdminReportsPage() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-amber-100">
-                  <Users className="w-5 h-5 text-amber-600" />
+                <div className="p-2 rounded-lg bg-emerald-100">
+                  <DollarSign className="w-5 h-5 text-emerald-600" />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500 uppercase">Usuários</p>
-                  <p className="text-2xl font-bold text-slate-900">{totals.totalUsers}</p>
+                  <p className="text-xs text-slate-500 uppercase">Receita Total</p>
+                  <p className="text-2xl font-bold text-emerald-600">{formatCurrency(totals.totalRevenue)}</p>
+                  <p className="text-xs text-slate-500">{totals.totalSales} vendas</p>
                 </div>
               </div>
             </CardContent>
@@ -229,9 +240,6 @@ export default async function AdminReportsPage() {
                     <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
                       Tendência
                     </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
-                      Usuários
-                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
@@ -249,24 +257,40 @@ export default async function AdminReportsPage() {
                         </div>
                       </td>
                       <td className="px-4 py-4 text-center">
-                        <span className={`text-lg font-semibold ${business.todayValidations > 0 ? 'text-green-600' : 'text-slate-400'}`}>
-                          {business.todayValidations}
-                        </span>
+                        <div>
+                          <span className={`text-lg font-semibold ${business.todaySales > 0 ? 'text-green-600' : 'text-slate-400'}`}>
+                            {business.todaySales}
+                          </span>
+                          {business.todayRevenue > 0 && (
+                            <p className="text-xs text-emerald-600">{formatCurrency(business.todayRevenue)}</p>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-4 text-center">
-                        <span className="text-lg font-semibold text-slate-900">
-                          {business.weekValidations}
-                        </span>
+                        <div>
+                          <span className="text-lg font-semibold text-slate-900">
+                            {business.weekSales}
+                          </span>
+                          {business.weekRevenue > 0 && (
+                            <p className="text-xs text-emerald-600">{formatCurrency(business.weekRevenue)}</p>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-4 text-center">
-                        <span className="text-lg font-semibold text-slate-700">
-                          {business.monthValidations}
-                        </span>
+                        <div>
+                          <span className="text-lg font-semibold text-slate-700">
+                            {business.monthSales}
+                          </span>
+                          {business.monthRevenue > 0 && (
+                            <p className="text-xs text-emerald-600">{formatCurrency(business.monthRevenue)}</p>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-4 text-center">
-                        <span className="text-slate-600">
-                          {business.totalValidations}
-                        </span>
+                        <div>
+                          <span className="text-slate-600">{business.totalSales}</span>
+                          <p className="text-xs text-emerald-600 font-medium">{formatCurrency(business.totalRevenue)}</p>
+                        </div>
                       </td>
                       <td className="px-4 py-4 text-center">
                         <div className="flex items-center justify-center gap-1">
@@ -289,12 +313,6 @@ export default async function AdminReportsPage() {
                           )}
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-center">
-                        <span className="inline-flex items-center gap-1 text-slate-600">
-                          <Users className="w-3 h-3" />
-                          {business.userCount}
-                        </span>
-                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -304,23 +322,24 @@ export default async function AdminReportsPage() {
                     <td className="px-6 py-4 font-bold text-slate-900">
                       Total ({businesses.length} empresas)
                     </td>
-                    <td className="px-4 py-4 text-center font-bold text-green-600">
-                      {totals?.todayValidations}
+                    <td className="px-4 py-4 text-center">
+                      <span className="font-bold text-green-600">{totals?.todaySales}</span>
+                      <p className="text-xs text-emerald-600">{formatCurrency(totals?.todayRevenue || 0)}</p>
                     </td>
-                    <td className="px-4 py-4 text-center font-bold text-slate-900">
-                      {totals?.weekValidations}
+                    <td className="px-4 py-4 text-center">
+                      <span className="font-bold text-slate-900">{totals?.weekSales}</span>
+                      <p className="text-xs text-emerald-600">{formatCurrency(totals?.weekRevenue || 0)}</p>
                     </td>
-                    <td className="px-4 py-4 text-center font-bold text-slate-700">
-                      {totals?.monthValidations}
+                    <td className="px-4 py-4 text-center">
+                      <span className="font-bold text-slate-700">{totals?.monthSales}</span>
+                      <p className="text-xs text-emerald-600">{formatCurrency(totals?.monthRevenue || 0)}</p>
                     </td>
-                    <td className="px-4 py-4 text-center font-bold text-slate-600">
-                      {totals?.totalValidations}
+                    <td className="px-4 py-4 text-center">
+                      <span className="font-bold text-slate-600">{totals?.totalSales}</span>
+                      <p className="text-xs text-emerald-600 font-medium">{formatCurrency(totals?.totalRevenue || 0)}</p>
                     </td>
                     <td className="px-4 py-4 text-center">
                       —
-                    </td>
-                    <td className="px-4 py-4 text-center font-bold text-slate-600">
-                      {totals?.totalUsers}
                     </td>
                   </tr>
                 </tfoot>

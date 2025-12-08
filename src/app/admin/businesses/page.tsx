@@ -4,29 +4,54 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui';
-import { formatDate } from '@/lib/utils';
-import { Building2, Plus, ExternalLink } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
+import { Building2, Plus, ExternalLink, Gift } from 'lucide-react';
 import Link from 'next/link';
-import type { Business } from '@/types';
 
-async function getBusinesses(): Promise<Business[]> {
+interface BusinessWithStats {
+  id: string;
+  name: string;
+  slug: string;
+  created_at: string;
+  totalSales: number;
+  totalRevenue: number;
+}
+
+async function getBusinessesWithStats(): Promise<BusinessWithStats[]> {
   const supabase = await createClient();
   
-  const { data, error } = await supabase
+  const { data: businesses, error } = await supabase
     .from('businesses')
-    .select('*')
+    .select('id, name, slug, created_at')
     .order('created_at', { ascending: false });
 
-  if (error) {
+  if (error || !businesses) {
     console.error('Error fetching businesses:', error);
     return [];
   }
 
-  return data || [];
+  // Get sales stats for each business
+  const businessesWithStats = await Promise.all(
+    businesses.map(async (business) => {
+      const { data: giftCards } = await supabase
+        .from('gift_cards')
+        .select('id, amount_cents')
+        .eq('business_id', business.id);
+      
+      const cards = giftCards || [];
+      return {
+        ...business,
+        totalSales: cards.length,
+        totalRevenue: cards.reduce((sum, c) => sum + (c.amount_cents || 0), 0),
+      };
+    })
+  );
+
+  return businessesWithStats;
 }
 
 export default async function AdminBusinessesPage() {
-  const businesses = await getBusinesses();
+  const businesses = await getBusinessesWithStats();
 
   return (
     <div className="space-y-6">
@@ -79,8 +104,11 @@ export default async function AdminBusinessesPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                       Slug
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                      Criado em
+                    <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Vendas
+                    </th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Receita
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
                       Ações
@@ -106,11 +134,26 @@ export default async function AdminBusinessesPage() {
                           {business.slug}
                         </code>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                        {formatDate(business.created_at)}
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <Gift className="w-4 h-4 text-slate-400" />
+                          <span className="font-medium text-slate-900">{business.totalSales}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <span className="font-medium text-emerald-600">
+                          {formatCurrency(business.totalRevenue)}
+                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end gap-2">
+                          <Link
+                            href={`/admin/businesses/${business.id}/cards`}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Vale-Presentes"
+                          >
+                            <Gift className="w-4 h-4" />
+                          </Link>
                           <Link
                             href={`/admin/businesses/${business.id}`}
                             className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"

@@ -3,7 +3,6 @@
 // ============================================
 // Shown when a user doesn't have a business assigned
 
-import Link from 'next/link';
 import { AlertTriangle } from 'lucide-react';
 
 export default function NoBusinessPage() {
@@ -25,12 +24,14 @@ export default function NoBusinessPage() {
           </p>
           
           <div className="space-y-3">
-            <Link
-              href="/auth/logout"
-              className="block w-full px-4 py-3 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 transition-colors"
-            >
-              Sair da Conta
-            </Link>
+            <form action="/auth/logout" method="POST">
+              <button
+                type="submit"
+                className="block w-full px-4 py-3 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 transition-colors"
+              >
+                Sair da Conta
+              </button>
+            </form>
             
             <a
               href="mailto:suporte@mimoz.com.br"

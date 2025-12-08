@@ -58,13 +58,15 @@ export default async function AccountLayout({ children }: AccountLayoutProps) {
                   {displayName}
                 </span>
               </div>
-              <Link
-                href="/auth/logout"
-                className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-                title="Sair"
-              >
-                <LogOut className="w-5 h-5" />
-              </Link>
+              <form action="/auth/logout" method="POST">
+                <button
+                  type="submit"
+                  className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                  title="Sair"
+                >
+                  <LogOut className="w-5 h-5" />
+                </button>
+              </form>
             </div>
           </div>
         </div>

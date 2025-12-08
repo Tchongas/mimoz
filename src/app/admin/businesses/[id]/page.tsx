@@ -6,7 +6,7 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui';
 import { BusinessForm } from '@/components/forms';
-import { ArrowLeft, Gift, CreditCard } from 'lucide-react';
+import { ArrowLeft, Gift } from 'lucide-react';
 import Link from 'next/link';
 import type { Business } from '@/types';
 import { DeleteBusinessButton } from './delete-button';
@@ -35,13 +35,9 @@ async function getBusiness(id: string): Promise<Business | null> {
 async function getBusinessStats(id: string) {
   const supabase = await createClient();
   
-  const [usersResult, validationsResult, templatesResult, giftCardsResult] = await Promise.all([
+  const [usersResult, templatesResult, giftCardsResult] = await Promise.all([
     supabase
       .from('profiles')
-      .select('id', { count: 'exact', head: true })
-      .eq('business_id', id),
-    supabase
-      .from('code_validations')
       .select('id', { count: 'exact', head: true })
       .eq('business_id', id),
     supabase
@@ -60,7 +56,6 @@ async function getBusinessStats(id: string) {
 
   return {
     totalUsers: usersResult.count || 0,
-    totalValidations: validationsResult.count || 0,
     totalTemplates: templatesResult.count || 0,
     totalGiftCards: giftCards.length,
     activeCards,
@@ -101,21 +96,21 @@ export default async function AdminEditBusinessPage({ params }: PageProps) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-slate-500">Usuários</p>
-            <p className="text-2xl font-bold text-slate-900">{stats.totalUsers}</p>
+            <p className="text-sm text-slate-500">Modelos</p>
+            <p className="text-2xl font-bold text-slate-900">{stats.totalTemplates}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-slate-500">Validações</p>
-            <p className="text-2xl font-bold text-slate-900">{stats.totalValidations}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-slate-500">Vale-Presentes</p>
+            <p className="text-sm text-slate-500">Vendas</p>
             <p className="text-2xl font-bold text-slate-900">{stats.totalGiftCards}</p>
             <p className="text-xs text-slate-500">{stats.activeCards} ativos</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-sm text-slate-500">Usuários</p>
+            <p className="text-2xl font-bold text-slate-900">{stats.totalUsers}</p>
           </CardContent>
         </Card>
         <Card>
