@@ -175,7 +175,8 @@ export async function POST(request: NextRequest) {
 
     if (usePaymentGateway) {
       // ========================================
-      // PRODUCTION FLOW: Create pending card, redirect to payment
+      // PRODUCTION FLOW: Create ACTIVE card, redirect to payment
+      // AbacatePay only redirects to completionUrl after payment is confirmed
       // ========================================
       
       const { data: giftCard, error: giftCardError } = await supabase
@@ -187,7 +188,8 @@ export async function POST(request: NextRequest) {
           amount_cents: template.amount_cents,
           original_amount_cents: template.amount_cents,
           balance_cents: template.amount_cents,
-          status: 'PENDING',
+          status: 'ACTIVE',  // Card is active - AbacatePay confirms payment before redirect
+          payment_status: 'COMPLETED',
           purchaser_user_id: user.id,
           purchaser_email: purchaserEmail,
           purchaser_name: purchaserName,
