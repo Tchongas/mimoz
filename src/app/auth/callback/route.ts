@@ -44,10 +44,11 @@ export async function GET(request: Request) {
           },
           setAll(cookiesToSet) {
             cookiesToSet.forEach(({ name, value, options }) => {
+              const cookieOptions = { ...options, path: '/' };
               // Store for later - we'll set them on the redirect response
-              cookiesToSetOnResponse.push({ name, value, options });
+              cookiesToSetOnResponse.push({ name, value, options: cookieOptions });
               // Also set on cookieStore for subsequent operations
-              cookieStore.set(name, value, options);
+              cookieStore.set(name, value, cookieOptions);
             });
           },
         },
@@ -58,7 +59,10 @@ export async function GET(request: Request) {
     const redirectWithCookies = (url: string) => {
       const response = NextResponse.redirect(url);
       cookiesToSetOnResponse.forEach(({ name, value, options }) => {
-        response.cookies.set(name, value, options);
+        response.cookies.set(name, value, {
+          ...options,
+          path: '/', // Ensure cookies work across entire site
+        });
       });
       return response;
     };
@@ -67,9 +71,11 @@ export async function GET(request: Request) {
     const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
     
     if (exchangeError) {
-      console.error('Code exchange error:', exchangeError);
+      console.error('[Auth Callback] Code exchange error:', exchangeError);
       return NextResponse.redirect(`${origin}/auth/login?error=auth_failed`);
     }
+
+    console.log('[Auth Callback] Code exchanged, cookies to set:', cookiesToSetOnResponse.length);
 
     // Get user
     const { data: { user } } = await supabase.auth.getUser();

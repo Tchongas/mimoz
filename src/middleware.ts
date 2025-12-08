@@ -22,7 +22,7 @@ const ROLE_ROUTES: Record<string, string[]> = {
   '/admin': ['ADMIN'],
   '/business': ['ADMIN', 'BUSINESS_OWNER'],
   '/cashier': ['ADMIN', 'BUSINESS_OWNER', 'CASHIER'],
-  '/account': ['CUSTOMER', 'ADMIN'], // Customer account pages
+  '/account': ['CUSTOMER', 'ADMIN', 'BUSINESS_OWNER', 'CASHIER'], // All authenticated users can access account
 };
 
 // Role to dashboard mapping
@@ -97,6 +97,7 @@ export async function middleware(request: NextRequest) {
 
   // Redirect unauthenticated users to login
   if (!user) {
+    console.log('[Middleware] No user found for path:', pathname);
     const loginUrl = new URL('/auth/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return redirectWithCookies(loginUrl);
