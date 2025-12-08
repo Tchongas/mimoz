@@ -19,6 +19,7 @@ import {
   QrCode,
   History,
   FileText,
+  Wallet,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -34,6 +35,7 @@ const NAV_ITEMS: Record<Role, NavItem[]> = {
     { title: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { title: 'Empresas', href: '/admin/businesses', icon: Building2 },
     { title: 'Usuários', href: '/admin/users', icon: Users },
+    { title: 'Pagamentos', href: '/admin/payments', icon: Wallet },
     { title: 'Relatórios', href: '/admin/reports', icon: FileText },
   ],
   BUSINESS_OWNER: [

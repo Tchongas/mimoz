@@ -34,6 +34,10 @@ async function sendEmail(payload: ResendEmailPayload): Promise<SendEmailResult> 
     return { success: false, error: 'Email not configured' };
   }
   
+  console.log('[Email] Sending email to:', payload.to);
+  console.log('[Email] From:', payload.from);
+  console.log('[Email] Subject:', payload.subject);
+  
   try {
     const response = await fetch(RESEND_API_URL, {
       method: 'POST',
@@ -47,10 +51,11 @@ async function sendEmail(payload: ResendEmailPayload): Promise<SendEmailResult> 
     const data = await response.json();
     
     if (!response.ok) {
-      console.error('[Email] Resend API error:', data);
+      console.error('[Email] Resend API error:', JSON.stringify(data, null, 2));
+      console.error('[Email] Response status:', response.status);
       return { 
         success: false, 
-        error: data.message || 'Failed to send email' 
+        error: data.message || data.error?.message || 'Failed to send email' 
       };
     }
     
@@ -69,12 +74,18 @@ async function sendEmail(payload: ResendEmailPayload): Promise<SendEmailResult> 
 // GET SENDER ADDRESS
 // ============================================
 function getSenderAddress(businessName: string): string {
-  // Use configured sender or default
-  const domain = process.env.RESEND_FROM_DOMAIN || 'mimoz.com.br';
-  const defaultFrom = process.env.RESEND_FROM_EMAIL || `noreply@${domain}`;
+  // Use configured sender or Resend's test domain for development
+  // IMPORTANT: For production, you MUST verify your domain in Resend dashboard
+  const fromEmail = process.env.RESEND_FROM_EMAIL;
   
-  // Format: "Business Name via Mimoz <noreply@domain>"
-  return `${businessName} via Mimoz <${defaultFrom}>`;
+  if (fromEmail) {
+    // Custom verified domain configured
+    return `${businessName} via Mimoz <${fromEmail}>`;
+  }
+  
+  // Use Resend's test domain (works without domain verification)
+  // This only delivers to the email address of the Resend account owner
+  return `Mimoz <onboarding@resend.dev>`;
 }
 
 // ============================================

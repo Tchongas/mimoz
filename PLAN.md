@@ -372,6 +372,15 @@ A whitelabel webpage generator for businesses to sell gift cards. This system in
   - `POST /api/codes/validate` - Validate code, return card details
   - `POST /api/codes/redeem` - Process redemption, update balance
 
+### Phase 8.5: Admin Payments ✅
+- [x] **Payments management page** `/admin/payments`
+  - View earnings per business
+  - Total revenue, platform fees, pending payouts
+  - Last sale date per business
+  - Quick link to business details
+- [x] **Sidebar navigation** - Added Payments tab for admins
+- [x] **Dashboard quick action** - Added Payments link
+
 ### Phase 9: Advanced Customization 🔜
 - [ ] **Logo upload** (Supabase Storage)
   - Image upload component

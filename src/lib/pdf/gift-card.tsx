@@ -10,18 +10,10 @@ import {
   View,
   Text,
   StyleSheet,
-  Font,
 } from '@react-pdf/renderer';
 
-// Register fonts (using system fonts for now)
-Font.register({
-  family: 'Inter',
-  fonts: [
-    { src: 'https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiJ-Ek-_EeA.woff2', fontWeight: 400 },
-    { src: 'https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGKYAZ9hiJ-Ek-_EeA.woff2', fontWeight: 600 },
-    { src: 'https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuFuYAZ9hiJ-Ek-_EeA.woff2', fontWeight: 700 },
-  ],
-});
+// Note: Using default Helvetica font (built into PDF)
+// For custom fonts, you'd need to bundle them locally
 
 export interface GiftCardPDFData {
   code: string;
@@ -41,7 +33,7 @@ export interface GiftCardPDFData {
 const styles = StyleSheet.create({
   page: {
     padding: 40,
-    fontFamily: 'Inter',
+    fontFamily: 'Helvetica',
     backgroundColor: '#f8fafc',
   },
   container: {
@@ -68,7 +60,7 @@ const styles = StyleSheet.create({
   },
   cardHeaderAmount: {
     fontSize: 48,
-    fontWeight: 700,
+    fontWeight: 'bold',
     color: 'white',
   },
   cardHeaderBusiness: {
@@ -85,7 +77,7 @@ const styles = StyleSheet.create({
   },
   codeText: {
     fontSize: 24,
-    fontWeight: 600,
+    fontWeight: 'bold',
     color: 'white',
     letterSpacing: 3,
     fontFamily: 'Courier',
@@ -109,7 +101,7 @@ const styles = StyleSheet.create({
   },
   infoValue: {
     fontSize: 12,
-    fontWeight: 600,
+    fontWeight: 'bold',
     color: '#0f172a',
   },
   messageBox: {
@@ -149,7 +141,7 @@ const styles = StyleSheet.create({
   },
   instructionsTitle: {
     fontSize: 14,
-    fontWeight: 600,
+    fontWeight: 'bold',
     color: '#0f172a',
     marginBottom: 12,
   },
@@ -168,7 +160,7 @@ const styles = StyleSheet.create({
   },
   instructionNumberText: {
     fontSize: 10,
-    fontWeight: 600,
+    fontWeight: 'bold',
     color: 'white',
   },
   instructionText: {

@@ -14,8 +14,12 @@ interface RouteParams {
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
+  console.log('[PDF] Request received');
+  
   try {
     const { id } = await params;
+    console.log('[PDF] Gift card ID:', id);
+    
     const supabase = await createClient();
     
     // Get gift card with related data
@@ -88,13 +92,17 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       cardColor,
       recipientName: giftCard.recipient_name,
       purchaserName: giftCard.purchaser_name,
-      message: giftCard.message,
+      message: giftCard.recipient_message,
     };
     
     // Generate PDF
+    console.log('[PDF] Generating PDF for:', pdfData.code);
+    
     const pdfBuffer = await renderToBuffer(
       <GiftCardPDF data={pdfData} />
     );
+    
+    console.log('[PDF] PDF generated, size:', pdfBuffer.length, 'bytes');
     
     // Return PDF as download
     const filename = `vale-presente-${giftCard.code}.pdf`;
@@ -111,8 +119,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     });
   } catch (error) {
     console.error('[PDF] Generation error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : '';
+    console.error('[PDF] Error details:', errorMessage);
+    console.error('[PDF] Stack:', errorStack);
+    
     return NextResponse.json(
-      { error: 'Erro ao gerar PDF' },
+      { error: 'Erro ao gerar PDF', details: errorMessage },
       { status: 500 }
     );
   }
