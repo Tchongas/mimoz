@@ -71,10 +71,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate status
-    if (giftCard.status !== 'ACTIVE') {
+    // Validate status - only ACTIVE and PARTIALLY_USED can be redeemed
+    const validStatuses = ['ACTIVE', 'PARTIALLY_USED'];
+    if (!validStatuses.includes(giftCard.status)) {
       return NextResponse.json(
-        { error: `Vale-presente não está ativo (status: ${giftCard.status})` },
+        { error: `Vale-presente não pode ser resgatado (status: ${giftCard.status})` },
         { status: 400 }
       );
     }
@@ -97,7 +98,8 @@ export async function POST(request: Request) {
 
     const balanceBefore = giftCard.balance_cents;
     const balanceAfter = balanceBefore - amountCents;
-    const newStatus = balanceAfter === 0 ? 'REDEEMED' : 'ACTIVE';
+    // Set status: REDEEMED if fully used, PARTIALLY_USED if partial
+    const newStatus = balanceAfter === 0 ? 'REDEEMED' : 'PARTIALLY_USED';
 
     // Create redemption record
     const { data: redemption, error: redemptionError } = await supabase

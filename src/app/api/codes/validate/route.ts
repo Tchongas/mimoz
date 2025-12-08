@@ -71,7 +71,20 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check status
+    // Check status - only ACTIVE and PARTIALLY_USED can be redeemed
+    const validStatuses = ['ACTIVE', 'PARTIALLY_USED'];
+    
+    if (giftCard.status === 'PENDING') {
+      return NextResponse.json({
+        valid: false,
+        error: 'Este vale-presente ainda não foi pago',
+        giftCard: {
+          code: giftCard.code,
+          status: giftCard.status,
+        },
+      });
+    }
+    
     if (giftCard.status === 'REDEEMED') {
       return NextResponse.json({
         valid: false,
@@ -101,6 +114,18 @@ export async function POST(request: Request) {
       return NextResponse.json({
         valid: false,
         error: 'Este vale-presente foi cancelado',
+        giftCard: {
+          code: giftCard.code,
+          status: giftCard.status,
+        },
+      });
+    }
+    
+    // Final check - must be in valid status
+    if (!validStatuses.includes(giftCard.status)) {
+      return NextResponse.json({
+        valid: false,
+        error: `Status inválido: ${giftCard.status}`,
         giftCard: {
           code: giftCard.code,
           status: giftCard.status,

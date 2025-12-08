@@ -168,8 +168,9 @@ export function CodeValidationForm({ businessId }: CodeValidationFormProps) {
   };
 
   const isExpired = giftCard && new Date(giftCard.expiresAt) < new Date();
+  const validStatuses = ['ACTIVE', 'PARTIALLY_USED'];
   const canRedeem = giftCard && 
-    giftCard.status === 'ACTIVE' && 
+    validStatuses.includes(giftCard.status) && 
     giftCard.balanceCents > 0 && 
     !isExpired;
 
@@ -230,10 +231,12 @@ export function CodeValidationForm({ businessId }: CodeValidationFormProps) {
               <code className="text-lg font-mono font-bold text-slate-900">{giftCard.code}</code>
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                 giftCard.status === 'ACTIVE' ? 'bg-green-100 text-green-700' :
+                giftCard.status === 'PARTIALLY_USED' ? 'bg-yellow-100 text-yellow-700' :
                 giftCard.status === 'REDEEMED' ? 'bg-slate-100 text-slate-700' :
                 'bg-red-100 text-red-700'
               }`}>
                 {giftCard.status === 'ACTIVE' ? 'Ativo' : 
+                 giftCard.status === 'PARTIALLY_USED' ? 'Parcialmente Usado' :
                  giftCard.status === 'REDEEMED' ? 'Usado' : 'Expirado'}
               </span>
             </div>

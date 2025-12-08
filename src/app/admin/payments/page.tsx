@@ -313,8 +313,6 @@ export default async function AdminPaymentsPage() {
               <ul className="mt-2 space-y-1 text-sm text-blue-800">
                 <li>• A taxa Mimoz de {PLATFORM_FEE_PERCENT}% é calculada sobre cada venda</li>
                 <li>• As taxas do gateway de pagamento (AbacatePay) já são descontadas automaticamente</li>
-                <li>• O valor "A Pagar" é o que deve ser transferido para cada empresa</li>
-                <li>• Recomendamos pagamentos semanais ou quinzenais via PIX</li>
               </ul>
             </div>
           </div>

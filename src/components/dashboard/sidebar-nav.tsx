@@ -20,6 +20,7 @@ import {
   History,
   FileText,
   Wallet,
+  Gift,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -40,8 +41,9 @@ const NAV_ITEMS: Record<Role, NavItem[]> = {
   ],
   BUSINESS_OWNER: [
     { title: 'Visão Geral', href: '/business', icon: LayoutDashboard },
-    { title: 'Vale-Presentes', href: '/business/cards', icon: QrCode },
-    { title: 'Relatórios', href: '/business/reports', icon: FileText },
+    { title: 'Validar Código', href: '/business/validate', icon: QrCode },
+    { title: 'Vale-Presentes', href: '/business/cards', icon: Gift },
+    { title: 'Relatórios', href: '/business/reports', icon: BarChart3 },
     { title: 'Configurações', href: '/business/settings', icon: Settings },
   ],
   CASHIER: [

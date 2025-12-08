@@ -381,6 +381,20 @@ A whitelabel webpage generator for businesses to sell gift cards. This system in
 - [x] **Sidebar navigation** - Added Payments tab for admins
 - [x] **Dashboard quick action** - Added Payments link
 
+### Phase 8.6: Unified Redemption Flow ✅
+- [x] **Business owner validation page** `/business/validate`
+  - Same functionality as cashier validation
+  - Validate gift card codes
+  - Redeem (deduct) amounts from gift cards
+  - View recent redemptions with operator info
+- [x] **Status handling improvements**
+  - Added `PARTIALLY_USED` status for partial redemptions
+  - Fixed validation API to handle all statuses correctly
+  - Fixed redemption API to accept `PARTIALLY_USED` cards
+- [x] **UI improvements**
+  - Status badges for `PARTIALLY_USED` cards
+  - Updated sidebar navigation with proper icons
+
 ### Phase 9: Advanced Customization 🔜
 - [ ] **Logo upload** (Supabase Storage)
   - Image upload component
