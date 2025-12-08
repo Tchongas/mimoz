@@ -326,20 +326,30 @@ A whitelabel webpage generator for businesses to sell gift cards. This system in
   - Usage examples
   - Troubleshooting guide
 
-### Phase 7: Gift Card Delivery 🔜
-- [ ] **Email delivery** (Resend)
-  - Purchase confirmation to buyer
-  - Gift card delivery to recipient
-  - Beautiful HTML email templates
-- [ ] **PDF generation** (@react-pdf/renderer)
-  - Printable gift card with QR code
-  - Business branding
-  - Download link in email
-- [ ] **Digital wallet** (future)
-  - Apple Wallet pass
-  - Google Pay pass
+### Phase 7: Gift Card Delivery 
+- [x] **Email service setup** (Resend - 3,000 emails/month free)
+  - `src/lib/email/resend.ts` - Resend client
+  - `src/lib/email/templates.ts` - HTML email templates
+  - `src/lib/email/types.ts` - TypeScript interfaces
+  - Environment: `RESEND_API_KEY`, `RESEND_FROM_DOMAIN`
+- [x] **Email templates**
+  - `giftCardPurchasedEmail` - Sent to buyer after payment
+  - `giftCardReceivedEmail` - Sent to recipient with card details
+  - `giftCardRedeemedEmail` - Sent when card is used
+  - Business branding (colors, name)
+  - Mobile-responsive HTML design
+  - Plain text fallbacks
+- [x] **PDF generation** (@react-pdf/renderer)
+  - `src/lib/pdf/gift-card.tsx` - PDF template
+  - Printable gift card with code
+  - Business branding and colors
+  - API endpoint: `GET /api/gift-cards/[id]/pdf`
+- [x] **Delivery triggers**
+  - After payment webhook → send emails automatically
+  - Download PDF from success page
+  - Download PDF from account page (gift card modal)
 
-### Phase 8: Redemption Flow ✅
+### Phase 8: Redemption Flow 
 - [x] **Cashier validation page** `/cashier`
   - Manual code entry with auto-uppercase
   - Real-time validation feedback
@@ -523,7 +533,7 @@ NEXT_PUBLIC_APP_URL=
 
 ### High Priority
 - [ ] **QR Code scanning** - Add camera-based QR scanning to cashier page
-- [ ] **Email notifications** - Set up Resend for purchase confirmations and gift card delivery
+- [x] **Email notifications** - Resend integration for purchase confirmations and gift card delivery
 - [ ] **Business analytics page** - Currently returns 404, needs implementation
 
 ### Medium Priority
@@ -534,7 +544,7 @@ NEXT_PUBLIC_APP_URL=
 
 ### Low Priority / Future
 - [ ] **Logo upload** - Supabase Storage integration for business logos
-- [ ] **PDF receipts** - Generate downloadable gift card PDFs
+- [x] **PDF receipts** - Generate downloadable gift card PDFs
 - [ ] **Multi-language** - i18n support (currently Portuguese only)
 - [ ] **Dark mode** - Theme toggle support
 

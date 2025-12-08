@@ -1,0 +1,119 @@
+// ============================================
+// MIMOZ - Gift Card PDF Download API
+// ============================================
+// GET /api/gift-cards/[id]/pdf - Generate and download gift card PDF
+
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { renderToBuffer } from '@react-pdf/renderer';
+import { GiftCardPDF } from '@/lib/pdf';
+import { formatCurrency, formatDate } from '@/lib/utils';
+
+interface RouteParams {
+  params: Promise<{ id: string }>;
+}
+
+export async function GET(request: NextRequest, { params }: RouteParams) {
+  try {
+    const { id } = await params;
+    const supabase = await createClient();
+    
+    // Get gift card with related data
+    const { data: giftCard, error } = await supabase
+      .from('gift_cards')
+      .select(`
+        *,
+        template:gift_card_templates(
+          name,
+          card_color
+        ),
+        business:businesses(
+          name,
+          slug,
+          gift_card_color
+        )
+      `)
+      .eq('id', id)
+      .single();
+    
+    if (error || !giftCard) {
+      return NextResponse.json(
+        { error: 'Vale-presente não encontrado' },
+        { status: 404 }
+      );
+    }
+    
+    // Verify access - either the owner or admin can download
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Não autorizado' },
+        { status: 401 }
+      );
+    }
+    
+    // Check if user is owner, purchaser, or admin
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role, business_id')
+      .eq('id', user.id)
+      .single();
+    
+    const isOwner = giftCard.recipient_email === user.email;
+    const isPurchaser = giftCard.purchaser_email === user.email;
+    const isAdmin = profile?.role === 'ADMIN';
+    const isBusinessOwner = profile?.role === 'BUSINESS_OWNER' && profile?.business_id === giftCard.business_id;
+    
+    if (!isOwner && !isPurchaser && !isAdmin && !isBusinessOwner) {
+      return NextResponse.json(
+        { error: 'Acesso negado' },
+        { status: 403 }
+      );
+    }
+    
+    // Prepare PDF data
+    const cardColor = giftCard.template?.card_color || 
+                      giftCard.business?.gift_card_color || 
+                      '#1e3a5f';
+    
+    const pdfData = {
+      code: giftCard.code,
+      amount: giftCard.amount_cents,
+      amountFormatted: formatCurrency(giftCard.amount_cents),
+      expiresAt: formatDate(giftCard.expires_at),
+      businessName: giftCard.business?.name || 'Mimoz',
+      businessSlug: giftCard.business?.slug || '',
+      templateName: giftCard.template?.name || 'Vale-Presente',
+      cardColor,
+      recipientName: giftCard.recipient_name,
+      purchaserName: giftCard.purchaser_name,
+      message: giftCard.message,
+    };
+    
+    // Generate PDF
+    const pdfBuffer = await renderToBuffer(
+      <GiftCardPDF data={pdfData} />
+    );
+    
+    // Return PDF as download
+    const filename = `vale-presente-${giftCard.code}.pdf`;
+    
+    // Convert Buffer to Uint8Array for NextResponse compatibility
+    const uint8Array = new Uint8Array(pdfBuffer);
+    
+    return new NextResponse(uint8Array, {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Cache-Control': 'private, max-age=3600',
+      },
+    });
+  } catch (error) {
+    console.error('[PDF] Generation error:', error);
+    return NextResponse.json(
+      { error: 'Erro ao gerar PDF' },
+      { status: 500 }
+    );
+  }
+}

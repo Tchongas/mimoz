@@ -5,7 +5,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { Gift, Home, User } from 'lucide-react';
+import { Gift, Home, User, Download } from 'lucide-react';
 import Footer from '@/components/ui/footer';
 import { CelebrationBanner } from './components/CelebrationBanner';
 import { GiftCardDisplay } from './components/GiftCardDisplay';
@@ -163,6 +163,14 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3">
+            <a
+              href={`/api/gift-cards/${giftCard.id}/pdf`}
+              download
+              className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors shadow-sm"
+            >
+              <Download className="w-4 h-4" />
+              Baixar PDF
+            </a>
             <Link
               href={`/store/${slug}`}
               className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors shadow-sm"

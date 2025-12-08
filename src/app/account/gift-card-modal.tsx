@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { X, Gift, Sparkles, Copy, Check, Calendar, Store } from 'lucide-react';
+import { X, Gift, Sparkles, Copy, Check, Calendar, Store, Download } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
 interface GiftCardModalProps {
@@ -171,14 +171,24 @@ export function GiftCardModal({ card, business, template, type, onClose }: GiftC
           </div>
         </div>
 
-        {/* Visit store link */}
-        <a
-          href={`/store/${business.slug}`}
-          className="mt-4 flex items-center justify-center gap-2 py-3 text-white/80 hover:text-white transition-colors text-sm"
-        >
-          <Store className="w-4 h-4" />
-          loja {business.name}
-        </a>
+        {/* Actions */}
+        <div className="mt-4 flex items-center justify-center gap-4">
+          <a
+            href={`/api/gift-cards/${card.id}/pdf`}
+            download
+            className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-white/80 hover:text-white transition-colors text-sm"
+          >
+            <Download className="w-4 h-4" />
+            Baixar PDF
+          </a>
+          <a
+            href={`/store/${business.slug}`}
+            className="flex items-center gap-2 px-4 py-2 text-white/80 hover:text-white transition-colors text-sm"
+          >
+            <Store className="w-4 h-4" />
+            Loja {business.name}
+          </a>
+        </div>
       </div>
     </div>
   );

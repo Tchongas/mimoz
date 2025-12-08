@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "@boxyhq/saml-jackson": "^1.23.0",
+    "@react-email/components": "^1.0.1",
+    "@react-pdf/renderer": "^4.3.1",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.86.0",
     "clsx": "^2.1.1",
@@ -19,6 +21,7 @@
     "next": "16.0.7",
     "react": "19.2.1",
     "react-dom": "19.2.1",
+    "resend": "^6.5.2",
     "tailwind-merge": "^2.5.4",
     "zod": "^3.23.8"
   },
