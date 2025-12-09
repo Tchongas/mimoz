@@ -60,16 +60,28 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Check if user is owner, purchaser, or admin
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, business_id')
+      .select('role, business_id, email')
       .eq('id', user.id)
       .single();
     
-    const isOwner = giftCard.recipient_email === user.email;
-    const isPurchaser = giftCard.purchaser_email === user.email;
+    const userEmail = profile?.email || user.email;
+    const isRecipient = giftCard.recipient_email === userEmail;
+    const isPurchaser = giftCard.purchaser_email === userEmail;
     const isAdmin = profile?.role === 'ADMIN';
     const isBusinessOwner = profile?.role === 'BUSINESS_OWNER' && profile?.business_id === giftCard.business_id;
     
-    if (!isOwner && !isPurchaser && !isAdmin && !isBusinessOwner) {
+    // Security: If purchaser bought for someone else, they should NOT have access to the PDF
+    // Only the recipient, admin, or business owner can download
+    const isPurchaserButGiftForOther = isPurchaser && giftCard.recipient_email && giftCard.recipient_email !== userEmail;
+    
+    if (isPurchaserButGiftForOther) {
+      return NextResponse.json(
+        { error: 'O código do vale-presente está disponível apenas para o destinatário' },
+        { status: 403 }
+      );
+    }
+    
+    if (!isRecipient && !isPurchaser && !isAdmin && !isBusinessOwner) {
       return NextResponse.json(
         { error: 'Acesso negado' },
         { status: 403 }

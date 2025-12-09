@@ -14,14 +14,16 @@ import { GiftCardPreview } from '@/components/ui';
 interface GiftCardModalProps {
   card: {
     id: string;
-    code: string;
+    code: string | null; // Can be null for security (gifts sent to others)
     amount_cents: number;
     balance_cents: number;
     status: string;
     expires_at: string;
     recipient_name: string;
+    recipient_email?: string;
     recipient_message?: string;
     purchaser_name?: string;
+    is_gift_for_other?: boolean; // Security flag
     // Custom card fields
     is_custom?: boolean;
     custom_title?: string | null;
@@ -60,6 +62,7 @@ export function GiftCardModal({ card, business, template, type, onClose }: GiftC
   const hasBalance = card.balance_cents > 0;
 
   const handleCopy = async () => {
+    if (!card.code) return;
     try {
       await navigator.clipboard.writeText(card.code);
       setCopied(true);
@@ -68,6 +71,9 @@ export function GiftCardModal({ card, business, template, type, onClose }: GiftC
       console.error('Failed to copy:', err);
     }
   };
+  
+  // Check if this is a gift the purchaser sent to someone else (code should be hidden)
+  const isGiftSentToOther = card.is_gift_for_other || !card.code;
 
   // Get background style for custom gradient cards
   const getBgStyle = () => {
@@ -175,33 +181,49 @@ export function GiftCardModal({ card, business, template, type, onClose }: GiftC
               )}
             </div>
 
-            {/* Code Section - The main focus for cashier */}
-            <div className="bg-white/15 backdrop-blur rounded-2xl p-5 mt-4">
-              <p className="opacity-50 text-xs uppercase tracking-wider text-center mb-3">
-                Apresente este código no caixa
-              </p>
-              <div className="flex items-center justify-center gap-4">
-                <p className="text-3xl sm:text-4xl font-mono font-bold tracking-[0.2em] text-center">
-                  {card.code}
-                </p>
+            {/* Code Section - Show code only if user is allowed to see it */}
+            {isGiftSentToOther ? (
+              // Gift sent to someone else - don't show code for security
+              <div className="bg-white/15 backdrop-blur rounded-2xl p-5 mt-4">
+                <div className="text-center">
+                  <p className="text-lg font-medium mb-2">🎁 Presente Enviado</p>
+                  <p className="opacity-70 text-sm mb-3">
+                    Este vale-presente foi enviado para <strong>{card.recipient_name}</strong>
+                  </p>
+                  <p className="opacity-50 text-xs">
+                    O código está disponível apenas para o destinatário
+                  </p>
+                </div>
               </div>
-              <button
-                onClick={handleCopy}
-                className="mt-4 w-full flex items-center justify-center gap-2 py-2 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-sm font-medium"
-              >
-                {copied ? (
-                  <>
-                    <Check className="w-4 h-4" />
-                    Copiado!
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4" />
-                    Copiar código
-                  </>
-                )}
-              </button>
-            </div>
+            ) : (
+              // Show code for self-purchases or received gifts
+              <div className="bg-white/15 backdrop-blur rounded-2xl p-5 mt-4">
+                <p className="opacity-50 text-xs uppercase tracking-wider text-center mb-3">
+                  Apresente este código no caixa
+                </p>
+                <div className="flex items-center justify-center gap-4">
+                  <p className="text-3xl sm:text-4xl font-mono font-bold tracking-[0.2em] text-center">
+                    {card.code}
+                  </p>
+                </div>
+                <button
+                  onClick={handleCopy}
+                  className="mt-4 w-full flex items-center justify-center gap-2 py-2 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-sm font-medium"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      Copiado!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" />
+                      Copiar código
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
 
             {/* Gift message if received */}
             {type === 'received' && card.purchaser_name && (
@@ -220,14 +242,17 @@ export function GiftCardModal({ card, business, template, type, onClose }: GiftC
 
         {/* Actions */}
         <div className="mt-4 flex items-center justify-center gap-4">
-          <a
-            href={`/api/gift-cards/${card.id}/pdf`}
-            download
-            className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-white/80 hover:text-white transition-colors text-sm"
-          >
-            <Download className="w-4 h-4" />
-            Baixar PDF
-          </a>
+          {/* Only show PDF download if user can see the code */}
+          {!isGiftSentToOther && (
+            <a
+              href={`/api/gift-cards/${card.id}/pdf`}
+              download
+              className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-white/80 hover:text-white transition-colors text-sm"
+            >
+              <Download className="w-4 h-4" />
+              Baixar PDF
+            </a>
+          )}
           <a
             href={`/store/${business.slug}`}
             className="flex items-center gap-2 px-4 py-2 text-white/80 hover:text-white transition-colors text-sm"
@@ -293,7 +318,7 @@ export function GiftCardWithModal({ card, userEmail, type }: GiftCardWithModalPr
   return (
     <>
       <div 
-        className="group relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl"
+        className="group relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-slate-200/50 hover:shadow-2xl"
         onClick={() => setIsOpen(true)}
       >
         {/* Glow effect */}

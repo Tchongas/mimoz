@@ -30,6 +30,7 @@ export default async function MyGiftCardsPage() {
   const userEmail = profile?.email || user.email;
   
   // Get gift cards purchased by user
+  // Note: We fetch all cards but will mask the code for gifts sent to others (security)
   const { data: purchasedCards, error: purchasedError } = await supabase
     .from('gift_cards')
     .select(`
@@ -67,6 +68,17 @@ export default async function MyGiftCardsPage() {
     `)
     .eq('purchaser_user_id', user.id)
     .order('purchased_at', { ascending: false });
+  
+  // Security: Mask codes for gift cards sent to others
+  // The purchaser should NOT see the code if they bought it for someone else
+  const securePurchasedCards = (purchasedCards || []).map(card => {
+    const isGiftForOther = card.recipient_email && card.recipient_email !== userEmail;
+    return {
+      ...card,
+      code: isGiftForOther ? null : card.code, // Hide code if it's a gift for someone else
+      is_gift_for_other: isGiftForOther,
+    };
+  });
   
   if (purchasedError) {
     console.error('[Account] Error fetching purchased cards:', purchasedError);
@@ -117,7 +129,7 @@ export default async function MyGiftCardsPage() {
     console.error('[Account] Error fetching received cards:', receivedError);
   }
   
-  const purchases = purchasedCards || [];
+  const purchases = securePurchasedCards;
   const received = receivedCards || [];
   
   const hasNoCards = purchases.length === 0 && received.length === 0;
