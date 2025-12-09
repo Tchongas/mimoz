@@ -333,6 +333,7 @@ export function StoreCustomizationForm({ business }: StoreCustomizationFormProps
   const [customCardsAllowCustomAmount, setCustomCardsAllowCustomAmount] = useState(business.custom_cards_allow_custom_amount ?? true);
   const [customCardsSectionTitle, setCustomCardsSectionTitle] = useState(business.custom_cards_section_title || 'Crie seu Vale-Presente Personalizado');
   const [customCardsSectionSubtitle, setCustomCardsSectionSubtitle] = useState(business.custom_cards_section_subtitle || 'Personalize com sua mensagem especial');
+  const [hideTemplateCards, setHideTemplateCards] = useState(business.hide_template_cards ?? false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -469,6 +470,7 @@ export function StoreCustomizationForm({ business }: StoreCustomizationFormProps
           custom_cards_allow_custom_amount: customCardsAllowCustomAmount,
           custom_cards_section_title: customCardsSectionTitle || null,
           custom_cards_section_subtitle: customCardsSectionSubtitle || null,
+          hide_template_cards: hideTemplateCards,
         }),
       });
 
@@ -1195,6 +1197,26 @@ export function StoreCustomizationForm({ business }: StoreCustomizationFormProps
                 placeholder="Personalize com sua mensagem especial"
                 disabled={isLoading}
               />
+            </div>
+            
+            <div className="flex items-center justify-between p-3 bg-amber-50 rounded-lg border border-amber-200">
+              <div>
+                <p className="font-medium text-amber-900">Ocultar Vale-Presentes Pré-definidos</p>
+                <p className="text-sm text-amber-700">Mostrar apenas a opção de vale-presente personalizado na loja</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setHideTemplateCards(!hideTemplateCards)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  hideTemplateCards ? 'bg-amber-600' : 'bg-slate-300'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    hideTemplateCards ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
             </div>
           </>
         )}

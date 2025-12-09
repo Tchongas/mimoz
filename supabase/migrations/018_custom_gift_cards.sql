@@ -20,7 +20,8 @@ ADD COLUMN IF NOT EXISTS custom_cards_max_amount_cents INTEGER DEFAULT 100000, -
 ADD COLUMN IF NOT EXISTS custom_cards_preset_amounts INTEGER[] DEFAULT '{2500, 5000, 10000, 15000, 20000, 50000}',
 ADD COLUMN IF NOT EXISTS custom_cards_allow_custom_amount BOOLEAN DEFAULT true,
 ADD COLUMN IF NOT EXISTS custom_cards_section_title TEXT DEFAULT 'Crie seu Vale-Presente Personalizado',
-ADD COLUMN IF NOT EXISTS custom_cards_section_subtitle TEXT DEFAULT 'Personalize com sua mensagem especial';
+ADD COLUMN IF NOT EXISTS custom_cards_section_subtitle TEXT DEFAULT 'Personalize com sua mensagem especial',
+ADD COLUMN IF NOT EXISTS hide_template_cards BOOLEAN DEFAULT false;
 
 -- ============================================
 -- GIFT CARD CUSTOMIZATION FIELDS

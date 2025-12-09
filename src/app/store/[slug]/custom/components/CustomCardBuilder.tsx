@@ -182,24 +182,62 @@ export function CustomCardBuilder({
   // All backgrounds combined
   const allBackgrounds = [...backgrounds.business, ...backgrounds.default];
 
+  // Animation state for card
+  const [isCardAnimating, setIsCardAnimating] = useState(false);
+
+  // Trigger animation when background changes
+  const handleBgChange = (bg: CardBackground) => {
+    setIsCardAnimating(true);
+    setTimeout(() => {
+      setSelectedBg(bg);
+      setIsCardAnimating(false);
+    }, 150);
+  };
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      {/* Left: Card Preview */}
-      <div className="order-2 lg:order-1">
-        <div className="sticky top-24">
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">Prévia do Vale-Presente</h3>
-          
-          {/* Card Preview */}
-          <div 
-            className="aspect-[1.6/1] rounded-2xl overflow-hidden shadow-2xl relative"
-            style={getBgStyle(selectedBg)}
-          >
-            {/* Decorative elements */}
-            <div className="absolute top-4 right-4 w-24 h-24 bg-white/10 rounded-full blur-xl" />
-            <div className="absolute bottom-4 left-4 w-16 h-16 bg-white/10 rounded-full blur-lg" />
+    <div className="relative">
+      {/* Dynamic background glow effect */}
+      <div 
+        className="fixed inset-0 transition-all duration-1000 opacity-20 pointer-events-none"
+        style={getBgStyle(selectedBg)}
+      />
+      <div className="fixed inset-0 bg-gradient-to-b from-white via-white/80 to-white pointer-events-none" />
+      
+      <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+        {/* Left: Card Preview */}
+        <div className="order-2 lg:order-1">
+          <div className="sticky top-24">
+            <div className="text-center lg:text-left mb-6">
+              <h3 className="text-xl font-bold text-slate-900 mb-1">Prévia do Vale-Presente</h3>
+              <p className="text-sm text-slate-500">Veja como ficará o seu presente</p>
+            </div>
             
-            {/* Content */}
-            <div className="relative h-full flex flex-col justify-between p-6 md:p-8">
+            {/* Card Preview with glow */}
+            <div className="relative">
+              {/* Glow effect behind card */}
+              <div 
+                className="absolute inset-4 blur-3xl opacity-50 transition-all duration-700"
+                style={getBgStyle(selectedBg)}
+              />
+              
+              <div 
+                className={`relative aspect-[1.6/1] rounded-3xl overflow-hidden shadow-2xl transition-all duration-300 ${
+                  isCardAnimating ? 'scale-95 opacity-80' : 'scale-100 opacity-100'
+                } hover:scale-[1.02]`}
+                style={getBgStyle(selectedBg)}
+              >
+                {/* Decorative elements */}
+                <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl transform translate-x-10 -translate-y-10" />
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full blur-xl transform -translate-x-8 translate-y-8" />
+                <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-white/5 rounded-full blur-3xl transform -translate-x-1/2 -translate-y-1/2" />
+                
+                {/* Sparkle effects */}
+                <div className="absolute top-6 right-8">
+                  <Sparkles className="w-6 h-6 opacity-40 animate-pulse" style={{ color: textColor }} />
+                </div>
+            
+                {/* Content */}
+                <div className="relative h-full flex flex-col justify-between p-6 md:p-8">
               {/* Top: Title */}
               <div>
                 {customTitle ? (
@@ -234,25 +272,26 @@ export function CustomCardBuilder({
                   )}
                 </div>
                 <Gift className="w-8 h-8 opacity-30" style={{ color: textColor }} />
+                </div>
               </div>
             </div>
-          </div>
+            </div>
 
           {/* Message Preview */}
           {message && (
             <div className="mt-4 p-4 bg-white rounded-xl border border-slate-200">
               <p className="text-sm text-slate-500 mb-1">Mensagem:</p>
-              <p className="text-slate-700 italic">"{message}"</p>
+              <p className="text-slate-700 italic">&ldquo;{message}&rdquo;</p>
               {userName && (
                 <p className="text-sm text-slate-500 mt-2">— {userName}</p>
               )}
             </div>
           )}
+          </div>
         </div>
-      </div>
 
-      {/* Right: Builder Form */}
-      <div className="order-1 lg:order-2 space-y-6">
+        {/* Right: Builder Form */}
+        <div className="order-1 lg:order-2 space-y-6">
         {/* Step 1: Amount */}
         <div className="bg-white rounded-2xl border border-slate-200 p-6">
           <div className="flex items-center gap-3 mb-4">
@@ -487,6 +526,7 @@ export function CustomCardBuilder({
           </p>
         </div>
       </div>
+    </div>
     </div>
   );
 }

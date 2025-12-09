@@ -161,6 +161,7 @@ export interface Business {
   custom_cards_allow_custom_amount: boolean | null;
   custom_cards_section_title: string | null;
   custom_cards_section_subtitle: string | null;
+  hide_template_cards: boolean | null;
 }
 
 export interface Profile {

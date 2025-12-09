@@ -30,6 +30,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { CustomCardShowcase } from './components/CustomCardShowcase';
 
 interface StorePageProps {
   params: Promise<{ slug: string }>;
@@ -267,6 +268,7 @@ export default async function StorePage({ params }: StorePageProps) {
   const customCardsEnabled = business.custom_cards_enabled ?? false;
   const customCardsSectionTitle = business.custom_cards_section_title || 'Crie seu Vale-Presente Personalizado';
   const customCardsSectionSubtitle = business.custom_cards_section_subtitle || 'Personalize com sua mensagem especial';
+  const hideTemplateCards = business.hide_template_cards ?? false;
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: pageBgColor }}>
@@ -458,8 +460,22 @@ export default async function StorePage({ params }: StorePageProps) {
           </section>
         )}
 
-        {/* Products Section */}
-        {productsSectionEnabled && (
+        {/* Custom Gift Cards Section - ABOVE templates for better visibility */}
+        {customCardsEnabled && (
+          <CustomCardShowcase
+            businessSlug={slug}
+            businessName={business.name}
+            sectionTitle={customCardsSectionTitle}
+            sectionSubtitle={customCardsSectionSubtitle}
+            accentColor={secondaryColor}
+            presetAmounts={business.custom_cards_preset_amounts || [2500, 5000, 10000, 15000, 20000, 50000]}
+            minAmount={business.custom_cards_min_amount_cents || 1000}
+            maxAmount={business.custom_cards_max_amount_cents || 100000}
+          />
+        )}
+
+        {/* Products Section - Template gift cards */}
+        {productsSectionEnabled && !hideTemplateCards && (
           <section id="produtos" className="py-12 md:py-16" style={{ backgroundColor: productsBgColor }}>
             <div className="max-w-6xl mx-auto px-4">
               <div className="text-center mb-8">
@@ -504,52 +520,6 @@ export default async function StorePage({ params }: StorePageProps) {
                   ))}
                 </div>
               )}
-            </div>
-          </section>
-        )}
-
-        {/* Custom Gift Cards Section */}
-        {customCardsEnabled && (
-          <section className="py-12 md:py-16 bg-gradient-to-br from-slate-50 to-white">
-            <div className="max-w-6xl mx-auto px-4">
-              <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-100 to-indigo-100 text-violet-700 rounded-full text-sm font-medium mb-4">
-                  <Sparkles className="w-4 h-4" />
-                  Novo
-                </div>
-                <h3 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
-                  {customCardsSectionTitle}
-                </h3>
-                <p className="text-slate-600 max-w-2xl mx-auto">
-                  {customCardsSectionSubtitle}
-                </p>
-              </div>
-              
-              <div className="max-w-2xl mx-auto">
-                <Link 
-                  href={`/store/${slug}/custom`}
-                  className="group block"
-                >
-                  <div className={`bg-white border-2 border-dashed border-slate-300 hover:border-violet-400 ${radiusClass} p-8 text-center transition-all hover:shadow-lg`}>
-                    <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Sparkles className="w-8 h-8 text-violet-600" />
-                    </div>
-                    <h4 className="text-xl font-semibold text-slate-900 mb-2">
-                      Criar Vale-Presente Personalizado
-                    </h4>
-                    <p className="text-slate-600 mb-4">
-                      Escolha o valor, personalize o design e adicione uma mensagem especial
-                    </p>
-                    <span 
-                      className={`inline-flex items-center gap-2 px-6 py-3 text-white font-semibold ${radiusClass} transition-all group-hover:gap-3`}
-                      style={{ backgroundColor: secondaryColor }}
-                    >
-                      Começar
-                      <ChevronRight className="w-5 h-5" />
-                    </span>
-                  </div>
-                </Link>
-              </div>
             </div>
           </section>
         )}

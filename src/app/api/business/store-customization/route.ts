@@ -162,6 +162,7 @@ export async function PATCH(request: NextRequest) {
       'custom_cards_allow_custom_amount',
       'custom_cards_section_title',
       'custom_cards_section_subtitle',
+      'hide_template_cards',
     ];
 
     // Filter to only allowed fields
