@@ -19,15 +19,12 @@ export function LandingFooter() {
             <Link href="/auth/login" className="hover:text-white transition-colors">
               Entrar
             </Link>
-            <Link href="/auth/register" className="hover:text-white transition-colors">
-              Criar Conta
-            </Link>
           </div>
         </div>
         
         {/* Copyright */}
         <div className="mt-8 pt-8 border-t border-slate-800 text-center text-sm text-slate-500">
-          © {new Date().getFullYear()} Mimoz. Todos os direitos reservados.
+          © {new Date().getFullYear()} Mimoz
         </div>
       </div>
     </footer>

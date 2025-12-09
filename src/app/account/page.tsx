@@ -123,44 +123,56 @@ export default async function MyGiftCardsPage() {
   const hasNoCards = purchases.length === 0 && received.length === 0;
   
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <AccountHeader totalPurchased={purchases.length} totalReceived={received.length} />
-      
-      {hasNoCards ? (
-        <EmptyState />
-      ) : (
-        <div className="space-y-8">
-          {/* Received Gift Cards */}
-          {received.length > 0 && (
-            <section>
-              <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                <Inbox className="w-5 h-5" />
-                Recebidos ({received.length})
-              </h2>
-              <div className="space-y-4">
-                {received.map((card) => (
-                  <GiftCardWithModal key={card.id} card={card} userEmail={userEmail} type="received" />
-                ))}
-              </div>
-            </section>
-          )}
-          
-          {/* Purchased Gift Cards */}
-          {purchases.length > 0 && (
-            <section>
-              <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                <ShoppingBag className="w-5 h-5" />
-                Comprados ({purchases.length})
-              </h2>
-              <div className="space-y-4">
-                {purchases.map((card) => (
-                  <GiftCardWithModal key={card.id} card={card} userEmail={userEmail} type="purchased" />
-                ))}
-              </div>
-            </section>
-          )}
-        </div>
-      )}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <AccountHeader totalPurchased={purchases.length} totalReceived={received.length} />
+        
+        {hasNoCards ? (
+          <EmptyState />
+        ) : (
+          <div className="space-y-10">
+            {/* Received Gift Cards */}
+            {received.length > 0 && (
+              <section>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-purple-100 rounded-xl">
+                    <Inbox className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-900">Presentes Recebidos</h2>
+                    <p className="text-sm text-slate-500">{received.length} {received.length === 1 ? 'vale-presente' : 'vale-presentes'}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {received.map((card) => (
+                    <GiftCardWithModal key={card.id} card={card} userEmail={userEmail} type="received" />
+                  ))}
+                </div>
+              </section>
+            )}
+            
+            {/* Purchased Gift Cards */}
+            {purchases.length > 0 && (
+              <section>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-emerald-100 rounded-xl">
+                    <ShoppingBag className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-900">Minhas Compras</h2>
+                    <p className="text-sm text-slate-500">{purchases.length} {purchases.length === 1 ? 'vale-presente' : 'vale-presentes'}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {purchases.map((card) => (
+                    <GiftCardWithModal key={card.id} card={card} userEmail={userEmail} type="purchased" />
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

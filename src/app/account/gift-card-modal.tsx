@@ -275,116 +275,139 @@ export function GiftCardWithModal({ card, userEmail, type }: GiftCardWithModalPr
     ? card.custom_bg_gradient_start
     : cardColor;
 
+  // Get background style
+  const getBgStyle = () => {
+    if (card.is_custom && card.custom_bg_type === 'gradient' && card.custom_bg_gradient_start && card.custom_bg_gradient_end) {
+      return { background: `linear-gradient(135deg, ${card.custom_bg_gradient_start}, ${card.custom_bg_gradient_end})` };
+    }
+    return { backgroundColor: cardColor };
+  };
+
+  // Get text color
+  const textColor = card.is_custom ? (card.custom_text_color || '#ffffff') : '#ffffff';
+  
+  // Check if card has balance
+  const hasBalance = card.balance_cents > 0;
+  const isUsed = card.balance_cents < card.amount_cents;
+
   return (
     <>
       <div 
-        className="bg-white rounded-2xl border border-slate-200 p-4 md:p-5 hover:border-slate-300 hover:shadow-md transition-all cursor-pointer group"
+        className="group relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl"
         onClick={() => setIsOpen(true)}
       >
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          {/* Card Info */}
-          <div className="flex-1">
-            <div className="flex items-start gap-4">
-              <div 
-                className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105"
-                style={{ 
-                  backgroundColor: cardColor,
-                  background: card.is_custom && card.custom_bg_type === 'gradient' && card.custom_bg_gradient_start && card.custom_bg_gradient_end
-                    ? `linear-gradient(to bottom right, ${card.custom_bg_gradient_start}, ${card.custom_bg_gradient_end})`
-                    : undefined
-                }}
-              >
-                {card.is_custom && card.custom_emoji ? (
-                  <span className="text-2xl">{card.custom_emoji}</span>
-                ) : (
-                  <Gift className="w-6 h-6 text-white" />
-                )}
-              </div>
-              <div>
-                <h3 className="font-semibold text-slate-900">
-                  {card.is_custom && card.custom_title ? card.custom_title : (business?.name || 'Vale-Presente')}
-                </h3>
-                <p className="text-sm text-slate-500">
-                  {card.is_custom ? business?.name : (template?.name || 'Gift Card')}
-                </p>
-                <div className="flex items-center gap-2 mt-2">
-                  {type === 'received' && (
-                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                      Presente recebido
-                    </span>
-                  )}
-                  {isGift && (
-                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                      Enviado como presente
-                    </span>
-                  )}
-                  {isExpired && (
-                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                      Expirado
-                    </span>
-                  )}
-                  {card.balance_cents === 0 && !isExpired && (
-                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
-                      Esgotado
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-            
-            {/* Recipient/Sender info */}
-            {type === 'purchased' && isGift && (
-              <div className="mt-4 p-3 bg-slate-50 rounded-lg">
-                <p className="text-sm text-slate-600">
-                  <span className="font-medium">Para:</span> {card.recipient_name}
-                </p>
-                <p className="text-sm text-slate-500">{card.recipient_email}</p>
-              </div>
-            )}
-            {type === 'received' && card.purchaser_name && (
-              <div className="mt-4 p-3 bg-purple-50 rounded-lg">
-                <p className="text-sm text-purple-700">
-                  <span className="font-medium">De:</span> {card.purchaser_name}
-                </p>
-              </div>
-            )}
+        {/* Glow effect */}
+        <div 
+          className="absolute inset-0 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-300 -z-10"
+          style={{ backgroundColor: glowColor }}
+        />
+        
+        {/* Card background */}
+        <div 
+          className="relative overflow-hidden"
+          style={getBgStyle()}
+        >
+          {/* Decorative pattern */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-white rounded-full" />
+            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white rounded-full" />
           </div>
           
-          {/* Value and hint */}
-          <div className="text-right md:min-w-[140px]">
-            <p className="text-2xl font-bold text-slate-900">
-              {formatCurrency(card.balance_cents)}
-            </p>
-            {card.balance_cents !== card.amount_cents && (
-              <p className="text-sm text-slate-400 line-through">
-                {formatCurrency(card.amount_cents)}
-              </p>
-            )}
-            <p className="text-xs text-slate-400 mt-2 group-hover:text-slate-600 transition-colors">
-              Clique para ver código
-            </p>
+          {/* Content */}
+          <div className="relative p-5">
+            {/* Header */}
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex-1 min-w-0">
+                {card.is_custom && card.custom_emoji && (
+                  <span className="text-3xl mb-2 block">{card.custom_emoji}</span>
+                )}
+                <h3 className="font-bold text-lg truncate" style={{ color: textColor }}>
+                  {card.is_custom && card.custom_title ? card.custom_title : (business?.name || 'Vale-Presente')}
+                </h3>
+                <p className="text-sm truncate" style={{ color: `${textColor}99` }}>
+                  {card.is_custom ? business?.name : (template?.name || 'Gift Card')}
+                </p>
+              </div>
+              {!card.is_custom && (
+                <div 
+                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: `${textColor}20` }}
+                >
+                  <Gift className="w-5 h-5" style={{ color: textColor }} />
+                </div>
+              )}
+            </div>
+            
+            {/* Amount */}
+            <div className="mb-4">
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-bold" style={{ color: textColor }}>
+                  {formatCurrency(card.balance_cents)}
+                </span>
+                {isUsed && (
+                  <span className="text-sm line-through" style={{ color: `${textColor}60` }}>
+                    {formatCurrency(card.amount_cents)}
+                  </span>
+                )}
+              </div>
+              {!hasBalance && (
+                <span className="inline-block mt-1 px-2 py-0.5 rounded text-xs font-medium bg-black/20" style={{ color: textColor }}>
+                  Esgotado
+                </span>
+              )}
+              {isExpired && hasBalance && (
+                <span className="inline-block mt-1 px-2 py-0.5 rounded text-xs font-medium bg-red-500/80 text-white">
+                  Expirado
+                </span>
+              )}
+            </div>
+            
+            {/* Footer info */}
+            <div 
+              className="flex items-center justify-between pt-3 border-t"
+              style={{ borderColor: `${textColor}20` }}
+            >
+              <div className="flex items-center gap-1 text-xs" style={{ color: `${textColor}80` }}>
+                <Calendar className="w-3 h-3" />
+                <span>Até {expiresAt.toLocaleDateString('pt-BR')}</span>
+              </div>
+              
+              {/* Badges */}
+              <div className="flex items-center gap-1">
+                {type === 'received' && (
+                  <span 
+                    className="px-2 py-0.5 rounded text-xs font-medium"
+                    style={{ backgroundColor: `${textColor}20`, color: textColor }}
+                  >
+                    🎁 Presente
+                  </span>
+                )}
+                {isGift && (
+                  <span 
+                    className="px-2 py-0.5 rounded text-xs font-medium"
+                    style={{ backgroundColor: `${textColor}20`, color: textColor }}
+                  >
+                    ✨ Enviado
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
         </div>
         
-        {/* Footer */}
-        <div className="mt-4 pt-4 border-t border-slate-100 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500">
-            <span className="flex items-center gap-1">
-              <Calendar className="w-4 h-4" />
-              {new Date(card.purchased_at).toLocaleDateString('pt-BR')}
-            </span>
-            <span>
-              Válido até {expiresAt.toLocaleDateString('pt-BR')}
-            </span>
-          </div>
+        {/* Bottom bar with business link */}
+        <div className="bg-white/95 backdrop-blur px-4 py-2.5 flex items-center justify-between">
+          <span className="text-xs text-slate-500">
+            Toque para ver código
+          </span>
           {business && (
             <Link
               href={`/store/${business.slug}`}
               onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors"
+              className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors"
             >
               <Store className="w-3 h-3" />
-              Ir para a loja
+              Loja
             </Link>
           )}
         </div>

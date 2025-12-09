@@ -21,12 +21,6 @@ export function LandingHeader() {
             >
               Entrar
             </Link>
-            <Link 
-              href="/auth/register" 
-              className="px-4 py-2 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors"
-            >
-              Começar Grátis
-            </Link>
           </div>
         </div>
       </div>

@@ -27,9 +27,6 @@ export function LandingSteps() {
           <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
             Simples de começar
           </h2>
-          <p className="text-lg text-slate-600">
-            Em 3 passos você já está vendendo
-          </p>
         </div>
         
         {/* Steps */}

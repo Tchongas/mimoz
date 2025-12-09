@@ -25,21 +25,8 @@ export function LandingHero() {
             </span>
           </h1>
           
-          {/* Subtitle */}
-          <p className="text-lg md:text-xl text-slate-600 mb-10 max-w-2xl mx-auto">
-            Crie sua loja de vale-presentes em minutos. Aceite pagamentos via PIX, 
-            personalize sua página e acompanhe suas vendas em tempo real.
-          </p>
-          
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link 
-              href="/auth/register" 
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-lg font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-all hover:shadow-lg hover:-translate-y-0.5"
-            >
-              Criar Minha Loja
-              <ArrowRight className="w-5 h-5" />
-            </Link>
             <Link 
               href="#como-funciona" 
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-lg font-medium text-slate-700 bg-white border border-slate-200 hover:border-slate-300 rounded-xl transition-colors"

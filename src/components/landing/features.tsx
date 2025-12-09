@@ -19,7 +19,7 @@ const FEATURES = [
   },
   {
     icon: Palette,
-    title: '100% Personalizável',
+    title: 'Personalizável',
     description: 'Cores, logo, textos e seções. Deixe sua loja com a identidade da sua marca.',
   },
   {
@@ -30,7 +30,7 @@ const FEATURES = [
   {
     icon: Zap,
     title: 'Validação Rápida',
-    description: 'Valide vale-presentes pelo código ou QR Code em segundos.',
+    description: 'Valide vale-presentes pelo código em segundos.',
   },
 ];
 
