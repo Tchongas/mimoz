@@ -23,17 +23,18 @@ const customCheckoutSchema = z.object({
   // Amount in cents
   amountCents: z.number().int().positive(),
   // Custom design
-  customTitle: z.string().max(100).optional(),
+  customTitle: z.string().max(100).optional().nullable(),
+  customEmoji: z.string().max(10).optional().nullable(),
   bgType: z.enum(['color', 'gradient', 'image']).default('color'),
-  bgColor: z.string().optional(),
-  bgGradientStart: z.string().optional(),
-  bgGradientEnd: z.string().optional(),
-  bgImageUrl: z.string().url().optional(),
+  bgColor: z.string().optional().nullable(),
+  bgGradientStart: z.string().optional().nullable(),
+  bgGradientEnd: z.string().optional().nullable(),
+  bgImageUrl: z.string().url().optional().nullable(),
   textColor: z.string().default('#ffffff'),
   // Recipient info
   recipientName: z.string().min(2, 'Nome do destinatário é obrigatório'),
   recipientEmail: z.string().email('Email inválido'),
-  recipientMessage: z.string().max(500).optional(),
+  recipientMessage: z.string().max(500).optional().nullable(),
 });
 
 // Generate unique gift card code

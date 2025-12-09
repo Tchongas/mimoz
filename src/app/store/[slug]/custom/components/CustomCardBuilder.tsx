@@ -336,7 +336,7 @@ export function CustomCardBuilder({
                     onChange={(e) => setCustomTitle(e.target.value)}
                     placeholder="Ex: Feliz Aniversário!"
                     maxLength={50}
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent text-lg"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent text-lg text-slate-900 placeholder:text-slate-400"
                   />
                   <p className="text-xs text-slate-500 mt-1">Deixe em branco para usar &quot;Vale-Presente&quot;</p>
                 </div>
@@ -409,7 +409,7 @@ export function CustomCardBuilder({
                           min={settings.minAmount / 100}
                           max={settings.maxAmount / 100}
                           step="0.01"
-                          className="w-full pl-14 pr-4 py-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent text-xl font-semibold"
+                          className="w-full pl-14 pr-4 py-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent text-xl font-semibold text-slate-900 placeholder:text-slate-400"
                         />
                       </div>
                     )}
@@ -459,7 +459,7 @@ export function CustomCardBuilder({
                       value={recipientName}
                       onChange={(e) => setRecipientName(e.target.value)}
                       placeholder="Para quem é o presente?"
-                      className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent"
+                      className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent text-slate-900 placeholder:text-slate-400"
                       required
                     />
                   </div>
@@ -477,7 +477,7 @@ export function CustomCardBuilder({
                       value={recipientEmail}
                       onChange={(e) => setRecipientEmail(e.target.value)}
                       placeholder="email@exemplo.com"
-                      className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent"
+                      className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent text-slate-900 placeholder:text-slate-400"
                       required
                     />
                   </div>
@@ -494,7 +494,7 @@ export function CustomCardBuilder({
                     placeholder="Escreva uma mensagem especial..."
                     maxLength={500}
                     rows={3}
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent resize-none"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent resize-none text-slate-900 placeholder:text-slate-400"
                   />
                   <p className="text-xs text-slate-500 mt-1">{message.length}/500</p>
                 </div>

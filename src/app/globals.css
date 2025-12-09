@@ -25,6 +25,15 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Ensure inputs always have proper contrast */
+input, textarea, select {
+  color: #1e293b; /* slate-800 */
+}
+
+input::placeholder, textarea::placeholder {
+  color: #94a3b8; /* slate-400 */
+}
+
 /* Custom Gift Card Animations */
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
