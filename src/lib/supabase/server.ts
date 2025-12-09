@@ -4,6 +4,7 @@
 // Use this client in Server Components, Server Actions, and Route Handlers
 
 import { createServerClient } from '@supabase/ssr';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
 export async function createClient() {
@@ -38,30 +39,15 @@ export async function createClient() {
 }
 
 // Create a client with service role for admin operations
-export async function createServiceClient() {
-  const cookieStore = await cookies();
-
-  return createServerClient(
+// This bypasses RLS and should only be used server-side for trusted operations
+export function createServiceClient() {
+  return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, {
-                ...options,
-                // Ensure cookies work across the entire site
-                path: '/',
-              })
-            );
-          } catch {
-            // Ignore in Server Components
-          }
-        },
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
       },
     }
   );

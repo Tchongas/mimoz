@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
 async function activateGiftCard(giftCardId: string) {
   try {
     // Use service client to bypass RLS
-    const supabase = await createServiceClient();
+    const supabase = createServiceClient();
     
     // Update gift card status to ACTIVE
     const { data, error } = await supabase

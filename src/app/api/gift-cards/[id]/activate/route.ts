@@ -12,7 +12,7 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createServiceClient();
+    const supabase = createServiceClient();
 
     // First, check current status
     const { data: currentCard, error: fetchError } = await supabase
@@ -84,7 +84,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createServiceClient();
+    const supabase = createServiceClient();
 
     const { data: card, error } = await supabase
       .from('gift_cards')

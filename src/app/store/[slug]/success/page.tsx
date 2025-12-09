@@ -44,7 +44,7 @@ async function getGiftCardData(code: string) {
     console.log('[SuccessPage] Attempting to activate gift card:', giftCard.id);
     
     // Use service role client to bypass RLS policies
-    const serviceClient = await createServiceClient();
+    const serviceClient = createServiceClient();
     
     // First verify the card exists with service client
     const { data: checkCard } = await serviceClient
