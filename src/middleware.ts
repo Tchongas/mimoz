@@ -9,12 +9,18 @@ import { updateSession } from '@/lib/supabase/middleware';
 // Routes that don't require authentication (or handle auth themselves)
 const PUBLIC_ROUTES = [
   '/auth/login',
+  '/auth/register',
   '/auth/callback',
   '/auth/error',
   '/auth/no-business',
   '/setup', // Setup page when not configured
   '/store', // Public store pages
   '/api',   // API routes handle their own auth
+];
+
+// Exact paths that are public (not prefix matching)
+const PUBLIC_EXACT_PATHS = [
+  '/', // Landing page
 ];
 
 // Routes that require specific roles
@@ -76,8 +82,12 @@ export async function middleware(request: NextRequest) {
     return redirectResponse;
   };
 
+  // Check if route is public (prefix match or exact match)
+  const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname.startsWith(route));
+  const isPublicExactPath = PUBLIC_EXACT_PATHS.includes(pathname);
+  
   // Allow public routes
-  if (PUBLIC_ROUTES.some((route) => pathname.startsWith(route))) {
+  if (isPublicRoute || isPublicExactPath) {
     // If user is logged in and trying to access login, redirect to dashboard
     if (pathname === '/auth/login' && user) {
       // Get user's role from profile
@@ -136,12 +146,6 @@ export async function middleware(request: NextRequest) {
       }
       break;
     }
-  }
-
-  // Root path redirect based on role
-  if (pathname === '/') {
-    const dashboard = ROLE_DASHBOARDS[userRole] || '/account';
-    return redirectWithCookies(new URL(dashboard, request.url));
   }
 
   return response;
