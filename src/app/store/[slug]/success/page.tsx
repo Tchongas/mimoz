@@ -56,7 +56,7 @@ async function getGiftCardData(code: string) {
     console.log('[SuccessPage] Service client check:', checkCard);
     
     if (checkCard) {
-      const { error, count } = await serviceClient
+      const { error } = await serviceClient
         .from('gift_cards')
         .update({
           status: 'ACTIVE',
@@ -67,9 +67,22 @@ async function getGiftCardData(code: string) {
       if (error) {
         console.error('[SuccessPage] Error activating gift card:', error);
       } else {
-        console.log('[SuccessPage] Gift card activated successfully:', giftCard.id);
-        giftCard.status = 'ACTIVE';
-        giftCard.payment_status = 'COMPLETED';
+        // Verify the update persisted
+        const { data: verifyCard } = await serviceClient
+          .from('gift_cards')
+          .select('id, status, payment_status')
+          .eq('id', giftCard.id)
+          .single();
+        
+        console.log('[SuccessPage] After update verification:', verifyCard);
+        
+        if (verifyCard?.status === 'ACTIVE') {
+          console.log('[SuccessPage] Gift card activated and verified!');
+          giftCard.status = 'ACTIVE';
+          giftCard.payment_status = 'COMPLETED';
+        } else {
+          console.error('[SuccessPage] Update did not persist! Card still:', verifyCard?.status);
+        }
       }
     } else {
       console.error('[SuccessPage] Card not found with service client - check SUPABASE_SERVICE_ROLE_KEY');
