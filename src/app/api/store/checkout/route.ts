@@ -17,6 +17,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createBilling } from '@/lib/payments';
+import { sendGiftCardEmails } from '@/lib/email/resend';
+import { formatCurrency, formatDate } from '@/lib/utils';
 import { z } from 'zod';
 
 const checkoutSchema = z.object({
@@ -122,7 +124,7 @@ export async function POST(request: NextRequest) {
     // Get template and business info
     const { data: template, error: templateError } = await supabase
       .from('gift_card_templates')
-      .select('*, businesses(name, slug)')
+      .select('*, businesses(name, slug, gift_card_color)')
       .eq('id', templateId)
       .eq('business_id', businessId)
       .eq('is_active', true)
@@ -298,6 +300,35 @@ export async function POST(request: NextRequest) {
           { error: 'Erro ao criar vale-presente' },
           { status: 500 }
         );
+      }
+
+      // Send confirmation emails (dev mode - card is already active)
+      try {
+        const emailData = {
+          code: giftCard.code,
+          amount: template.amount_cents,
+          amountFormatted: formatCurrency(template.amount_cents),
+          expiresAt: formatDate(expiresAt.toISOString()),
+          validDays: 365,
+          businessName: business.name,
+          businessSlug: business.slug,
+          templateName: template.name,
+          cardColor: template.card_color || (business as { gift_card_color?: string }).gift_card_color || '#1e3a5f',
+          recipientName: finalRecipientName,
+          recipientEmail: finalRecipientEmail,
+          purchaserName,
+          purchaserEmail,
+          message: recipientMessage || undefined,
+        };
+        
+        console.log('[Checkout] Sending confirmation emails (dev mode)');
+        const emailResult = await sendGiftCardEmails(emailData);
+        console.log('[Checkout] Email results:', {
+          purchaser: emailResult.purchaser.success ? 'sent' : emailResult.purchaser.error,
+          recipient: emailResult.recipient ? (emailResult.recipient.success ? 'sent' : emailResult.recipient.error) : 'same as purchaser',
+        });
+      } catch (emailError) {
+        console.error('[Checkout] Email error (non-fatal):', emailError);
       }
 
       return NextResponse.json({

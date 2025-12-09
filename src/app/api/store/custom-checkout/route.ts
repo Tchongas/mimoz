@@ -16,6 +16,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createBilling } from '@/lib/payments';
+import { sendGiftCardEmails } from '@/lib/email/resend';
+import { formatCurrency, formatDate } from '@/lib/utils';
 import { z } from 'zod';
 
 const customCheckoutSchema = z.object({
@@ -338,6 +340,35 @@ export async function POST(request: NextRequest) {
           { error: 'Erro ao criar vale-presente' },
           { status: 500 }
         );
+      }
+
+      // Send confirmation emails (dev mode - card is already active)
+      try {
+        const emailData = {
+          code: giftCard.code,
+          amount: amountCents,
+          amountFormatted: formatCurrency(amountCents),
+          expiresAt: formatDate(expiresAt.toISOString()),
+          validDays: 365,
+          businessName: business.name,
+          businessSlug: business.slug,
+          templateName: customTitle || 'Vale-Presente Personalizado',
+          cardColor: displayBgColor,
+          recipientName,
+          recipientEmail,
+          purchaserName,
+          purchaserEmail,
+          message: recipientMessage || undefined,
+        };
+        
+        console.log('[CustomCheckout] Sending confirmation emails (dev mode)');
+        const emailResult = await sendGiftCardEmails(emailData);
+        console.log('[CustomCheckout] Email results:', {
+          purchaser: emailResult.purchaser.success ? 'sent' : emailResult.purchaser.error,
+          recipient: emailResult.recipient ? (emailResult.recipient.success ? 'sent' : emailResult.recipient.error) : 'same as purchaser',
+        });
+      } catch (emailError) {
+        console.error('[CustomCheckout] Email error (non-fatal):', emailError);
       }
 
       return NextResponse.json({
