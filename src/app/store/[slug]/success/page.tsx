@@ -2,7 +2,7 @@
 // MIMOZ - Purchase Success Page
 // ============================================
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { Gift, Home, User, Download } from 'lucide-react';
@@ -37,20 +37,31 @@ async function getGiftCardData(code: string) {
 
   // If card is PENDING and user reached success page, activate it
   // AbacatePay only redirects to completionUrl after payment is confirmed
+  // Use service client to bypass RLS (user might not be authenticated)
   if (giftCard && giftCard.status === 'PENDING') {
-    const { error } = await supabase
+    console.log('[SuccessPage] Attempting to activate gift card:', giftCard.id);
+    
+    // Use service role client to bypass RLS policies
+    const serviceClient = await createServiceClient();
+    
+    const { data: updatedCard, error } = await serviceClient
       .from('gift_cards')
       .update({
         status: 'ACTIVE',
         payment_status: 'COMPLETED',
       })
       .eq('id', giftCard.id)
-      .eq('status', 'PENDING'); // Only if still pending (idempotency)
+      .select()
+      .single();
     
-    if (!error) {
-      console.log('[SuccessPage] Activated gift card:', giftCard.id);
-      giftCard.status = 'ACTIVE';
-      giftCard.payment_status = 'COMPLETED';
+    if (error) {
+      console.error('[SuccessPage] Error activating gift card:', error);
+    } else if (updatedCard) {
+      console.log('[SuccessPage] Gift card activated successfully:', updatedCard.id, updatedCard.status);
+      giftCard.status = updatedCard.status;
+      giftCard.payment_status = updatedCard.payment_status;
+    } else {
+      console.log('[SuccessPage] No card updated - may already be active');
     }
   }
 

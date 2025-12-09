@@ -17,7 +17,7 @@ import {
   type BillingPaidEvent,
   type BillingPaidEventData,
 } from '@/lib/payments';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { sendGiftCardEmails } from '@/lib/email/resend';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
@@ -84,7 +84,8 @@ export async function POST(request: NextRequest) {
  */
 async function activateGiftCard(giftCardId: string) {
   try {
-    const supabase = await createClient();
+    // Use service client to bypass RLS
+    const supabase = await createServiceClient();
     
     // Update gift card status to ACTIVE
     const { data, error } = await supabase
