@@ -65,8 +65,9 @@ export async function POST(request: NextRequest) {
         giftCardId,
       });
 
-      // Send confirmation emails
+      // Activate the gift card and send confirmation emails
       if (giftCardId) {
+        await activateGiftCard(giftCardId);
         await sendConfirmationEmails(giftCardId);
       }
     }
@@ -75,6 +76,43 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('[Webhook] Error:', error);
     return NextResponse.json({ error: 'Webhook processing failed', received: true }, { status: 200 });
+  }
+}
+
+/**
+ * Activate a gift card after payment is confirmed
+ */
+async function activateGiftCard(giftCardId: string) {
+  try {
+    const supabase = await createClient();
+    
+    // Update gift card status to ACTIVE
+    const { data, error } = await supabase
+      .from('gift_cards')
+      .update({
+        status: 'ACTIVE',
+        payment_status: 'COMPLETED',
+      })
+      .eq('id', giftCardId)
+      .eq('status', 'PENDING') // Only activate if still pending (idempotency)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('[Webhook] Error activating gift card:', giftCardId, error);
+      return false;
+    }
+    
+    if (data) {
+      console.log('[Webhook] Gift card activated:', giftCardId);
+      return true;
+    } else {
+      console.log('[Webhook] Gift card already active or not found:', giftCardId);
+      return false;
+    }
+  } catch (error) {
+    console.error('[Webhook] Error activating gift card:', error);
+    return false;
   }
 }
 

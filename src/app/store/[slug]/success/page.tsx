@@ -51,6 +51,9 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
     notFound();
   }
 
+  // Check if payment is still pending
+  const isPending = giftCard.status === 'PENDING';
+
   // Get gift card color with fallbacks
   const giftCardColor = giftCard.template?.card_color || giftCard.business?.gift_card_color || DEFAULT_COLORS.giftCard;
   const isGift = giftCard.recipient_email !== giftCard.purchaser_email;
@@ -92,12 +95,33 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
       {/* Content */}
       <main className="flex-1">
         <div className="max-w-lg mx-auto px-4 py-8 sm:py-12 relative animate-in fade-in-50 slide-in-from-bottom-2 duration-300">
-          <CelebrationBanner
-            isGift={isGift}
-            recipientName={giftCard.recipient_name}
-          />
+          {isPending ? (
+            // Payment still processing - show pending state
+            <div className="text-center py-12">
+              <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-amber-100 flex items-center justify-center">
+                <svg className="w-8 h-8 text-amber-600 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">Processando pagamento...</h2>
+              <p className="text-slate-600 mb-6">
+                Aguarde enquanto confirmamos seu pagamento. Isso pode levar alguns segundos.
+              </p>
+              <p className="text-sm text-slate-500">
+                Esta página será atualizada automaticamente quando o pagamento for confirmado.
+              </p>
+              {/* Auto-refresh every 3 seconds while pending */}
+              <meta httpEquiv="refresh" content="3" />
+            </div>
+          ) : (
+            <>
+              <CelebrationBanner
+                isGift={isGift}
+                recipientName={giftCard.recipient_name}
+              />
 
-          <GiftCardDisplay
+              <GiftCardDisplay
             businessName={giftCard.business.name}
             templateName={giftCard.template?.name}
             amountCents={giftCard.amount_cents}
@@ -202,6 +226,8 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
           <p className="text-center text-xs text-slate-400 mt-6">
             📧 Um email de confirmação foi enviado para você e para o destinatário
           </p>
+            </>
+          )}
         </div>
       </main>
 

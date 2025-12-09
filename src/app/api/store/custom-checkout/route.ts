@@ -206,7 +206,8 @@ export async function POST(request: NextRequest) {
 
     if (usePaymentGateway) {
       // ========================================
-      // PRODUCTION FLOW
+      // PRODUCTION FLOW: Create PENDING card, activate after payment
+      // Card will be activated by webhook when payment is confirmed
       // ========================================
       const { data: giftCard, error: giftCardError } = await supabase
         .from('gift_cards')
@@ -217,8 +218,8 @@ export async function POST(request: NextRequest) {
           amount_cents: amountCents,
           original_amount_cents: amountCents,
           balance_cents: amountCents,
-          status: 'ACTIVE',
-          payment_status: 'COMPLETED',
+          status: 'PENDING',  // PENDING until payment is confirmed via webhook
+          payment_status: 'PENDING',
           purchaser_user_id: user.id,
           purchaser_email: purchaserEmail,
           purchaser_name: purchaserName,

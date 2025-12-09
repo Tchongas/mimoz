@@ -67,6 +67,7 @@ export default async function MyGiftCardsPage() {
       )
     `)
     .eq('purchaser_user_id', user.id)
+    .neq('status', 'PENDING') // Only show paid/active cards, not pending payments
     .order('purchased_at', { ascending: false });
   
   // Security: Mask codes for gift cards sent to others
@@ -123,6 +124,7 @@ export default async function MyGiftCardsPage() {
     `)
     .eq('recipient_email', userEmail)
     .neq('purchaser_user_id', user.id) // Exclude self-purchases
+    .neq('status', 'PENDING') // Only show paid/active cards
     .order('purchased_at', { ascending: false });
   
   if (receivedError) {
