@@ -257,9 +257,8 @@ export function GiftCardWithModal({ card, userEmail, type }: GiftCardWithModalPr
     businesses: { name: string; slug: string } 
   } | null;
   
-  // Business info comes from the direct relation (aliased as 'business')
-  // or from the template's businesses relation for older cards
-  const business = card.business as { name: string; slug: string } | null
+  // Business info comes from the direct relation or from the template's businesses relation
+  const business = card.businesses as { name: string; slug: string } | null
     || template?.businesses;
   
   const expiresAt = new Date(card.expires_at);

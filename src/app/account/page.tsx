@@ -30,7 +30,7 @@ export default async function MyGiftCardsPage() {
   const userEmail = profile?.email || user.email;
   
   // Get gift cards purchased by user
-  const { data: purchasedCards } = await supabase
+  const { data: purchasedCards, error: purchasedError } = await supabase
     .from('gift_cards')
     .select(`
       id,
@@ -46,13 +46,13 @@ export default async function MyGiftCardsPage() {
       expires_at,
       is_custom,
       custom_title,
-      custom_emoji,
       custom_bg_type,
       custom_bg_color,
       custom_bg_gradient_start,
       custom_bg_gradient_end,
       custom_text_color,
-      business:businesses!business_id (
+      business_id,
+      businesses (
         name,
         slug
       ),
@@ -68,8 +68,12 @@ export default async function MyGiftCardsPage() {
     .eq('purchaser_user_id', user.id)
     .order('purchased_at', { ascending: false });
   
+  if (purchasedError) {
+    console.error('[Account] Error fetching purchased cards:', purchasedError);
+  }
+  
   // Get gift cards received (where recipient_email matches user's email)
-  const { data: receivedCards } = await supabase
+  const { data: receivedCards, error: receivedError } = await supabase
     .from('gift_cards')
     .select(`
       id,
@@ -86,13 +90,13 @@ export default async function MyGiftCardsPage() {
       expires_at,
       is_custom,
       custom_title,
-      custom_emoji,
       custom_bg_type,
       custom_bg_color,
       custom_bg_gradient_start,
       custom_bg_gradient_end,
       custom_text_color,
-      business:businesses!business_id (
+      business_id,
+      businesses (
         name,
         slug
       ),
@@ -108,6 +112,10 @@ export default async function MyGiftCardsPage() {
     .eq('recipient_email', userEmail)
     .neq('purchaser_user_id', user.id) // Exclude self-purchases
     .order('purchased_at', { ascending: false });
+  
+  if (receivedError) {
+    console.error('[Account] Error fetching received cards:', receivedError);
+  }
   
   const purchases = purchasedCards || [];
   const received = receivedCards || [];

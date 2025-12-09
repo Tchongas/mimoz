@@ -31,6 +31,7 @@ ADD COLUMN IF NOT EXISTS hide_template_cards BOOLEAN DEFAULT false;
 ALTER TABLE public.gift_cards 
 ADD COLUMN IF NOT EXISTS is_custom BOOLEAN DEFAULT false,
 ADD COLUMN IF NOT EXISTS custom_title TEXT,
+ADD COLUMN IF NOT EXISTS custom_emoji TEXT,
 ADD COLUMN IF NOT EXISTS custom_bg_type TEXT DEFAULT 'color' CHECK (custom_bg_type IN ('color', 'gradient', 'image')),
 ADD COLUMN IF NOT EXISTS custom_bg_color TEXT,
 ADD COLUMN IF NOT EXISTS custom_bg_gradient_start TEXT,
@@ -144,5 +145,6 @@ COMMENT ON COLUMN public.businesses.custom_cards_max_amount_cents IS 'Maximum am
 COMMENT ON COLUMN public.businesses.custom_cards_preset_amounts IS 'Array of preset amounts in cents for quick selection';
 COMMENT ON COLUMN public.gift_cards.is_custom IS 'Whether this gift card was customized by the buyer';
 COMMENT ON COLUMN public.gift_cards.custom_title IS 'Custom headline/title set by the buyer';
+COMMENT ON COLUMN public.gift_cards.custom_emoji IS 'Emoji icon selected by the buyer for the card';
 COMMENT ON TABLE public.custom_card_backgrounds IS 'Business-specific background presets for custom cards';
 COMMENT ON TABLE public.default_card_backgrounds IS 'System-wide default backgrounds available to all businesses';
