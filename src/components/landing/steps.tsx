@@ -4,7 +4,7 @@ const STEPS = [
   {
     number: '1',
     title: 'Crie sua conta',
-    description: 'Cadastre-se gratuitamente e configure seu negócio em minutos.',
+    description: 'Entre em contato Conosco',
   },
   {
     number: '2',
