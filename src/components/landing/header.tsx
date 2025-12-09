@@ -1,0 +1,35 @@
+'use client';
+
+import Link from 'next/link';
+import { Gift } from 'lucide-react';
+
+export function LandingHeader() {
+  return (
+    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-9 h-9 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-xl flex items-center justify-center">
+              <Gift className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold text-slate-900">Mimoz</span>
+          </Link>
+          <div className="flex items-center gap-3">
+            <Link 
+              href="/auth/login" 
+              className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
+            >
+              Entrar
+            </Link>
+            <Link 
+              href="/auth/register" 
+              className="px-4 py-2 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors"
+            >
+              Começar Grátis
+            </Link>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}

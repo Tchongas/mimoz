@@ -1,20 +1,33 @@
 // ============================================
-// MIMOZ - Home Page (Redirects to Dashboard)
+// MIMOZ - Landing Page
 // ============================================
-// This page redirects authenticated users to their dashboard
-// The middleware handles the actual redirect logic
 
 import { redirect } from 'next/navigation';
 import { getSessionUser, getRoleDashboard } from '@/lib/auth';
+import {
+  LandingHeader,
+  LandingHero,
+  LandingFeatures,
+  LandingSteps,
+  LandingCTA,
+  LandingFooter,
+} from '@/components/landing';
 
-export default async function Home() {
+export default async function LandingPage() {
+  // If user is logged in, redirect to their dashboard
   const user = await getSessionUser();
-  
   if (user) {
-    // Redirect to role-based dashboard
     redirect(getRoleDashboard(user.role));
   }
-  
-  // Redirect unauthenticated users to login
-  redirect('/auth/login');
+
+  return (
+    <div className="min-h-screen bg-white">
+      <LandingHeader />
+      <LandingHero />
+      <LandingFeatures />
+      <LandingSteps />
+      <LandingCTA />
+      <LandingFooter />
+    </div>
+  );
 }
