@@ -103,6 +103,16 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
             amountCents={giftCard.amount_cents}
             code={giftCard.code}
             giftCardColor={giftCardColor}
+            recipientName={giftCard.recipient_name}
+            // Custom card fields
+            isCustom={giftCard.is_custom}
+            customTitle={giftCard.custom_title}
+            customEmoji={giftCard.custom_emoji}
+            customBgType={giftCard.custom_bg_type}
+            customBgColor={giftCard.custom_bg_color}
+            customBgGradientStart={giftCard.custom_bg_gradient_start}
+            customBgGradientEnd={giftCard.custom_bg_gradient_end}
+            customTextColor={giftCard.custom_text_color}
           />
 
           <InfoGrid

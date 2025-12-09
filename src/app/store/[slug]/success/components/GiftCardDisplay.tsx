@@ -1,6 +1,9 @@
+'use client';
+
 import { Gift, Sparkles } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { CopyCodeButton } from '../copy-code-button';
+import { GiftCardPreview } from '@/components/ui';
 
 interface GiftCardDisplayProps {
   businessName: string;
@@ -8,6 +11,16 @@ interface GiftCardDisplayProps {
   amountCents: number;
   code: string;
   giftCardColor: string;
+  recipientName?: string;
+  // Custom card fields
+  isCustom?: boolean;
+  customTitle?: string | null;
+  customEmoji?: string | null;
+  customBgType?: 'color' | 'gradient' | 'image' | null;
+  customBgColor?: string | null;
+  customBgGradientStart?: string | null;
+  customBgGradientEnd?: string | null;
+  customTextColor?: string | null;
 }
 
 export function GiftCardDisplay({
@@ -16,7 +29,79 @@ export function GiftCardDisplay({
   amountCents,
   code,
   giftCardColor,
+  recipientName,
+  isCustom,
+  customTitle,
+  customEmoji,
+  customBgType,
+  customBgColor,
+  customBgGradientStart,
+  customBgGradientEnd,
+  customTextColor,
 }: GiftCardDisplayProps) {
+  // For custom cards, use the shared GiftCardPreview component
+  if (isCustom) {
+    const bgColor = customBgColor || giftCardColor;
+    const textColor = customTextColor || '#ffffff';
+    
+    return (
+      <div className="relative mb-6">
+        {/* Glow effect */}
+        <div
+          className="absolute inset-4 rounded-3xl blur-3xl opacity-40"
+          style={{ 
+            backgroundColor: customBgType === 'gradient' && customBgGradientStart 
+              ? customBgGradientStart 
+              : bgColor 
+          }}
+        />
+
+        {/* Card Preview */}
+        <GiftCardPreview
+          title={customTitle || undefined}
+          emoji={customEmoji || undefined}
+          amount={amountCents}
+          businessName={businessName}
+          recipientName={recipientName}
+          bgType={customBgType || 'color'}
+          bgColor={bgColor}
+          bgGradientStart={customBgGradientStart || undefined}
+          bgGradientEnd={customBgGradientEnd || undefined}
+          bgGradientDirection="to-br"
+          textColor={textColor}
+          size="lg"
+          showMessage={false}
+        />
+
+        {/* Code Section */}
+        <div 
+          className="relative -mt-4 mx-4 rounded-2xl p-4 backdrop-blur shadow-lg"
+          style={{ 
+            backgroundColor: customBgType === 'gradient' && customBgGradientEnd 
+              ? `${customBgGradientEnd}ee` 
+              : `${bgColor}ee` 
+          }}
+        >
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs uppercase tracking-wider mb-1" style={{ color: `${textColor}80` }}>
+                Código
+              </p>
+              <p 
+                className="text-xl sm:text-2xl font-mono font-bold tracking-widest truncate"
+                style={{ color: textColor }}
+              >
+                {code}
+              </p>
+            </div>
+            <CopyCodeButton code={code} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Standard template card display
   return (
     <div className="relative mb-6">
       <div

@@ -31,6 +31,7 @@ export interface GiftCardPDFData {
   // Custom card fields
   isCustom?: boolean;
   customTitle?: string;
+  customEmoji?: string;
   customBgType?: 'color' | 'gradient' | 'image';
   customBgGradientStart?: string;
   customBgGradientEnd?: string;
@@ -208,7 +209,10 @@ export function GiftCardPDF({ data }: { data: GiftCardPDFData }) {
 
   // Determine text color
   const textColor = data.customTextColor || 'white';
-  const headerLabel = data.isCustom && data.customTitle ? data.customTitle : 'Vale-Presente';
+  
+  // For custom cards, show title as main element; for templates show "Vale-Presente"
+  const isCustom = data.isCustom;
+  const displayTitle = isCustom && data.customTitle ? data.customTitle : 'Vale-Presente';
 
   return (
     <Document>
@@ -222,8 +226,23 @@ export function GiftCardPDF({ data }: { data: GiftCardPDFData }) {
               <View style={styles.decorCircle1} />
               <View style={styles.decorCircle2} />
               
-              <Text style={[styles.cardHeaderLabel, { color: `${textColor}99` }]}>{headerLabel}</Text>
-              <Text style={[styles.cardHeaderAmount, { color: textColor }]}>{data.amountFormatted}</Text>
+              {/* Emoji for custom cards */}
+              {isCustom && data.customEmoji && (
+                <Text style={{ fontSize: 32, marginBottom: 8 }}>{data.customEmoji}</Text>
+              )}
+              
+              {/* Title - main focus for custom cards */}
+              <Text style={[
+                isCustom ? styles.cardHeaderAmount : styles.cardHeaderLabel, 
+                { color: isCustom ? textColor : `${textColor}99`, fontSize: isCustom ? 28 : 10 }
+              ]}>
+                {displayTitle}
+              </Text>
+              
+              {/* Amount */}
+              <Text style={[styles.cardHeaderAmount, { color: textColor, marginTop: 8 }]}>{data.amountFormatted}</Text>
+              
+              {/* Business name */}
               <Text style={[styles.cardHeaderBusiness, { color: `${textColor}cc` }]}>{data.businessName}</Text>
               
               {/* Code */}

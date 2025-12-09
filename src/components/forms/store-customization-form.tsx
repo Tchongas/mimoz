@@ -740,6 +740,25 @@ export function StoreCustomizationForm({ business }: StoreCustomizationFormProps
         title="Seção de Produtos" 
         icon={<Gift className="w-5 h-5 text-pink-600" />}
       >
+        <div className="flex items-center justify-between p-3 bg-amber-50 rounded-lg border border-amber-200">
+          <div>
+            <p className="font-medium text-amber-900">Ocultar Vale-Presentes Pré-definidos</p>
+            <p className="text-sm text-amber-700">Mostrar apenas vale-presentes personalizados (se ativado)</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setHideTemplateCards(!hideTemplateCards)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              hideTemplateCards ? 'bg-amber-600' : 'bg-slate-300'
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                hideTemplateCards ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
         <div className="space-y-1">
           <Label>Título da Seção</Label>
           <Input
@@ -1197,26 +1216,6 @@ export function StoreCustomizationForm({ business }: StoreCustomizationFormProps
                 placeholder="Personalize com sua mensagem especial"
                 disabled={isLoading}
               />
-            </div>
-            
-            <div className="flex items-center justify-between p-3 bg-amber-50 rounded-lg border border-amber-200">
-              <div>
-                <p className="font-medium text-amber-900">Ocultar Vale-Presentes Pré-definidos</p>
-                <p className="text-sm text-amber-700">Mostrar apenas a opção de vale-presente personalizado na loja</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setHideTemplateCards(!hideTemplateCards)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  hideTemplateCards ? 'bg-amber-600' : 'bg-slate-300'
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    hideTemplateCards ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
             </div>
           </>
         )}
