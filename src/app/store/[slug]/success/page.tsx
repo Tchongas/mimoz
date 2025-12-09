@@ -38,30 +38,41 @@ async function getGiftCardData(code: string) {
   // If card is PENDING and user reached success page, activate it
   // AbacatePay only redirects to completionUrl after payment is confirmed
   // Use service client to bypass RLS (user might not be authenticated)
+  console.log('[SuccessPage] Gift card status:', giftCard?.id, giftCard?.status);
+  
   if (giftCard && giftCard.status === 'PENDING') {
     console.log('[SuccessPage] Attempting to activate gift card:', giftCard.id);
     
     // Use service role client to bypass RLS policies
     const serviceClient = await createServiceClient();
     
-    const { data: updatedCard, error } = await serviceClient
+    // First verify the card exists with service client
+    const { data: checkCard } = await serviceClient
       .from('gift_cards')
-      .update({
-        status: 'ACTIVE',
-        payment_status: 'COMPLETED',
-      })
+      .select('id, status')
       .eq('id', giftCard.id)
-      .select()
       .single();
     
-    if (error) {
-      console.error('[SuccessPage] Error activating gift card:', error);
-    } else if (updatedCard) {
-      console.log('[SuccessPage] Gift card activated successfully:', updatedCard.id, updatedCard.status);
-      giftCard.status = updatedCard.status;
-      giftCard.payment_status = updatedCard.payment_status;
+    console.log('[SuccessPage] Service client check:', checkCard);
+    
+    if (checkCard) {
+      const { error, count } = await serviceClient
+        .from('gift_cards')
+        .update({
+          status: 'ACTIVE',
+          payment_status: 'COMPLETED',
+        })
+        .eq('id', giftCard.id);
+      
+      if (error) {
+        console.error('[SuccessPage] Error activating gift card:', error);
+      } else {
+        console.log('[SuccessPage] Gift card activated successfully:', giftCard.id);
+        giftCard.status = 'ACTIVE';
+        giftCard.payment_status = 'COMPLETED';
+      }
     } else {
-      console.log('[SuccessPage] No card updated - may already be active');
+      console.error('[SuccessPage] Card not found with service client - check SUPABASE_SERVICE_ROLE_KEY');
     }
   }
 
