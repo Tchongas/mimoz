@@ -52,6 +52,10 @@ export default async function MyGiftCardsPage() {
       custom_bg_gradient_start,
       custom_bg_gradient_end,
       custom_text_color,
+      business:businesses!business_id (
+        name,
+        slug
+      ),
       gift_card_templates (
         name,
         card_color,
@@ -59,10 +63,6 @@ export default async function MyGiftCardsPage() {
           name,
           slug
         )
-      ),
-      businesses (
-        name,
-        slug
       )
     `)
     .eq('purchaser_user_id', user.id)
@@ -92,6 +92,10 @@ export default async function MyGiftCardsPage() {
       custom_bg_gradient_start,
       custom_bg_gradient_end,
       custom_text_color,
+      business:businesses!business_id (
+        name,
+        slug
+      ),
       gift_card_templates (
         name,
         card_color,
@@ -99,10 +103,6 @@ export default async function MyGiftCardsPage() {
           name,
           slug
         )
-      ),
-      businesses (
-        name,
-        slug
       )
     `)
     .eq('recipient_email', userEmail)

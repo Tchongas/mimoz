@@ -257,10 +257,10 @@ export function GiftCardWithModal({ card, userEmail, type }: GiftCardWithModalPr
     businesses: { name: string; slug: string } 
   } | null;
   
-  // For custom cards, business info comes from the business relation directly
-  const business = card.is_custom 
-    ? card.businesses as { name: string; slug: string } | null
-    : template?.businesses;
+  // Business info comes from the direct relation (aliased as 'business')
+  // or from the template's businesses relation for older cards
+  const business = card.business as { name: string; slug: string } | null
+    || template?.businesses;
   
   const expiresAt = new Date(card.expires_at);
   const isExpired = expiresAt < new Date() && card.status === 'ACTIVE';
