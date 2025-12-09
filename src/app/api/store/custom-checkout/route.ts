@@ -1,0 +1,360 @@
+// ============================================
+// MIMOZ - Custom Gift Card Checkout API
+// ============================================
+// POST - Create checkout for custom (user-designed) gift cards
+//
+// REQUIRES AUTHENTICATION - user must be logged in
+//
+// Flow:
+// 1. Verify user is authenticated
+// 2. Validate custom card data (amount within limits, etc.)
+// 3. Generate unique gift card code
+// 4. Create pending gift card with custom design
+// 5. Create AbacatePay billing (payment link)
+// 6. Return payment URL for redirect
+
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { createBilling } from '@/lib/payments';
+import { z } from 'zod';
+
+const customCheckoutSchema = z.object({
+  businessId: z.string().uuid(),
+  // Amount in cents
+  amountCents: z.number().int().positive(),
+  // Custom design
+  customTitle: z.string().max(100).optional(),
+  bgType: z.enum(['color', 'gradient', 'image']).default('color'),
+  bgColor: z.string().optional(),
+  bgGradientStart: z.string().optional(),
+  bgGradientEnd: z.string().optional(),
+  bgImageUrl: z.string().url().optional(),
+  textColor: z.string().default('#ffffff'),
+  // Recipient info
+  recipientName: z.string().min(2, 'Nome do destinatário é obrigatório'),
+  recipientEmail: z.string().email('Email inválido'),
+  recipientMessage: z.string().max(500).optional(),
+});
+
+// Generate unique gift card code
+function generateGiftCardCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = 'MIMO-';
+  for (let i = 0; i < 4; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  code += '-';
+  for (let i = 0; i < 4; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+function getBaseUrl(request: NextRequest): string {
+  const host = request.headers.get('host') || 'localhost:3000';
+  const protocol = host.includes('localhost') ? 'http' : 'https';
+  return `${protocol}://${host}`;
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+
+    // ========================================
+    // 1. REQUIRE AUTHENTICATION
+    // ========================================
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Você precisa estar logado para fazer uma compra', code: 'AUTH_REQUIRED' },
+        { status: 401 }
+      );
+    }
+
+    // Get user profile
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name, email')
+      .eq('id', user.id)
+      .single();
+
+    const purchaserName = profile?.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Cliente';
+    const purchaserEmail = user.email!;
+
+    // ========================================
+    // 2. VALIDATE REQUEST
+    // ========================================
+    const body = await request.json();
+    const validation = customCheckoutSchema.safeParse(body);
+
+    if (!validation.success) {
+      console.error('[CustomCheckout] Validation failed:', validation.error.issues);
+      return NextResponse.json(
+        { 
+          error: validation.error.issues[0].message,
+          field: validation.error.issues[0].path.join('.'),
+        },
+        { status: 400 }
+      );
+    }
+
+    const {
+      businessId,
+      amountCents,
+      customTitle,
+      bgType,
+      bgColor,
+      bgGradientStart,
+      bgGradientEnd,
+      bgImageUrl,
+      textColor,
+      recipientName,
+      recipientEmail,
+      recipientMessage,
+    } = validation.data;
+
+    // ========================================
+    // 3. VERIFY BUSINESS AND CUSTOM CARD SETTINGS
+    // ========================================
+    const { data: business, error: bizError } = await supabase
+      .from('businesses')
+      .select(`
+        id, name, slug,
+        custom_cards_enabled,
+        custom_cards_min_amount_cents,
+        custom_cards_max_amount_cents
+      `)
+      .eq('id', businessId)
+      .single();
+
+    if (bizError || !business) {
+      return NextResponse.json(
+        { error: 'Empresa não encontrada' },
+        { status: 404 }
+      );
+    }
+
+    if (!business.custom_cards_enabled) {
+      return NextResponse.json(
+        { error: 'Esta empresa não aceita vale-presentes personalizados' },
+        { status: 400 }
+      );
+    }
+
+    // Validate amount within limits
+    const minAmount = business.custom_cards_min_amount_cents || 1000;
+    const maxAmount = business.custom_cards_max_amount_cents || 100000;
+
+    if (amountCents < minAmount) {
+      return NextResponse.json(
+        { error: `Valor mínimo é R$ ${(minAmount / 100).toFixed(2)}` },
+        { status: 400 }
+      );
+    }
+
+    if (amountCents > maxAmount) {
+      return NextResponse.json(
+        { error: `Valor máximo é R$ ${(maxAmount / 100).toFixed(2)}` },
+        { status: 400 }
+      );
+    }
+
+    // ========================================
+    // 4. GENERATE UNIQUE CODE
+    // ========================================
+    let code: string;
+    let codeExists = true;
+    let attempts = 0;
+
+    while (codeExists && attempts < 10) {
+      code = generateGiftCardCode();
+      const { data: existing } = await supabase
+        .from('gift_cards')
+        .select('id')
+        .eq('code', code)
+        .single();
+      
+      codeExists = !!existing;
+      attempts++;
+    }
+
+    if (codeExists) {
+      return NextResponse.json(
+        { error: 'Erro ao gerar código. Tente novamente.' },
+        { status: 500 }
+      );
+    }
+
+    // Calculate expiration (365 days default for custom cards)
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 365);
+
+    // Build URLs
+    const baseUrl = getBaseUrl(request);
+    const storeUrl = `${baseUrl}/store/${business.slug}`;
+    const successUrl = `${baseUrl}/store/${business.slug}/success`;
+
+    // Check if payment gateway is configured
+    const usePaymentGateway = !!process.env.ABACATEPAY_API_KEY;
+
+    // Determine background color for display
+    const displayBgColor = bgType === 'color' ? (bgColor || '#1e3a5f') : (bgGradientStart || '#1e3a5f');
+
+    if (usePaymentGateway) {
+      // ========================================
+      // PRODUCTION FLOW
+      // ========================================
+      const { data: giftCard, error: giftCardError } = await supabase
+        .from('gift_cards')
+        .insert({
+          business_id: businessId,
+          template_id: null, // No template for custom cards
+          code: code!,
+          amount_cents: amountCents,
+          original_amount_cents: amountCents,
+          balance_cents: amountCents,
+          status: 'ACTIVE',
+          payment_status: 'COMPLETED',
+          purchaser_user_id: user.id,
+          purchaser_email: purchaserEmail,
+          purchaser_name: purchaserName,
+          recipient_email: recipientEmail,
+          recipient_name: recipientName,
+          recipient_message: recipientMessage || null,
+          expires_at: expiresAt.toISOString(),
+          // Custom card fields
+          is_custom: true,
+          custom_title: customTitle || null,
+          custom_bg_type: bgType,
+          custom_bg_color: bgColor || null,
+          custom_bg_gradient_start: bgGradientStart || null,
+          custom_bg_gradient_end: bgGradientEnd || null,
+          custom_bg_image_url: bgImageUrl || null,
+          custom_text_color: textColor,
+        })
+        .select()
+        .single();
+
+      if (giftCardError) {
+        console.error('Error creating custom gift card:', giftCardError);
+        return NextResponse.json(
+          { error: 'Erro ao criar vale-presente' },
+          { status: 500 }
+        );
+      }
+
+      try {
+        const billing = await createBilling({
+          frequency: 'ONE_TIME',
+          methods: ['PIX'],
+          products: [{
+            externalId: giftCard.id,
+            name: `Vale-Presente Personalizado ${business.name}`,
+            description: customTitle || 'Vale-presente personalizado',
+            quantity: 1,
+            price: amountCents,
+          }],
+          completionUrl: `${successUrl}?code=${encodeURIComponent(giftCard.code)}`,
+          returnUrl: storeUrl,
+          externalId: giftCard.id,
+          metadata: {
+            giftCardId: giftCard.id,
+            giftCardCode: giftCard.code,
+            businessId,
+            isCustom: true,
+            purchaserEmail,
+            purchaserName,
+          },
+        });
+
+        await supabase
+          .from('gift_cards')
+          .update({ payment_provider_id: billing.id })
+          .eq('id', giftCard.id);
+
+        console.log('[CustomCheckout] Created billing:', {
+          billingId: billing.id,
+          giftCardId: giftCard.id,
+          amount: amountCents,
+        });
+
+        return NextResponse.json({
+          success: true,
+          checkoutUrl: billing.url,
+          billingId: billing.id,
+        });
+
+      } catch (paymentError) {
+        console.error('Error creating payment:', paymentError);
+        await supabase.from('gift_cards').delete().eq('id', giftCard.id);
+        
+        return NextResponse.json(
+          { error: 'Erro ao criar pagamento. Tente novamente.' },
+          { status: 500 }
+        );
+      }
+
+    } else {
+      // ========================================
+      // DEV/TEST FLOW
+      // ========================================
+      console.warn('[CustomCheckout] ABACATEPAY_API_KEY not set, creating card without payment');
+
+      const { data: giftCard, error: giftCardError } = await supabase
+        .from('gift_cards')
+        .insert({
+          business_id: businessId,
+          template_id: null,
+          code: code!,
+          amount_cents: amountCents,
+          original_amount_cents: amountCents,
+          balance_cents: amountCents,
+          status: 'ACTIVE',
+          purchaser_user_id: user.id,
+          purchaser_email: purchaserEmail,
+          purchaser_name: purchaserName,
+          recipient_email: recipientEmail,
+          recipient_name: recipientName,
+          recipient_message: recipientMessage || null,
+          expires_at: expiresAt.toISOString(),
+          // Custom card fields
+          is_custom: true,
+          custom_title: customTitle || null,
+          custom_bg_type: bgType,
+          custom_bg_color: bgColor || null,
+          custom_bg_gradient_start: bgGradientStart || null,
+          custom_bg_gradient_end: bgGradientEnd || null,
+          custom_bg_image_url: bgImageUrl || null,
+          custom_text_color: textColor,
+        })
+        .select()
+        .single();
+
+      if (giftCardError) {
+        console.error('Error creating custom gift card:', giftCardError);
+        return NextResponse.json(
+          { error: 'Erro ao criar vale-presente' },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        giftCardCode: giftCard.code,
+        giftCardId: giftCard.id,
+        devMode: true,
+      });
+    }
+
+  } catch (error) {
+    console.error('Custom checkout error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
+    return NextResponse.json(
+      { 
+        error: process.env.NODE_ENV === 'development' ? errorMessage : 'Erro interno do servidor',
+      },
+      { status: 500 }
+    );
+  }
+}

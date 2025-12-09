@@ -28,6 +28,13 @@ export interface GiftCardPDFData {
   purchaserName?: string;
   message?: string;
   qrCodeDataUrl?: string;
+  // Custom card fields
+  isCustom?: boolean;
+  customTitle?: string;
+  customBgType?: 'color' | 'gradient' | 'image';
+  customBgGradientStart?: string;
+  customBgGradientEnd?: string;
+  customTextColor?: string;
 }
 
 const styles = StyleSheet.create({
@@ -190,6 +197,19 @@ const styles = StyleSheet.create({
 });
 
 export function GiftCardPDF({ data }: { data: GiftCardPDFData }) {
+  // Determine header background style
+  const getHeaderStyle = () => {
+    if (data.isCustom && data.customBgType === 'gradient' && data.customBgGradientStart && data.customBgGradientEnd) {
+      // For PDF, we can't use CSS gradients, so we use the start color
+      return { backgroundColor: data.customBgGradientStart };
+    }
+    return { backgroundColor: data.cardColor };
+  };
+
+  // Determine text color
+  const textColor = data.customTextColor || 'white';
+  const headerLabel = data.isCustom && data.customTitle ? data.customTitle : 'Vale-Presente';
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -197,18 +217,18 @@ export function GiftCardPDF({ data }: { data: GiftCardPDFData }) {
           {/* Gift Card */}
           <View style={styles.card}>
             {/* Header with color */}
-            <View style={[styles.cardHeader, { backgroundColor: data.cardColor }]}>
+            <View style={[styles.cardHeader, getHeaderStyle()]}>
               {/* Decorative circles */}
               <View style={styles.decorCircle1} />
               <View style={styles.decorCircle2} />
               
-              <Text style={styles.cardHeaderLabel}>Vale-Presente</Text>
-              <Text style={styles.cardHeaderAmount}>{data.amountFormatted}</Text>
-              <Text style={styles.cardHeaderBusiness}>{data.businessName}</Text>
+              <Text style={[styles.cardHeaderLabel, { color: `${textColor}99` }]}>{headerLabel}</Text>
+              <Text style={[styles.cardHeaderAmount, { color: textColor }]}>{data.amountFormatted}</Text>
+              <Text style={[styles.cardHeaderBusiness, { color: `${textColor}cc` }]}>{data.businessName}</Text>
               
               {/* Code */}
               <View style={styles.codeContainer}>
-                <Text style={styles.codeText}>{data.code}</Text>
+                <Text style={[styles.codeText, { color: textColor }]}>{data.code}</Text>
               </View>
             </View>
             

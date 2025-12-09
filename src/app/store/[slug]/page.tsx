@@ -262,6 +262,11 @@ export default async function StorePage({ params }: StorePageProps) {
   
   // Show/hide footer
   const showFooter = business.show_footer ?? true;
+  
+  // Custom cards
+  const customCardsEnabled = business.custom_cards_enabled ?? false;
+  const customCardsSectionTitle = business.custom_cards_section_title || 'Crie seu Vale-Presente Personalizado';
+  const customCardsSectionSubtitle = business.custom_cards_section_subtitle || 'Personalize com sua mensagem especial';
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: pageBgColor }}>
@@ -499,6 +504,52 @@ export default async function StorePage({ params }: StorePageProps) {
                   ))}
                 </div>
               )}
+            </div>
+          </section>
+        )}
+
+        {/* Custom Gift Cards Section */}
+        {customCardsEnabled && (
+          <section className="py-12 md:py-16 bg-gradient-to-br from-slate-50 to-white">
+            <div className="max-w-6xl mx-auto px-4">
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-100 to-indigo-100 text-violet-700 rounded-full text-sm font-medium mb-4">
+                  <Sparkles className="w-4 h-4" />
+                  Novo
+                </div>
+                <h3 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
+                  {customCardsSectionTitle}
+                </h3>
+                <p className="text-slate-600 max-w-2xl mx-auto">
+                  {customCardsSectionSubtitle}
+                </p>
+              </div>
+              
+              <div className="max-w-2xl mx-auto">
+                <Link 
+                  href={`/store/${slug}/custom`}
+                  className="group block"
+                >
+                  <div className={`bg-white border-2 border-dashed border-slate-300 hover:border-violet-400 ${radiusClass} p-8 text-center transition-all hover:shadow-lg`}>
+                    <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Sparkles className="w-8 h-8 text-violet-600" />
+                    </div>
+                    <h4 className="text-xl font-semibold text-slate-900 mb-2">
+                      Criar Vale-Presente Personalizado
+                    </h4>
+                    <p className="text-slate-600 mb-4">
+                      Escolha o valor, personalize o design e adicione uma mensagem especial
+                    </p>
+                    <span 
+                      className={`inline-flex items-center gap-2 px-6 py-3 text-white font-semibold ${radiusClass} transition-all group-hover:gap-3`}
+                      style={{ backgroundColor: secondaryColor }}
+                    >
+                      Começar
+                      <ChevronRight className="w-5 h-5" />
+                    </span>
+                  </div>
+                </Link>
+              </div>
             </div>
           </section>
         )}

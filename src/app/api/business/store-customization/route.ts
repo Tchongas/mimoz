@@ -153,6 +153,15 @@ export async function PATCH(request: NextRequest) {
       'og_image_url',
       'meta_title',
       'meta_description',
+      
+      // Custom gift cards
+      'custom_cards_enabled',
+      'custom_cards_min_amount_cents',
+      'custom_cards_max_amount_cents',
+      'custom_cards_preset_amounts',
+      'custom_cards_allow_custom_amount',
+      'custom_cards_section_title',
+      'custom_cards_section_subtitle',
     ];
 
     // Filter to only allowed fields

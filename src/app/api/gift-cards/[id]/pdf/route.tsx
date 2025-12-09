@@ -77,9 +77,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
     
     // Prepare PDF data
-    const cardColor = giftCard.template?.card_color || 
-                      giftCard.business?.gift_card_color || 
-                      '#1e3a5f';
+    // For custom cards, use custom colors; otherwise use template/business colors
+    const cardColor = giftCard.is_custom 
+      ? (giftCard.custom_bg_color || giftCard.business?.gift_card_color || '#1e3a5f')
+      : (giftCard.template?.card_color || giftCard.business?.gift_card_color || '#1e3a5f');
     
     const pdfData = {
       code: giftCard.code,
@@ -93,6 +94,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       recipientName: giftCard.recipient_name,
       purchaserName: giftCard.purchaser_name,
       message: giftCard.recipient_message,
+      // Custom card fields
+      isCustom: giftCard.is_custom || false,
+      customTitle: giftCard.custom_title,
+      customBgType: giftCard.custom_bg_type,
+      customBgGradientStart: giftCard.custom_bg_gradient_start,
+      customBgGradientEnd: giftCard.custom_bg_gradient_end,
+      customTextColor: giftCard.custom_text_color,
     };
     
     // Generate PDF

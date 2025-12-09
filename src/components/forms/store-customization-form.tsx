@@ -322,6 +322,17 @@ export function StoreCustomizationForm({ business }: StoreCustomizationFormProps
   const [ogImageUrl, setOgImageUrl] = useState(business.og_image_url || '');
   const [metaTitle, setMetaTitle] = useState(business.meta_title || '');
   const [metaDescription, setMetaDescription] = useState(business.meta_description || '');
+  
+  // Custom gift cards settings
+  const [customCardsEnabled, setCustomCardsEnabled] = useState(business.custom_cards_enabled ?? false);
+  const [customCardsMinAmount, setCustomCardsMinAmount] = useState((business.custom_cards_min_amount_cents || 1000) / 100);
+  const [customCardsMaxAmount, setCustomCardsMaxAmount] = useState((business.custom_cards_max_amount_cents || 100000) / 100);
+  const [customCardsPresetAmounts, setCustomCardsPresetAmounts] = useState(
+    (business.custom_cards_preset_amounts || [2500, 5000, 10000, 15000, 20000, 50000]).map(a => a / 100).join(', ')
+  );
+  const [customCardsAllowCustomAmount, setCustomCardsAllowCustomAmount] = useState(business.custom_cards_allow_custom_amount ?? true);
+  const [customCardsSectionTitle, setCustomCardsSectionTitle] = useState(business.custom_cards_section_title || 'Crie seu Vale-Presente Personalizado');
+  const [customCardsSectionSubtitle, setCustomCardsSectionSubtitle] = useState(business.custom_cards_section_subtitle || 'Personalize com sua mensagem especial');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -446,6 +457,18 @@ export function StoreCustomizationForm({ business }: StoreCustomizationFormProps
           og_image_url: ogImageUrl || null,
           meta_title: metaTitle || null,
           meta_description: metaDescription || null,
+          
+          // Custom gift cards
+          custom_cards_enabled: customCardsEnabled,
+          custom_cards_min_amount_cents: Math.round(customCardsMinAmount * 100),
+          custom_cards_max_amount_cents: Math.round(customCardsMaxAmount * 100),
+          custom_cards_preset_amounts: customCardsPresetAmounts
+            .split(',')
+            .map(s => Math.round(parseFloat(s.trim()) * 100))
+            .filter(n => !isNaN(n) && n > 0),
+          custom_cards_allow_custom_amount: customCardsAllowCustomAmount,
+          custom_cards_section_title: customCardsSectionTitle || null,
+          custom_cards_section_subtitle: customCardsSectionSubtitle || null,
         }),
       });
 
@@ -1062,6 +1085,118 @@ export function StoreCustomizationForm({ business }: StoreCustomizationFormProps
               disabled={isLoading}
             />
           </div>
+        )}
+      </CollapsibleSection>
+
+      {/* Custom Gift Cards Settings */}
+      <CollapsibleSection 
+        title="Vale-Presentes Personalizados" 
+        icon={<Gift className="w-5 h-5 text-violet-600" />}
+      >
+        <div className="p-4 bg-violet-50 rounded-lg mb-4">
+          <p className="text-sm text-violet-800">
+            Permita que seus clientes criem vale-presentes personalizados com valor, design e mensagem próprios.
+          </p>
+        </div>
+        
+        <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+          <div>
+            <p className="font-medium text-slate-900">Ativar Vale-Presentes Personalizados</p>
+            <p className="text-sm text-slate-500">Clientes poderão criar seus próprios vale-presentes</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setCustomCardsEnabled(!customCardsEnabled)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              customCardsEnabled ? 'bg-violet-600' : 'bg-slate-300'
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                customCardsEnabled ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+        
+        {customCardsEnabled && (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+              <div className="space-y-1">
+                <Label>Valor Mínimo (R$)</Label>
+                <Input
+                  type="number"
+                  value={customCardsMinAmount}
+                  onChange={(e) => setCustomCardsMinAmount(parseFloat(e.target.value) || 0)}
+                  min={1}
+                  step={0.01}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Valor Máximo (R$)</Label>
+                <Input
+                  type="number"
+                  value={customCardsMaxAmount}
+                  onChange={(e) => setCustomCardsMaxAmount(parseFloat(e.target.value) || 0)}
+                  min={1}
+                  step={0.01}
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-1">
+              <Label>Valores Pré-definidos (R$)</Label>
+              <Input
+                value={customCardsPresetAmounts}
+                onChange={(e) => setCustomCardsPresetAmounts(e.target.value)}
+                placeholder="25, 50, 100, 150, 200, 500"
+                disabled={isLoading}
+              />
+              <p className="text-xs text-slate-500">Separe os valores por vírgula. Ex: 25, 50, 100</p>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+              <div>
+                <p className="font-medium text-slate-900">Permitir Valor Personalizado</p>
+                <p className="text-sm text-slate-500">Cliente pode digitar qualquer valor dentro dos limites</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCustomCardsAllowCustomAmount(!customCardsAllowCustomAmount)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  customCardsAllowCustomAmount ? 'bg-violet-600' : 'bg-slate-300'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    customCardsAllowCustomAmount ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+            
+            <div className="space-y-1">
+              <Label>Título da Seção</Label>
+              <Input
+                value={customCardsSectionTitle}
+                onChange={(e) => setCustomCardsSectionTitle(e.target.value)}
+                placeholder="Crie seu Vale-Presente Personalizado"
+                disabled={isLoading}
+              />
+            </div>
+            
+            <div className="space-y-1">
+              <Label>Subtítulo da Seção</Label>
+              <Input
+                value={customCardsSectionSubtitle}
+                onChange={(e) => setCustomCardsSectionSubtitle(e.target.value)}
+                placeholder="Personalize com sua mensagem especial"
+                disabled={isLoading}
+              />
+            </div>
+          </>
         )}
       </CollapsibleSection>
 

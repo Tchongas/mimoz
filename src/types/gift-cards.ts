@@ -5,6 +5,7 @@
 export type GiftCardStatus = 'PENDING' | 'ACTIVE' | 'REDEEMED' | 'EXPIRED' | 'CANCELLED';
 export type PaymentStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
 export type PaymentMethod = 'PIX' | 'CARD';
+export type CustomBgType = 'color' | 'gradient' | 'image';
 
 export interface GiftCard {
   id: string;
@@ -30,6 +31,15 @@ export interface GiftCard {
   purchased_at: string;
   expires_at: string;
   redeemed_at: string | null;
+  // Custom card fields
+  is_custom: boolean;
+  custom_title: string | null;
+  custom_bg_type: CustomBgType | null;
+  custom_bg_color: string | null;
+  custom_bg_gradient_start: string | null;
+  custom_bg_gradient_end: string | null;
+  custom_bg_image_url: string | null;
+  custom_text_color: string | null;
 }
 
 export interface GiftCardTemplate {
@@ -178,4 +188,47 @@ export interface CheckoutResponse {
   giftCardCode?: string;
   billingId?: string;
   devMode?: boolean;
+}
+
+// ============================================
+// Custom Gift Card Types
+// ============================================
+
+export interface CardBackground {
+  id: string;
+  name: string;
+  type: CustomBgType;
+  color: string | null;
+  gradient_start: string | null;
+  gradient_end: string | null;
+  gradient_direction: string | null;
+  image_url: string | null;
+  text_color: string;
+  category?: string;
+  is_active: boolean;
+  sort_order: number;
+}
+
+export interface CustomCardSettings {
+  enabled: boolean;
+  min_amount_cents: number;
+  max_amount_cents: number;
+  preset_amounts: number[];
+  allow_custom_amount: boolean;
+  section_title: string;
+  section_subtitle: string;
+}
+
+export interface CustomCardData {
+  amount_cents: number;
+  title: string;
+  message: string;
+  bg_type: CustomBgType;
+  bg_color: string | null;
+  bg_gradient_start: string | null;
+  bg_gradient_end: string | null;
+  bg_image_url: string | null;
+  text_color: string;
+  recipient_name: string;
+  recipient_email: string;
 }

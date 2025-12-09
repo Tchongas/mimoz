@@ -152,6 +152,15 @@ export interface Business {
   og_image_url: string | null;
   meta_title: string | null;
   meta_description: string | null;
+  
+  // Custom gift cards settings
+  custom_cards_enabled: boolean | null;
+  custom_cards_min_amount_cents: number | null;
+  custom_cards_max_amount_cents: number | null;
+  custom_cards_preset_amounts: number[] | null;
+  custom_cards_allow_custom_amount: boolean | null;
+  custom_cards_section_title: string | null;
+  custom_cards_section_subtitle: string | null;
 }
 
 export interface Profile {
