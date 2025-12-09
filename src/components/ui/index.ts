@@ -15,3 +15,4 @@ export { Spinner } from './spinner';
 export { CopyButton } from './copy-button';
 export { Skeleton, SkeletonCard, SkeletonTable, SkeletonStats, SkeletonForm, SkeletonPage } from './skeleton';
 export { NavigationProgress } from './navigation-progress';
+export { GiftCardPreview, GIFT_CARD_EMOJIS, type GiftCardPreviewProps } from './gift-card-preview';

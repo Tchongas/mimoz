@@ -9,14 +9,13 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Sparkles, 
-  Gift, 
   Heart, 
-  Star, 
   PartyPopper,
   ChevronRight,
   Palette,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { GiftCardPreview, GIFT_CARD_EMOJIS } from '@/components/ui';
 
 interface CustomCardShowcaseProps {
   businessSlug: string;
@@ -41,14 +40,14 @@ const SHOWCASE_BACKGROUNDS = [
   { id: 'royal', name: 'Real', type: 'gradient', start: '#6d28d9', end: '#4f46e5', textColor: '#ffffff' },
 ];
 
-// Preset titles for the showcase
+// Preset titles for the showcase (title + emoji separated)
 const SHOWCASE_TITLES = [
-  'Feliz Aniversário! 🎂',
-  'Com Amor ❤️',
-  'Parabéns! 🎉',
-  'Para Você ✨',
-  'Obrigado! 💝',
-  'Boas Festas! 🎄',
+  { title: 'Feliz Aniversário!', emoji: '🎂' },
+  { title: 'Com Amor', emoji: '❤️' },
+  { title: 'Parabéns!', emoji: '🎉' },
+  { title: 'Para Você', emoji: '✨' },
+  { title: 'Obrigado!', emoji: '💝' },
+  { title: 'Boas Festas!', emoji: '🎄' },
 ];
 
 export function CustomCardShowcase({
@@ -90,7 +89,7 @@ export function CustomCardShowcase({
   }, []);
 
   const currentBg = SHOWCASE_BACKGROUNDS[selectedBgIndex];
-  const currentTitle = SHOWCASE_TITLES[titleIndex];
+  const currentTitleData = SHOWCASE_TITLES[titleIndex];
 
   const getBgStyle = () => {
     if (currentBg.type === 'gradient') {
@@ -110,7 +109,7 @@ export function CustomCardShowcase({
   };
 
   return (
-    <section className="relative py-16 md:py-24 overflow-hidden">
+    <section className="relative py-12 md:py-20 overflow-hidden">
       {/* Animated background */}
       <div 
         className="absolute inset-0 transition-all duration-1000 ease-in-out opacity-10"
@@ -128,93 +127,46 @@ export function CustomCardShowcase({
 
       <div className="relative max-w-6xl mx-auto px-4">
         {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-100 to-indigo-100 text-violet-700 rounded-full text-sm font-medium mb-4 animate-pulse-slow">
-            <Sparkles className="w-4 h-4" />
-            Experiência Exclusiva
-          </div>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 mb-4">
+        <div className="text-center mb-8 md:mb-12">
+          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900 mb-3">
             {sectionTitle}
           </h2>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+          <p className="text-base md:text-lg text-slate-600 max-w-2xl mx-auto">
             {sectionSubtitle}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-          {/* Interactive Card Preview */}
-          <div className="order-2 lg:order-1">
-            <div className="relative">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12 items-center">
+          {/* Interactive Card Preview - ON TOP for mobile */}
+          <div className="order-1 lg:order-1">
+            <div className="relative max-w-md mx-auto lg:max-w-none">
               {/* Glow effect behind card */}
               <div 
                 className="absolute inset-4 blur-3xl opacity-40 transition-all duration-1000"
                 style={getBgStyle()}
               />
               
-              {/* Card */}
+              {/* Card using shared component */}
               <div 
-                className={`relative aspect-[1.6/1] rounded-3xl overflow-hidden shadow-2xl transform transition-all duration-500 ${
-                  isAnimating ? 'scale-95 opacity-80' : 'scale-100 opacity-100'
-                } hover:scale-[1.02] cursor-pointer`}
-                style={getBgStyle()}
+                className="relative cursor-pointer"
                 onClick={() => handleBgSelect((selectedBgIndex + 1) % SHOWCASE_BACKGROUNDS.length)}
               >
-                {/* Decorative elements */}
-                <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl transform translate-x-10 -translate-y-10" />
-                <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full blur-xl transform -translate-x-8 translate-y-8" />
-                <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-white/5 rounded-full blur-3xl transform -translate-x-1/2 -translate-y-1/2" />
-                
-                {/* Sparkle effects */}
-                <div className="absolute top-6 right-8">
-                  <Sparkles className="w-6 h-6 text-white/40 animate-pulse" />
-                </div>
-                <div className="absolute bottom-8 left-6">
-                  <Star className="w-5 h-5 text-white/30 animate-pulse-slow" />
-                </div>
-                
-                {/* Content */}
-                <div className="relative h-full flex flex-col justify-between p-6 md:p-8">
-                  {/* Top: Title */}
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p 
-                        className="text-xl md:text-2xl font-bold transition-all duration-500"
-                        style={{ color: currentBg.textColor }}
-                      >
-                        {currentTitle}
-                      </p>
-                    </div>
-                    <Gift className="w-8 h-8 opacity-40" style={{ color: currentBg.textColor }} />
-                  </div>
-                  
-                  {/* Center: Amount */}
-                  <div className="text-center py-4">
-                    <p 
-                      className="text-5xl md:text-6xl font-bold tracking-tight"
-                      style={{ color: currentBg.textColor }}
-                    >
-                      {formatCurrency(selectedAmount)}
-                    </p>
-                    <p 
-                      className="text-sm mt-2 opacity-70"
-                      style={{ color: currentBg.textColor }}
-                    >
-                      {businessName}
-                    </p>
-                  </div>
-                  
-                  {/* Bottom: Recipient placeholder */}
-                  <div className="flex justify-between items-end">
-                    <div>
-                      <p className="text-xs opacity-50" style={{ color: currentBg.textColor }}>Para</p>
-                      <p className="font-medium opacity-80" style={{ color: currentBg.textColor }}>Alguém Especial</p>
-                    </div>
-                    <div className="flex gap-1">
-                      <Heart className="w-4 h-4 opacity-30" style={{ color: currentBg.textColor }} />
-                      <Star className="w-4 h-4 opacity-30" style={{ color: currentBg.textColor }} />
-                    </div>
-                  </div>
-                </div>
+                <GiftCardPreview
+                  title={currentTitleData.title}
+                  emoji={currentTitleData.emoji}
+                  amount={selectedAmount}
+                  businessName={businessName}
+                  recipientName="Alguém Especial"
+                  bgType={currentBg.type as 'color' | 'gradient'}
+                  bgColor={currentBg.color}
+                  bgGradientStart={currentBg.start}
+                  bgGradientEnd={currentBg.end}
+                  bgGradientDirection="to-br"
+                  textColor={currentBg.textColor}
+                  size="lg"
+                  showMessage={false}
+                  isAnimating={isAnimating}
+                />
               </div>
 
               {/* Click hint */}
@@ -225,7 +177,7 @@ export function CustomCardShowcase({
           </div>
 
           {/* Right side: Features & CTA */}
-          <div className="order-1 lg:order-2 space-y-8">
+          <div className="order-2 lg:order-2 space-y-6">
             {/* Background selector */}
             <div>
               <p className="text-sm font-medium text-slate-700 mb-3 flex items-center gap-2">
