@@ -290,13 +290,14 @@ export function GiftCardModal({ card, business, template, type, onClose }: GiftC
         </div>
 
         {/* Actions */}
-        <div className="mt-5 flex items-center justify-center gap-3">
+        <div className="mt-5 flex items-center justify-center gap-3 relative z-10">
           {/* Only show PDF download if user can see the code */}
           {!isGiftSentToOther && (
             <a
               href={`/api/gift-cards/${card.id}/pdf`}
-              download
-              className="flex items-center gap-2 px-5 py-2.5 bg-white rounded-xl text-slate-700 hover:bg-slate-100 transition-all text-sm font-medium shadow-sm"
+              download={`vale-presente-${card.code || card.id}.pdf`}
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-2 px-5 py-2.5 bg-white rounded-xl text-slate-700 hover:bg-slate-100 transition-all text-sm font-medium shadow-sm cursor-pointer"
             >
               <Download className="w-4 h-4" />
               Baixar PDF
@@ -304,7 +305,8 @@ export function GiftCardModal({ card, business, template, type, onClose }: GiftC
           )}
           <a
             href={`/store/${business.slug}`}
-            className="flex items-center gap-2 px-5 py-2.5 bg-white rounded-xl text-slate-700 hover:bg-slate-100 transition-all text-sm font-medium shadow-sm"
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-2 px-5 py-2.5 bg-white rounded-xl text-slate-700 hover:bg-slate-100 transition-all text-sm font-medium shadow-sm cursor-pointer"
           >
             <Store className="w-4 h-4" />
             Ver Loja

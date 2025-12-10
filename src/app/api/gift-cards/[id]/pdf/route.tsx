@@ -3,6 +3,10 @@
 // ============================================
 // GET /api/gift-cards/[id]/pdf - Generate and download gift card PDF
 
+// Force Node.js runtime - @react-pdf/renderer doesn't work in Edge
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { renderToBuffer } from '@react-pdf/renderer';

@@ -10,7 +10,7 @@ import Footer from '@/components/ui/footer';
 import { GiftCardDisplay } from './components/GiftCardDisplay';
 import { InfoGrid } from './components/InfoGrid';
 import { PaymentPending } from './components/PaymentPending';
-import { SuccessConfetti } from './components/SuccessConfetti';
+// Confetti removed - was too buggy
 
 interface SuccessPageProps {
   params: Promise<{ slug: string }>;
@@ -115,9 +115,6 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex flex-col overflow-hidden">
-      {/* Confetti on success */}
-      {!isPending && <SuccessConfetti />}
-      
       {/* Decorative background elements */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div 
