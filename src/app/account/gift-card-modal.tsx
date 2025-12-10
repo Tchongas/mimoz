@@ -5,11 +5,10 @@
 // ============================================
 // Shows gift card in a popup for cashier scanning
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { X, Gift, Sparkles, Copy, Check, Calendar, Store, Download } from 'lucide-react';
+import { X, Gift, Sparkles, Copy, Check, Calendar, Store, Download, Heart, MessageCircle } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
-import { GiftCardPreview } from '@/components/ui';
 
 interface GiftCardModalProps {
   card: {
@@ -48,6 +47,13 @@ interface GiftCardModalProps {
 
 export function GiftCardModal({ card, business, template, type, onClose }: GiftCardModalProps) {
   const [copied, setCopied] = useState(false);
+  const [isRevealed, setIsRevealed] = useState(false);
+  
+  // Trigger reveal animation
+  useEffect(() => {
+    const timer = setTimeout(() => setIsRevealed(true), 50);
+    return () => clearTimeout(timer);
+  }, []);
   
   // Determine colors based on whether it's a custom card or template
   const isCustom = card.is_custom;
@@ -92,27 +98,39 @@ export function GiftCardModal({ card, business, template, type, onClose }: GiftC
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
+      {/* Backdrop with blur */}
       <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className={`absolute inset-0 bg-black/70 backdrop-blur-md transition-opacity duration-300 ${
+          isRevealed ? 'opacity-100' : 'opacity-0'
+        }`}
         onClick={onClose}
       />
       
       {/* Modal */}
-      <div className="relative w-full max-w-md animate-in fade-in zoom-in-95 duration-200">
+      <div className={`relative w-full max-w-md transition-all duration-500 ${
+        isRevealed 
+          ? 'opacity-100 scale-100 translate-y-0' 
+          : 'opacity-0 scale-95 translate-y-4'
+      }`}>
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute -top-12 right-0 p-2 text-white/80 hover:text-white transition-colors"
+          className="absolute -top-12 right-0 p-2 text-white/80 hover:text-white transition-colors z-10"
         >
           <X className="w-6 h-6" />
         </button>
 
-        {/* Card glow effect */}
+        {/* Card glow effect - animated */}
         <div 
-          className="absolute inset-0 rounded-3xl blur-3xl opacity-40"
+          className={`absolute inset-0 rounded-3xl blur-3xl transition-all duration-700 ${
+            isRevealed ? 'opacity-50 scale-110' : 'opacity-0 scale-100'
+          }`}
           style={{ backgroundColor: glowColor }}
         />
+
+        {/* Floating sparkles */}
+        <div className="absolute -top-6 -right-6 text-3xl animate-sparkle" style={{ animationDelay: '0s' }}>✨</div>
+        <div className="absolute -bottom-4 -left-4 text-2xl animate-sparkle" style={{ animationDelay: '0.5s' }}>🌟</div>
 
         {/* The Gift Card */}
         <div 
@@ -121,18 +139,21 @@ export function GiftCardModal({ card, business, template, type, onClose }: GiftC
         >
           {/* Decorative pattern */}
           <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-0 right-0 w-80 h-80 bg-white rounded-full -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-60 h-60 bg-white rounded-full translate-y-1/2 -translate-x-1/2" />
+            <div className="absolute -top-20 -right-20 w-80 h-80 bg-white rounded-full" />
+            <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-white rounded-full" />
             <div className="absolute top-1/2 left-1/2 w-40 h-40 bg-white rounded-full -translate-x-1/2 -translate-y-1/2 opacity-50" />
           </div>
 
-          <div className="relative p-8" style={{ color: textColor }}>
+          {/* Shimmer effect */}
+          <div className="absolute inset-0 animate-shimmer opacity-20" />
+
+          <div className="relative p-6 sm:p-8" style={{ color: textColor }}>
             {/* Header */}
             <div className="flex items-start justify-between mb-6">
               <div>
                 {isCustom && card.custom_title ? (
                   <>
-                    <p className="text-2xl font-bold mb-1">{card.custom_title}</p>
+                    <p className="text-2xl sm:text-3xl font-bold mb-1">{card.custom_title}</p>
                     <p className="text-sm opacity-70">{business.name}</p>
                   </>
                 ) : (
@@ -149,13 +170,23 @@ export function GiftCardModal({ card, business, template, type, onClose }: GiftC
                 )}
               </div>
               {isCustom && card.custom_emoji ? (
-                <span className="text-4xl">{card.custom_emoji}</span>
+                <span className="text-5xl animate-bounce" style={{ animationDuration: '3s' }}>
+                  {card.custom_emoji}
+                </span>
               ) : (
                 <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center">
                   <Gift className="w-7 h-7" />
                 </div>
               )}
             </div>
+
+            {/* Recipient name for received gifts */}
+            {type === 'received' && card.recipient_name && (
+              <div className="mb-4 flex items-center gap-2 text-sm opacity-80">
+                <Heart className="w-4 h-4" />
+                <span>Para: <strong>{card.recipient_name}</strong></span>
+              </div>
+            )}
 
             {/* Amount */}
             <div className="text-center py-6">
@@ -164,14 +195,14 @@ export function GiftCardModal({ card, business, template, type, onClose }: GiftC
                   <p className="opacity-50 text-sm line-through mb-1">
                     {formatCurrency(card.amount_cents)}
                   </p>
-                  <p className="text-6xl font-bold tracking-tight">
+                  <p className="text-6xl sm:text-7xl font-bold tracking-tight">
                     {formatCurrency(card.balance_cents)}
                   </p>
                   <p className="opacity-60 text-sm mt-2">Saldo disponível</p>
                 </>
               ) : (
                 <>
-                  <p className="text-6xl font-bold tracking-tight">
+                  <p className="text-6xl sm:text-7xl font-bold tracking-tight">
                     {formatCurrency(card.amount_cents)}
                   </p>
                   <p className="opacity-60 text-sm mt-2">
@@ -181,14 +212,39 @@ export function GiftCardModal({ card, business, template, type, onClose }: GiftC
               )}
             </div>
 
+            {/* Gift message - PROMINENT for received gifts */}
+            {type === 'received' && card.recipient_message && (
+              <div className="mb-4 p-4 bg-white/15 backdrop-blur rounded-2xl border border-white/10">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                    <MessageCircle className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    {card.purchaser_name && (
+                      <p className="text-xs opacity-60 mb-1 flex items-center gap-1">
+                        <Heart className="w-3 h-3" />
+                        Mensagem de {card.purchaser_name}
+                      </p>
+                    )}
+                    <p className="italic text-base leading-relaxed">
+                      "{card.recipient_message}"
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Code Section - Show code only if user is allowed to see it */}
             {isGiftSentToOther ? (
               // Gift sent to someone else - don't show code for security
-              <div className="bg-white/15 backdrop-blur rounded-2xl p-5 mt-4">
+              <div className="bg-white/15 backdrop-blur rounded-2xl p-5">
                 <div className="text-center">
-                  <p className="text-lg font-medium mb-2">🎁 Presente Enviado</p>
-                  <p className="opacity-70 text-sm mb-3">
-                    Este vale-presente foi enviado para <strong>{card.recipient_name}</strong>
+                  <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-white/20 flex items-center justify-center">
+                    <span className="text-3xl">🎁</span>
+                  </div>
+                  <p className="text-lg font-semibold mb-2">Presente Enviado!</p>
+                  <p className="opacity-70 text-sm mb-2">
+                    Enviado para <strong>{card.recipient_name}</strong>
                   </p>
                   <p className="opacity-50 text-xs">
                     O código está disponível apenas para o destinatário
@@ -197,18 +253,18 @@ export function GiftCardModal({ card, business, template, type, onClose }: GiftC
               </div>
             ) : (
               // Show code for self-purchases or received gifts
-              <div className="bg-white/15 backdrop-blur rounded-2xl p-5 mt-4">
+              <div className="bg-white/15 backdrop-blur rounded-2xl p-5">
                 <p className="opacity-50 text-xs uppercase tracking-wider text-center mb-3">
                   Apresente este código no caixa
                 </p>
-                <div className="flex items-center justify-center gap-4">
-                  <p className="text-3xl sm:text-4xl font-mono font-bold tracking-[0.2em] text-center">
+                <div className="flex items-center justify-center">
+                  <p className="text-3xl sm:text-4xl font-mono font-bold tracking-[0.15em] text-center">
                     {card.code}
                   </p>
                 </div>
                 <button
                   onClick={handleCopy}
-                  className="mt-4 w-full flex items-center justify-center gap-2 py-2 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-sm font-medium"
+                  className="mt-4 w-full flex items-center justify-center gap-2 py-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all text-sm font-medium hover:scale-[1.02]"
                 >
                   {copied ? (
                     <>
@@ -225,29 +281,26 @@ export function GiftCardModal({ card, business, template, type, onClose }: GiftC
               </div>
             )}
 
-            {/* Gift message if received */}
-            {type === 'received' && card.purchaser_name && (
-              <div className="mt-4 p-4 bg-white/10 rounded-xl">
-                <p className="opacity-60 text-xs mb-1">Presente de</p>
-                <p className="font-medium">{card.purchaser_name}</p>
-                {card.recipient_message && (
-                  <p className="opacity-80 text-sm mt-2 italic">
-                    &ldquo;{card.recipient_message}&rdquo;
-                  </p>
-                )}
+            {/* Sender info for received gifts (if no message) */}
+            {type === 'received' && card.purchaser_name && !card.recipient_message && (
+              <div className="mt-4 p-3 bg-white/10 rounded-xl text-center">
+                <p className="text-sm opacity-80">
+                  <Heart className="w-3 h-3 inline mr-1" />
+                  Presente de <strong>{card.purchaser_name}</strong>
+                </p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="mt-4 flex items-center justify-center gap-4">
+        {/* Actions - More prominent */}
+        <div className="mt-5 flex items-center justify-center gap-3">
           {/* Only show PDF download if user can see the code */}
           {!isGiftSentToOther && (
             <a
               href={`/api/gift-cards/${card.id}/pdf`}
               download
-              className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-white/80 hover:text-white transition-colors text-sm"
+              className="flex items-center gap-2 px-5 py-2.5 bg-white/15 hover:bg-white/25 rounded-xl text-white transition-all text-sm font-medium hover:scale-105"
             >
               <Download className="w-4 h-4" />
               Baixar PDF
@@ -255,10 +308,10 @@ export function GiftCardModal({ card, business, template, type, onClose }: GiftC
           )}
           <a
             href={`/store/${business.slug}`}
-            className="flex items-center gap-2 px-4 py-2 text-white/80 hover:text-white transition-colors text-sm"
+            className="flex items-center gap-2 px-5 py-2.5 bg-white/15 hover:bg-white/25 rounded-xl text-white transition-all text-sm font-medium hover:scale-105"
           >
             <Store className="w-4 h-4" />
-            Loja {business.name}
+            Loja
           </a>
         </div>
       </div>
@@ -315,6 +368,9 @@ export function GiftCardWithModal({ card, userEmail, type }: GiftCardWithModalPr
   const hasBalance = card.balance_cents > 0;
   const isUsed = card.balance_cents < card.amount_cents;
 
+  // Check if there's a message to show
+  const hasMessage = type === 'received' && card.recipient_message;
+
   return (
     <>
       <div 
@@ -323,7 +379,7 @@ export function GiftCardWithModal({ card, userEmail, type }: GiftCardWithModalPr
       >
         {/* Glow effect */}
         <div 
-          className="absolute inset-0 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-300 -z-10"
+          className="absolute inset-0 rounded-2xl blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-300 -z-10"
           style={{ backgroundColor: glowColor }}
         />
         
@@ -337,6 +393,9 @@ export function GiftCardWithModal({ card, userEmail, type }: GiftCardWithModalPr
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-white rounded-full" />
             <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white rounded-full" />
           </div>
+
+          {/* Shimmer on hover */}
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-20 animate-shimmer transition-opacity" />
           
           {/* Content */}
           <div className="relative p-5">
@@ -344,7 +403,9 @@ export function GiftCardWithModal({ card, userEmail, type }: GiftCardWithModalPr
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1 min-w-0">
                 {card.is_custom && card.custom_emoji && (
-                  <span className="text-3xl mb-2 block">{card.custom_emoji}</span>
+                  <span className="text-3xl mb-2 block group-hover:animate-bounce" style={{ animationDuration: '2s' }}>
+                    {card.custom_emoji}
+                  </span>
                 )}
                 <h3 className="font-bold text-lg truncate" style={{ color: textColor }}>
                   {card.is_custom && card.custom_title ? card.custom_title : (business?.name || 'Vale-Presente')}
@@ -386,6 +447,32 @@ export function GiftCardWithModal({ card, userEmail, type }: GiftCardWithModalPr
                 </span>
               )}
             </div>
+
+            {/* Message preview for received gifts */}
+            {hasMessage && (
+              <div 
+                className="mb-4 p-3 rounded-xl text-sm"
+                style={{ backgroundColor: `${textColor}15` }}
+              >
+                <div className="flex items-start gap-2">
+                  <span className="text-base flex-shrink-0">💌</span>
+                  <p 
+                    className="italic line-clamp-2 opacity-90"
+                    style={{ color: textColor }}
+                  >
+                    "{card.recipient_message}"
+                  </p>
+                </div>
+                {card.purchaser_name && (
+                  <p 
+                    className="text-xs mt-1 opacity-60 text-right"
+                    style={{ color: textColor }}
+                  >
+                    — {card.purchaser_name}
+                  </p>
+                )}
+              </div>
+            )}
             
             {/* Footer info */}
             <div 
@@ -422,8 +509,9 @@ export function GiftCardWithModal({ card, userEmail, type }: GiftCardWithModalPr
         
         {/* Bottom bar with business link */}
         <div className="bg-white/95 backdrop-blur px-4 py-2.5 flex items-center justify-between">
-          <span className="text-xs text-slate-500">
-            Toque para ver código
+          <span className="text-xs text-slate-500 flex items-center gap-1">
+            <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            Toque para abrir
           </span>
           {business && (
             <Link

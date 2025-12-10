@@ -22,6 +22,7 @@ import {
   CreditCard,
   Send,
   Gift,
+  X,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { GiftCardPreview, GIFT_CARD_EMOJIS } from '@/components/ui';
@@ -386,34 +387,66 @@ export function CustomCardBuilder({
                   ))}
                 </div>
 
-                {/* Custom amount */}
+                {/* Custom amount - inline input style */}
                 {settings.allowCustomAmount && (
-                  <div>
-                    <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
-                      <input
-                        type="checkbox"
-                        checked={useCustomAmount}
-                        onChange={(e) => setUseCustomAmount(e.target.checked)}
-                        className="rounded border-slate-300"
-                      />
-                      Outro valor
-                    </label>
-                    {useCustomAmount && (
-                      <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-medium">R$</span>
-                        <input
-                          type="number"
-                          value={customAmount}
-                          onChange={(e) => setCustomAmount(e.target.value)}
-                          placeholder="0,00"
-                          min={settings.minAmount / 100}
-                          max={settings.maxAmount / 100}
-                          step="0.01"
-                          className="w-full pl-14 pr-4 py-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent text-xl font-semibold text-slate-900 placeholder:text-slate-400"
-                        />
-                      </div>
-                    )}
-                    <p className="text-xs text-slate-500 mt-2">
+                  <div className="relative">
+                    <button
+                      onClick={() => {
+                        setUseCustomAmount(true);
+                        // Focus the input after a short delay
+                        setTimeout(() => {
+                          const input = document.getElementById('custom-amount-input');
+                          if (input) input.focus();
+                        }, 50);
+                      }}
+                      className={`w-full py-4 px-4 rounded-xl font-semibold transition-all text-base flex items-center justify-center gap-2 ${
+                        useCustomAmount
+                          ? 'ring-2 ring-offset-2 text-white'
+                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      }`}
+                      style={
+                        useCustomAmount
+                          ? { backgroundColor: secondaryColor }
+                          : {}
+                      }
+                    >
+                      {useCustomAmount ? (
+                        <div className="flex items-center gap-2 w-full">
+                          <DollarSign className="w-5 h-5 flex-shrink-0" />
+                          <div className="flex items-center gap-1 flex-1">
+                            <span className="text-white/80">R$</span>
+                            <input
+                              id="custom-amount-input"
+                              type="number"
+                              value={customAmount}
+                              onChange={(e) => setCustomAmount(e.target.value)}
+                              onClick={(e) => e.stopPropagation()}
+                              placeholder="Digite o valor"
+                              min={settings.minAmount / 100}
+                              max={settings.maxAmount / 100}
+                              step="0.01"
+                              className="bg-transparent border-none outline-none text-xl font-bold text-white placeholder:text-white/50 w-full text-center [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            />
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setUseCustomAmount(false);
+                              setCustomAmount('');
+                            }}
+                            className="p-1 hover:bg-white/20 rounded-lg transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4" />
+                          Outro valor
+                        </>
+                      )}
+                    </button>
+                    <p className="text-xs text-slate-500 mt-2 text-center">
                       Mín: {formatCurrency(settings.minAmount)} • Máx: {formatCurrency(settings.maxAmount)}
                     </p>
                   </div>

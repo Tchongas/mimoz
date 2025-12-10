@@ -5,12 +5,12 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { Gift, Home, User, Download } from 'lucide-react';
+import { Gift, Home, User, Download, Sparkles } from 'lucide-react';
 import Footer from '@/components/ui/footer';
-import { CelebrationBanner } from './components/CelebrationBanner';
 import { GiftCardDisplay } from './components/GiftCardDisplay';
 import { InfoGrid } from './components/InfoGrid';
 import { PaymentPending } from './components/PaymentPending';
+import { SuccessConfetti } from './components/SuccessConfetti';
 
 interface SuccessPageProps {
   params: Promise<{ slug: string }>;
@@ -114,9 +114,24 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
   const isGift = giftCard.recipient_email !== giftCard.purchaser_email;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex flex-col overflow-hidden">
+      {/* Confetti on success */}
+      {!isPending && <SuccessConfetti />}
+      
+      {/* Decorative background elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div 
+          className="absolute -top-40 -right-40 w-96 h-96 rounded-full blur-3xl opacity-20"
+          style={{ backgroundColor: giftCardColor }}
+        />
+        <div 
+          className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full blur-3xl opacity-15"
+          style={{ backgroundColor: giftCardColor }}
+        />
+      </div>
+
       {/* Header */}
-      <header className="bg-white/95 backdrop-blur border-b border-slate-200 sticky top-0 z-10">
+      <header className="bg-white/80 backdrop-blur-lg border-b border-slate-200/50 sticky top-0 z-20">
         <div className="max-w-4xl mx-auto px-4 py-3 md:py-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -124,11 +139,11 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
                 <img 
                   src={giftCard.business.logo_url} 
                   alt={giftCard.business.name}
-                  className="w-10 h-10 rounded-lg object-cover"
+                  className="w-10 h-10 rounded-xl object-cover shadow-sm"
                 />
               ) : (
                 <div 
-                  className="w-10 h-10 rounded-lg flex items-center justify-center"
+                  className="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm"
                   style={{ backgroundColor: giftCardColor }}
                 >
                   <Gift className="w-5 h-5 text-white" />
@@ -138,7 +153,7 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
             </div>
             <Link
               href="/account"
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
             >
               <User className="w-4 h-4" />
               <span className="hidden sm:inline">Minha Conta</span>
@@ -148,123 +163,134 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
       </header>
 
       {/* Content */}
-      <main className="flex-1">
-        <div className="max-w-lg mx-auto px-4 py-8 sm:py-12 relative animate-in fade-in-50 slide-in-from-bottom-2 duration-300">
+      <main className="flex-1 relative z-10">
+        <div className="max-w-lg mx-auto px-4 py-8 sm:py-12">
           {isPending ? (
-            // Payment still processing - use client component for polling
             <PaymentPending giftCardId={giftCard.id} giftCardCode={giftCard.code} />
           ) : (
             <>
-              <CelebrationBanner
-                isGift={isGift}
+              {/* Celebration Header */}
+              <div className="text-center mb-10 animate-in fade-in-50 slide-in-from-bottom-4 duration-700">
+                {/* Animated celebration icon */}
+                <div className="relative mb-6 flex items-center justify-center">
+                  <div className="absolute w-28 h-28 rounded-full bg-gradient-to-br from-emerald-200 to-teal-200 animate-ping opacity-30" />
+                  <div className="absolute w-20 h-20 rounded-full bg-gradient-to-br from-emerald-300 to-teal-300 animate-pulse opacity-50" />
+                  <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-200">
+                    <Sparkles className="w-8 h-8 text-white" />
+                  </div>
+                  <div className="absolute -top-1 -right-1 text-2xl animate-bounce" style={{ animationDuration: '2s' }}>✨</div>
+                  <div className="absolute -bottom-1 -left-2 text-xl animate-bounce" style={{ animationDuration: '2.5s', animationDelay: '0.5s' }}>🎉</div>
+                </div>
+
+                <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">
+                  {isGift ? (
+                    <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                      🎁 Presente Enviado!
+                    </span>
+                  ) : (
+                    <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                      🎉 Parabéns!
+                    </span>
+                  )}
+                </h1>
+                
+                <p className="text-slate-600 text-lg">
+                  {isGift ? (
+                    <>
+                      <span className="font-semibold text-purple-600">{giftCard.recipient_name || 'O destinatário'}</span>
+                      {' '}vai adorar esse presente!
+                    </>
+                  ) : (
+                    'Seu vale-presente está pronto para usar!'
+                  )}
+                </p>
+              </div>
+
+              {/* Gift Card Display with message integrated */}
+              <GiftCardDisplay
+                businessName={giftCard.business.name}
+                templateName={giftCard.template?.name}
+                amountCents={giftCard.amount_cents}
+                code={giftCard.code}
+                giftCardColor={giftCardColor}
                 recipientName={giftCard.recipient_name}
+                recipientMessage={giftCard.recipient_message}
+                senderName={giftCard.purchaser_name}
+                isGift={isGift}
+                isCustom={giftCard.is_custom}
+                customTitle={giftCard.custom_title}
+                customEmoji={giftCard.custom_emoji}
+                customBgType={giftCard.custom_bg_type}
+                customBgColor={giftCard.custom_bg_color}
+                customBgGradientStart={giftCard.custom_bg_gradient_start}
+                customBgGradientEnd={giftCard.custom_bg_gradient_end}
+                customTextColor={giftCard.custom_text_color}
               />
 
-              <GiftCardDisplay
-            businessName={giftCard.business.name}
-            templateName={giftCard.template?.name}
-            amountCents={giftCard.amount_cents}
-            code={giftCard.code}
-            giftCardColor={giftCardColor}
-            recipientName={giftCard.recipient_name}
-            // Custom card fields
-            isCustom={giftCard.is_custom}
-            customTitle={giftCard.custom_title}
-            customEmoji={giftCard.custom_emoji}
-            customBgType={giftCard.custom_bg_type}
-            customBgColor={giftCard.custom_bg_color}
-            customBgGradientStart={giftCard.custom_bg_gradient_start}
-            customBgGradientEnd={giftCard.custom_bg_gradient_end}
-            customTextColor={giftCard.custom_text_color}
-          />
+              {/* Info Grid */}
+              <InfoGrid
+                recipientName={giftCard.recipient_name}
+                recipientEmail={giftCard.recipient_email}
+                expiresAt={giftCard.expires_at}
+                businessName={giftCard.business.name}
+                code={giftCard.code}
+              />
 
-          <InfoGrid
-            recipientName={giftCard.recipient_name}
-            recipientEmail={giftCard.recipient_email}
-            expiresAt={giftCard.expires_at}
-            businessName={giftCard.business.name}
-            code={giftCard.code}
-          />
+              {/* How to use - Fun style */}
+              <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-5 mb-6 border border-slate-200/50">
+                <h4 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                  <span className="text-xl">💡</span>
+                  Como usar seu vale-presente
+                </h4>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-4 p-3 bg-white rounded-xl shadow-sm">
+                    <span className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-sm font-bold">1</span>
+                    <span className="text-slate-700">Vá até <strong className="text-slate-900">{giftCard.business.name}</strong></span>
+                  </div>
+                  <div className="flex items-center gap-4 p-3 bg-white rounded-xl shadow-sm">
+                    <span className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold">2</span>
+                    <span className="text-slate-700">Mostre o código <strong className="font-mono text-slate-900">{giftCard.code}</strong></span>
+                  </div>
+                  <div className="flex items-center gap-4 p-3 bg-white rounded-xl shadow-sm">
+                    <span className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-sm font-bold">3</span>
+                    <span className="text-slate-700">Aproveite! O saldo é descontado automaticamente 🎉</span>
+                  </div>
+                </div>
+              </div>
 
-          {/* Personal Message */}
-          {giftCard.recipient_message && (
-            <div 
-              className="rounded-2xl p-4 mb-6 border"
-              style={{ 
-                backgroundColor: `${giftCardColor}08`, 
-                borderColor: `${giftCardColor}20` 
-              }}
-            >
-              <div className="flex items-start gap-3">
-                <div 
-                  className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                  style={{ backgroundColor: `${giftCardColor}15` }}
+              {/* Actions - More playful */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <a
+                  href={`/api/gift-cards/${giftCard.id}/pdf`}
+                  download
+                  className="flex items-center justify-center gap-2 px-4 py-3.5 bg-white border-2 border-slate-200 text-slate-700 rounded-xl font-medium hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm hover:shadow"
                 >
-                  <span className="text-sm">💬</span>
-                </div>
-                <div>
-                  <p className="text-sm font-medium mb-1" style={{ color: giftCardColor }}>
-                    Mensagem de {giftCard.purchaser_name || 'você'}
-                  </p>
-                  <p className="text-slate-600 italic">"{giftCard.recipient_message}"</p>
-                </div>
+                  <Download className="w-4 h-4" />
+                  Baixar PDF
+                </a>
+                <Link
+                  href={`/store/${slug}`}
+                  className="flex items-center justify-center gap-2 px-4 py-3.5 bg-white border-2 border-slate-200 text-slate-700 rounded-xl font-medium hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm hover:shadow"
+                >
+                  <Gift className="w-4 h-4" />
+                  Comprar outro
+                </Link>
+                <Link
+                  href="/account"
+                  className="flex items-center justify-center gap-2 px-4 py-3.5 text-white rounded-xl font-medium transition-all shadow-lg hover:shadow-xl hover:scale-[1.02]"
+                  style={{ backgroundColor: giftCardColor }}
+                >
+                  <Home className="w-4 h-4" />
+                  Meus presentes
+                </Link>
               </div>
-            </div>
-          )}
 
-          {/* How to use - Compact */}
-          <div className="bg-slate-50 rounded-2xl p-4 mb-6">
-            <h4 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs">?</span>
-              Como usar
-            </h4>
-            <div className="space-y-2 text-sm text-slate-600">
-              <div className="flex items-start gap-3">
-                <span className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-xs font-medium flex-shrink-0">1</span>
-                <span>Vá até qualquer unidade <strong>{giftCard.business.name}</strong></span>
+              {/* Email notice - friendlier */}
+              <div className="text-center mt-8 p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+                <p className="text-sm text-emerald-700">
+                  📨 Email de confirmação enviado para você{isGift ? ` e para ${giftCard.recipient_name}` : ''}!
+                </p>
               </div>
-              <div className="flex items-start gap-3">
-                <span className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-xs font-medium flex-shrink-0">2</span>
-                <span>Apresente o código <strong className="font-mono">{giftCard.code}</strong> no caixa</span>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-xs font-medium flex-shrink-0">3</span>
-                <span>O saldo será descontado automaticamente</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <a
-              href={`/api/gift-cards/${giftCard.id}/pdf`}
-              download
-              className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors shadow-sm"
-            >
-              <Download className="w-4 h-4" />
-              Baixar PDF
-            </a>
-            <Link
-              href={`/store/${slug}`}
-              className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors shadow-sm"
-            >
-              <Gift className="w-4 h-4" />
-              Comprar outro
-            </Link>
-            <Link
-              href="/account"
-              className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 text-white rounded-xl font-medium transition-colors shadow-sm"
-              style={{ backgroundColor: giftCardColor }}
-            >
-              <Home className="w-4 h-4" />
-              Meus vale-presentes
-            </Link>
-          </div>
-
-          {/* Email notice */}
-          <p className="text-center text-xs text-slate-400 mt-6">
-            📧 Um email de confirmação foi enviado para você e para o destinatário
-          </p>
             </>
           )}
         </div>

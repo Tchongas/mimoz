@@ -1,9 +1,8 @@
 'use client';
 
-import { Gift, Sparkles } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Gift, Sparkles, Copy, Check, PartyPopper } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
-import { CopyCodeButton } from '../copy-code-button';
-import { GiftCardPreview } from '@/components/ui';
 
 interface GiftCardDisplayProps {
   businessName: string;
@@ -12,6 +11,9 @@ interface GiftCardDisplayProps {
   code: string;
   giftCardColor: string;
   recipientName?: string;
+  recipientMessage?: string | null;
+  senderName?: string | null;
+  isGift?: boolean;
   // Custom card fields
   isCustom?: boolean;
   customTitle?: string | null;
@@ -30,6 +32,9 @@ export function GiftCardDisplay({
   code,
   giftCardColor,
   recipientName,
+  recipientMessage,
+  senderName,
+  isGift,
   isCustom,
   customTitle,
   customEmoji,
@@ -39,122 +44,163 @@ export function GiftCardDisplay({
   customBgGradientEnd,
   customTextColor,
 }: GiftCardDisplayProps) {
-  // For custom cards, use the shared GiftCardPreview component
-  if (isCustom) {
-    const bgColor = customBgColor || giftCardColor;
-    const textColor = customTextColor || '#ffffff';
-    
-    return (
-      <div className="relative mb-6">
-        {/* Glow effect */}
-        <div
-          className="absolute inset-4 rounded-3xl blur-3xl opacity-40"
-          style={{ 
-            backgroundColor: customBgType === 'gradient' && customBgGradientStart 
-              ? customBgGradientStart 
-              : bgColor 
-          }}
-        />
+  const [copied, setCopied] = useState(false);
+  const [isRevealed, setIsRevealed] = useState(false);
 
-        {/* Card Preview */}
-        <GiftCardPreview
-          title={customTitle || undefined}
-          emoji={customEmoji || undefined}
-          amount={amountCents}
-          businessName={businessName}
-          recipientName={recipientName}
-          bgType={customBgType || 'color'}
-          bgColor={bgColor}
-          bgGradientStart={customBgGradientStart || undefined}
-          bgGradientEnd={customBgGradientEnd || undefined}
-          bgGradientDirection="to-br"
-          textColor={textColor}
-          size="lg"
-          showMessage={false}
-        />
+  useEffect(() => {
+    // Trigger reveal animation after mount
+    const timer = setTimeout(() => setIsRevealed(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
 
-        {/* Code Section */}
-        <div 
-          className="relative -mt-4 mx-4 rounded-2xl p-4 backdrop-blur shadow-lg"
-          style={{ 
-            backgroundColor: customBgType === 'gradient' && customBgGradientEnd 
-              ? `${customBgGradientEnd}ee` 
-              : `${bgColor}ee` 
-          }}
-        >
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <p className="text-xs uppercase tracking-wider mb-1" style={{ color: `${textColor}80` }}>
-                Código
-              </p>
-              <p 
-                className="text-xl sm:text-2xl font-mono font-bold tracking-widest truncate"
-                style={{ color: textColor }}
-              >
-                {code}
-              </p>
-            </div>
-            <CopyCodeButton code={code} />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
 
-  // Standard template card display
+  // Determine colors
+  const bgColor = isCustom ? (customBgColor || giftCardColor) : giftCardColor;
+  const textColor = isCustom ? (customTextColor || '#ffffff') : '#ffffff';
+  const glowColor = isCustom && customBgType === 'gradient' && customBgGradientStart
+    ? customBgGradientStart
+    : bgColor;
+
+  // Get background style
+  const getBgStyle = () => {
+    if (isCustom && customBgType === 'gradient' && customBgGradientStart && customBgGradientEnd) {
+      return { background: `linear-gradient(135deg, ${customBgGradientStart}, ${customBgGradientEnd})` };
+    }
+    return { backgroundColor: bgColor };
+  };
+
   return (
-    <div className="relative mb-6">
+    <div className="relative mb-8">
+      {/* Animated glow effect */}
       <div
-        className="absolute inset-0 rounded-3xl blur-2xl opacity-30 transform translate-y-4"
-        style={{ backgroundColor: giftCardColor }}
+        className={`absolute inset-0 rounded-3xl blur-3xl transition-all duration-1000 ${
+          isRevealed ? 'opacity-50 scale-105' : 'opacity-0 scale-95'
+        }`}
+        style={{ backgroundColor: glowColor }}
       />
 
+      {/* Main card with reveal animation */}
       <div
-        className="relative rounded-3xl p-6 sm:p-8 text-white overflow-hidden shadow-xl"
-        style={{ backgroundColor: giftCardColor }}
+        className={`relative rounded-3xl overflow-hidden shadow-2xl transition-all duration-700 ${
+          isRevealed 
+            ? 'opacity-100 translate-y-0 rotate-0' 
+            : 'opacity-0 translate-y-8 -rotate-3'
+        }`}
+        style={getBgStyle()}
       >
+        {/* Decorative pattern */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full translate-y-1/2 -translate-x-1/2" />
-          <div className="absolute top-1/2 left-1/2 w-32 h-32 bg-white rounded-full -translate-x-1/2 -translate-y-1/2 opacity-50" />
+          <div className="absolute -top-20 -right-20 w-80 h-80 bg-white rounded-full" />
+          <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-white rounded-full" />
+          <div className="absolute top-1/2 left-1/2 w-40 h-40 bg-white rounded-full -translate-x-1/2 -translate-y-1/2 opacity-50" />
         </div>
 
-        <div className="relative">
-          <div className="flex items-start justify-between mb-8">
-            <div>
-              <div className="flex items-center gap-2 text-white/60 text-xs uppercase tracking-wider mb-1">
-                <Sparkles className="w-3 h-3" />
-                Vale-Presente
-              </div>
-              <p className="text-lg font-semibold">{businessName}</p>
-            </div>
-            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-              <Gift className="w-6 h-6" />
-            </div>
-          </div>
+        {/* Shimmer overlay */}
+        <div className="absolute inset-0 animate-shimmer opacity-30" />
 
-          <div className="text-center py-4 sm:py-6">
-            <p className="text-5xl sm:text-6xl font-bold tracking-tight">
-              {formatCurrency(amountCents)}
-            </p>
-            {templateName && (
-              <p className="text-white/60 text-sm mt-2">{templateName}</p>
+        <div className="relative p-6 sm:p-8" style={{ color: textColor }}>
+          {/* Header */}
+          <div className="flex items-start justify-between mb-6">
+            <div>
+              {isCustom && customTitle ? (
+                <>
+                  <p className="text-2xl sm:text-3xl font-bold mb-1">{customTitle}</p>
+                  <p className="text-sm opacity-70">{businessName}</p>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 opacity-60 text-xs uppercase tracking-wider mb-1">
+                    <Sparkles className="w-3 h-3" />
+                    Vale-Presente
+                  </div>
+                  <p className="text-xl font-bold">{businessName}</p>
+                  {templateName && (
+                    <p className="opacity-60 text-sm">{templateName}</p>
+                  )}
+                </>
+              )}
+            </div>
+            {isCustom && customEmoji ? (
+              <span className="text-5xl animate-bounce" style={{ animationDuration: '3s' }}>
+                {customEmoji}
+              </span>
+            ) : (
+              <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center">
+                <Gift className="w-7 h-7" />
+              </div>
             )}
           </div>
 
-          <div className="bg-white/15 backdrop-blur rounded-2xl p-4 mt-4">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <p className="text-white/50 text-xs uppercase tracking-wider mb-1">Código</p>
-                <p className="text-xl sm:text-2xl font-mono font-bold tracking-widest truncate">
-                  {code}
-                </p>
+          {/* Amount - Big and bold */}
+          <div className="text-center py-8">
+            <p className="text-6xl sm:text-7xl font-bold tracking-tight">
+              {formatCurrency(amountCents)}
+            </p>
+            {recipientName && (
+              <p className="opacity-70 text-sm mt-3">
+                Para: <span className="font-semibold">{recipientName}</span>
+              </p>
+            )}
+          </div>
+
+          {/* Personal message */}
+          {recipientMessage && (
+            <div className="bg-white/10 backdrop-blur rounded-2xl p-4 mb-4">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">💌</span>
+                <div>
+                  {senderName && (
+                    <p className="text-xs opacity-60 mb-1">Mensagem de {senderName}</p>
+                  )}
+                  <p className="italic opacity-90">"{recipientMessage}"</p>
+                </div>
               </div>
-              <CopyCodeButton code={code} />
             </div>
+          )}
+
+          {/* Code Section */}
+          <div className="bg-white/15 backdrop-blur rounded-2xl p-5">
+            <p className="opacity-50 text-xs uppercase tracking-wider text-center mb-3">
+              Apresente este código no caixa
+            </p>
+            <div className="flex items-center justify-center">
+              <p className="text-3xl sm:text-4xl font-mono font-bold tracking-[0.15em] text-center">
+                {code}
+              </p>
+            </div>
+            <button
+              onClick={handleCopy}
+              className="mt-4 w-full flex items-center justify-center gap-2 py-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all text-sm font-medium"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  Copiado!
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4" />
+                  Copiar código
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Floating sparkles */}
+      <div className="absolute -top-4 -right-4 text-3xl animate-sparkle" style={{ animationDelay: '0s' }}>✨</div>
+      <div className="absolute -bottom-2 -left-2 text-2xl animate-sparkle" style={{ animationDelay: '0.5s' }}>🎊</div>
+      <div className="absolute top-1/2 -right-6 text-xl animate-sparkle" style={{ animationDelay: '1s' }}>⭐</div>
     </div>
   );
 }
