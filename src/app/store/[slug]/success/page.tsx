@@ -171,15 +171,13 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
             <>
               {/* Celebration Header */}
               <div className="text-center mb-10 animate-in fade-in-50 slide-in-from-bottom-4 duration-700">
-                {/* Animated celebration icon */}
+                {/* Celebration icon */}
                 <div className="relative mb-6 flex items-center justify-center">
-                  <div className="absolute w-28 h-28 rounded-full bg-gradient-to-br from-emerald-200 to-teal-200 animate-ping opacity-30" />
-                  <div className="absolute w-20 h-20 rounded-full bg-gradient-to-br from-emerald-300 to-teal-300 animate-pulse opacity-50" />
+                  <div className="absolute w-24 h-24 rounded-full bg-gradient-to-br from-emerald-200 to-teal-200 opacity-40" />
+                  <div className="absolute w-18 h-18 rounded-full bg-gradient-to-br from-emerald-300 to-teal-300 opacity-60" />
                   <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-200">
                     <Sparkles className="w-8 h-8 text-white" />
                   </div>
-                  <div className="absolute -top-1 -right-1 text-2xl animate-bounce" style={{ animationDuration: '2s' }}>✨</div>
-                  <div className="absolute -bottom-1 -left-2 text-xl animate-bounce" style={{ animationDuration: '2.5s', animationDelay: '0.5s' }}>🎉</div>
                 </div>
 
                 <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">

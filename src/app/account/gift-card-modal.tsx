@@ -128,10 +128,6 @@ export function GiftCardModal({ card, business, template, type, onClose }: GiftC
           style={{ backgroundColor: glowColor }}
         />
 
-        {/* Floating sparkles */}
-        <div className="absolute -top-6 -right-6 text-3xl animate-sparkle" style={{ animationDelay: '0s' }}>✨</div>
-        <div className="absolute -bottom-4 -left-4 text-2xl animate-sparkle" style={{ animationDelay: '0.5s' }}>🌟</div>
-
         {/* The Gift Card */}
         <div 
           className="relative rounded-3xl overflow-hidden shadow-2xl"
@@ -170,7 +166,7 @@ export function GiftCardModal({ card, business, template, type, onClose }: GiftC
                 )}
               </div>
               {isCustom && card.custom_emoji ? (
-                <span className="text-5xl animate-bounce" style={{ animationDuration: '3s' }}>
+                <span className="text-5xl">
                   {card.custom_emoji}
                 </span>
               ) : (
@@ -212,18 +208,18 @@ export function GiftCardModal({ card, business, template, type, onClose }: GiftC
               )}
             </div>
 
-            {/* Gift message - PROMINENT for received gifts */}
-            {type === 'received' && card.recipient_message && (
+            {/* Gift message - Show for all cards with a message */}
+            {card.recipient_message && (
               <div className="mb-4 p-4 bg-white/15 backdrop-blur rounded-2xl border border-white/10">
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
                     <MessageCircle className="w-5 h-5" />
                   </div>
                   <div className="flex-1">
-                    {card.purchaser_name && (
+                    {(card.purchaser_name || type === 'purchased') && (
                       <p className="text-xs opacity-60 mb-1 flex items-center gap-1">
                         <Heart className="w-3 h-3" />
-                        Mensagem de {card.purchaser_name}
+                        {type === 'received' ? `Mensagem de ${card.purchaser_name}` : 'Sua mensagem'}
                       </p>
                     )}
                     <p className="italic text-base leading-relaxed">
@@ -293,14 +289,14 @@ export function GiftCardModal({ card, business, template, type, onClose }: GiftC
           </div>
         </div>
 
-        {/* Actions - More prominent */}
+        {/* Actions */}
         <div className="mt-5 flex items-center justify-center gap-3">
           {/* Only show PDF download if user can see the code */}
           {!isGiftSentToOther && (
             <a
               href={`/api/gift-cards/${card.id}/pdf`}
               download
-              className="flex items-center gap-2 px-5 py-2.5 bg-white/15 hover:bg-white/25 rounded-xl text-white transition-all text-sm font-medium hover:scale-105"
+              className="flex items-center gap-2 px-5 py-2.5 bg-white rounded-xl text-slate-700 hover:bg-slate-100 transition-all text-sm font-medium shadow-sm"
             >
               <Download className="w-4 h-4" />
               Baixar PDF
@@ -308,10 +304,10 @@ export function GiftCardModal({ card, business, template, type, onClose }: GiftC
           )}
           <a
             href={`/store/${business.slug}`}
-            className="flex items-center gap-2 px-5 py-2.5 bg-white/15 hover:bg-white/25 rounded-xl text-white transition-all text-sm font-medium hover:scale-105"
+            className="flex items-center gap-2 px-5 py-2.5 bg-white rounded-xl text-slate-700 hover:bg-slate-100 transition-all text-sm font-medium shadow-sm"
           >
             <Store className="w-4 h-4" />
-            Loja
+            Ver Loja
           </a>
         </div>
       </div>
@@ -403,7 +399,7 @@ export function GiftCardWithModal({ card, userEmail, type }: GiftCardWithModalPr
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1 min-w-0">
                 {card.is_custom && card.custom_emoji && (
-                  <span className="text-3xl mb-2 block group-hover:animate-bounce" style={{ animationDuration: '2s' }}>
+                  <span className="text-3xl mb-2 block">
                     {card.custom_emoji}
                   </span>
                 )}

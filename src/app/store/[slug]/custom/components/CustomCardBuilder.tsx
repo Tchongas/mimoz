@@ -401,20 +401,15 @@ export function CustomCardBuilder({
                       }}
                       className={`w-full py-4 px-4 rounded-xl font-semibold transition-all text-base flex items-center justify-center gap-2 ${
                         useCustomAmount
-                          ? 'ring-2 ring-offset-2 text-white'
+                          ? 'bg-white ring-2 ring-slate-300 text-slate-900'
                           : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                       }`}
-                      style={
-                        useCustomAmount
-                          ? { backgroundColor: secondaryColor }
-                          : {}
-                      }
                     >
                       {useCustomAmount ? (
                         <div className="flex items-center gap-2 w-full">
-                          <DollarSign className="w-5 h-5 flex-shrink-0" />
+                          <DollarSign className="w-5 h-5 flex-shrink-0 text-slate-500" />
                           <div className="flex items-center gap-1 flex-1">
-                            <span className="text-white/80">R$</span>
+                            <span className="text-slate-500">R$</span>
                             <input
                               id="custom-amount-input"
                               type="number"
@@ -425,7 +420,7 @@ export function CustomCardBuilder({
                               min={settings.minAmount / 100}
                               max={settings.maxAmount / 100}
                               step="0.01"
-                              className="bg-transparent border-none outline-none text-xl font-bold text-white placeholder:text-white/50 w-full text-center [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              className="bg-transparent border-none outline-none text-xl font-bold text-slate-900 placeholder:text-slate-400 w-full text-center [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             />
                           </div>
                           <button
@@ -434,7 +429,7 @@ export function CustomCardBuilder({
                               setUseCustomAmount(false);
                               setCustomAmount('');
                             }}
-                            className="p-1 hover:bg-white/20 rounded-lg transition-colors"
+                            className="p-1 hover:bg-slate-100 rounded-lg transition-colors text-slate-500"
                           >
                             <X className="w-4 h-4" />
                           </button>

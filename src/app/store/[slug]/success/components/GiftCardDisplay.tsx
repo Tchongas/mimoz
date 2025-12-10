@@ -130,7 +130,7 @@ export function GiftCardDisplay({
               )}
             </div>
             {isCustom && customEmoji ? (
-              <span className="text-5xl animate-bounce" style={{ animationDuration: '3s' }}>
+              <span className="text-5xl">
                 {customEmoji}
               </span>
             ) : (
@@ -197,10 +197,6 @@ export function GiftCardDisplay({
         </div>
       </div>
 
-      {/* Floating sparkles */}
-      <div className="absolute -top-4 -right-4 text-3xl animate-sparkle" style={{ animationDelay: '0s' }}>✨</div>
-      <div className="absolute -bottom-2 -left-2 text-2xl animate-sparkle" style={{ animationDelay: '0.5s' }}>🎊</div>
-      <div className="absolute top-1/2 -right-6 text-xl animate-sparkle" style={{ animationDelay: '1s' }}>⭐</div>
     </div>
   );
 }
