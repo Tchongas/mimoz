@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { X, Gift, Sparkles, Copy, Check, Calendar, Store, Download, Heart, MessageCircle } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { GiftBoxReveal } from './components/GiftBoxReveal';
 
 interface GiftCardModalProps {
   card: {
@@ -326,6 +327,8 @@ interface GiftCardWithModalProps {
 
 export function GiftCardWithModal({ card, userEmail, type }: GiftCardWithModalProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [showGiftReveal, setShowGiftReveal] = useState(false);
+  const [hasSeenReveal, setHasSeenReveal] = useState(false);
   
   const template = card.gift_card_templates as { 
     name: string; 
@@ -369,11 +372,20 @@ export function GiftCardWithModal({ card, userEmail, type }: GiftCardWithModalPr
   // Check if there's a message to show
   const hasMessage = type === 'received' && card.recipient_message;
 
+  // Handle card click - show reveal for received gifts, direct open for purchased
+  const handleCardClick = () => {
+    if (type === 'received' && !hasSeenReveal) {
+      setShowGiftReveal(true);
+    } else {
+      setIsOpen(true);
+    }
+  };
+
   return (
     <>
       <div 
         className="group relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-slate-200/50 hover:shadow-2xl"
-        onClick={() => setIsOpen(true)}
+        onClick={handleCardClick}
       >
         {/* Glow effect */}
         <div 
@@ -508,8 +520,17 @@ export function GiftCardWithModal({ card, userEmail, type }: GiftCardWithModalPr
         {/* Bottom bar with business link */}
         <div className="bg-white/95 backdrop-blur px-4 py-2.5 flex items-center justify-between">
           <span className="text-xs text-slate-500 flex items-center gap-1">
-            <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            Toque para abrir
+            {type === 'received' && !hasSeenReveal ? (
+              <>
+                <span className="text-base">🎁</span>
+                <span className="font-medium text-purple-600">Toque para abrir seu presente!</span>
+              </>
+            ) : (
+              <>
+                <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                Toque para ver
+              </>
+            )}
           </span>
           {business && (
             <Link
@@ -523,6 +544,18 @@ export function GiftCardWithModal({ card, userEmail, type }: GiftCardWithModalPr
           )}
         </div>
       </div>
+
+      {/* Gift Box Reveal Animation - only for received gifts that haven't been seen */}
+      {showGiftReveal && (
+        <GiftBoxReveal
+          cardColor={cardColor}
+          onRevealComplete={() => {
+            setShowGiftReveal(false);
+            setHasSeenReveal(true);
+            setIsOpen(true);
+          }}
+        />
+      )}
 
       {/* Modal */}
       {isOpen && business && (

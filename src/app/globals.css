@@ -147,3 +147,77 @@ input::placeholder, textarea::placeholder {
 .animate-sparkle {
   animation: sparkle 1.5s ease-in-out infinite;
 }
+
+/* Gift Box Reveal Animations */
+@keyframes gift-shake {
+  0%, 100% { transform: rotate(0deg); }
+  10% { transform: rotate(-8deg) scale(1.02); }
+  20% { transform: rotate(8deg) scale(1.04); }
+  30% { transform: rotate(-10deg) scale(1.06); }
+  40% { transform: rotate(10deg) scale(1.08); }
+  50% { transform: rotate(-12deg) scale(1.1); }
+  60% { transform: rotate(12deg) scale(1.08); }
+  70% { transform: rotate(-10deg) scale(1.06); }
+  80% { transform: rotate(10deg) scale(1.04); }
+  90% { transform: rotate(-5deg) scale(1.02); }
+}
+
+@keyframes lid-wobble {
+  0%, 100% { transform: translateX(-50%) rotateX(0deg); }
+  20% { transform: translateX(-50%) rotateX(-15deg); }
+  40% { transform: translateX(-50%) rotateX(10deg); }
+  60% { transform: translateX(-50%) rotateX(-20deg); }
+  80% { transform: translateX(-50%) rotateX(15deg); }
+}
+
+@keyframes confetti-burst {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--tx, 0), var(--ty, 0)) rotate(720deg) scale(0);
+    opacity: 0;
+  }
+}
+
+@keyframes sparkle-burst {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  30% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--tx, 0), var(--ty, 0)) scale(0);
+    opacity: 0;
+  }
+}
+
+@keyframes scale-in {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-gift-shake {
+  animation: gift-shake 1s ease-in-out;
+}
+
+.animate-lid-wobble {
+  animation: lid-wobble 1s ease-in-out;
+}
+
+.animate-confetti-burst {
+  animation: confetti-burst 0.8s ease-out forwards;
+}
+
+.animate-sparkle-burst {
+  animation: sparkle-burst 0.8s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.4s ease-out forwards;
+}
