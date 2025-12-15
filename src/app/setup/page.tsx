@@ -3,6 +3,7 @@
 // ============================================
 // Shown when Supabase is not configured
 
+import Image from 'next/image';
 import { Settings, ExternalLink, CheckCircle, XCircle } from 'lucide-react';
 
 export default function SetupPage() {
@@ -28,6 +29,11 @@ export default function SetupPage() {
       <div className="max-w-lg w-full">
         {/* Header */}
         <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <div className="w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center">
+              <Image src="/images/logo.png" alt="Tapresente" width={28} height={28} className="invert" />
+            </div>
+          </div>
           <h1 className="text-4xl font-bold text-white mb-2">Tapresente</h1>
           <p className="text-slate-400">Configuração Inicial</p>
         </div>

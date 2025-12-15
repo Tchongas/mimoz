@@ -3,6 +3,7 @@
 // ============================================
 // Google OAuth only - no email/password
 
+import Image from 'next/image';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getRoleDashboard } from '@/lib/auth';
@@ -36,6 +37,11 @@ export default async function LoginPage({
       <div className="w-full max-w-md p-8">
         {/* Logo/Brand */}
         <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <div className="w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center">
+              <Image src="/images/logo.png" alt="Tapresente" width={28} height={28} className="invert" />
+            </div>
+          </div>
           <h1 className="text-4xl font-bold text-white mb-2">Tapresente</h1>
           <p className="text-slate-400">Plataforma de Gift Cards</p>
         </div>

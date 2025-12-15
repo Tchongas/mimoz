@@ -15,6 +15,30 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Tapresente - Plataforma de Gift Cards",
   description: "Plataforma whitelabel para venda de gift cards",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://tapresente.com"),
+  icons: {
+    icon: "/images/logo.png",
+    apple: "/images/logo.png",
+  },
+  openGraph: {
+    title: "Tapresente - Plataforma de Gift Cards",
+    description: "Plataforma whitelabel para venda de gift cards",
+    url: "/",
+    siteName: "Tapresente",
+    images: [
+      {
+        url: "/images/bannerNottransparent.png",
+      },
+    ],
+    locale: "pt_BR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Tapresente - Plataforma de Gift Cards",
+    description: "Plataforma whitelabel para venda de gift cards",
+    images: ["/images/bannerNottransparent.png"],
+  },
 };
 
 export default function RootLayout({

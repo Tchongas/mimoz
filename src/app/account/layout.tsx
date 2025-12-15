@@ -3,9 +3,10 @@
 // ============================================
 // Layout for customer account pages (purchases, settings)
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { Gift, User, LogOut, ShoppingBag, Settings } from 'lucide-react';
+import { User, LogOut, ShoppingBag, Settings } from 'lucide-react';
 
 interface AccountLayoutProps {
   children: React.ReactNode;
@@ -35,7 +36,7 @@ export default async function AccountLayout({ children }: AccountLayoutProps) {
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2">
               <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center">
-                <Gift className="w-4 h-4 text-white" />
+                <Image src="/images/logo.png" alt="Tapresente" width={16} height={16} className="invert" />
               </div>
               <span className="text-xl font-bold text-slate-900">Tapresente</span>
             </Link>

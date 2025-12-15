@@ -1,5 +1,5 @@
+import Image from 'next/image';
 import Link from 'next/link';
-import { Gift } from 'lucide-react';
 
 export function LandingFooter() {
   return (
@@ -9,7 +9,7 @@ export function LandingFooter() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-lg flex items-center justify-center">
-              <Gift className="w-4 h-4 text-white" />
+              <Image src="/images/logo.png" alt="Tapresente" width={16} height={16} className="invert" />
             </div>
             <span className="text-lg font-bold text-white">Tapresente</span>
           </Link>
