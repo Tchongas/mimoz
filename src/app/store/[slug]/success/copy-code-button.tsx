@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// MIMOZ - Copy Code Button
+// Tapresente - Copy Code Button
 // ============================================
 
 import { useState } from 'react';

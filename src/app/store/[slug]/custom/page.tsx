@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Custom Gift Card Builder Page
+// Tapresente - Custom Gift Card Builder Page
 // ============================================
 
 import { createClient } from '@/lib/supabase/server';

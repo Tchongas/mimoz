@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Admin Layout
+// Tapresente - Admin Layout
 // ============================================
 
 import { requireRole } from '@/lib/auth';

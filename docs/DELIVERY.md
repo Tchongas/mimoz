@@ -1,6 +1,6 @@
 # Gift Card Delivery System
 
-This document describes the email and PDF delivery system for Mimoz gift cards.
+This document describes the email and PDF delivery system for Tapresente gift cards.
 
 ## Overview
 
@@ -25,8 +25,8 @@ We use [Resend](https://resend.com) for transactional emails.
 RESEND_API_KEY=re_xxxxx
 
 # Optional (defaults shown)
-RESEND_FROM_DOMAIN=mimoz.com.br
-RESEND_FROM_EMAIL=noreply@mimoz.com.br
+RESEND_FROM_DOMAIN=tapresente.com
+RESEND_FROM_EMAIL=noreply@tapresente.com
 ```
 
 ### Getting Started

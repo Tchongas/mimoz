@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// MIMOZ - Login Button Component
+// Tapresente - Login Button Component
 // ============================================
 // Client component for Google OAuth login
 

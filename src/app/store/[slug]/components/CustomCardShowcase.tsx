@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// MIMOZ - Custom Card Showcase Component
+// Tapresente - Custom Card Showcase Component
 // ============================================
 // A magical, interactive preview of custom gift cards on the store page
 

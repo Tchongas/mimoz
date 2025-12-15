@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Cashier Loading State
+// Tapresente - Cashier Loading State
 // ============================================
 
 import { SkeletonCard, Skeleton } from '@/components/ui';

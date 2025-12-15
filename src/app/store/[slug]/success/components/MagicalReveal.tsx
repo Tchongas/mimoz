@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// MIMOZ - Magical Card Reveal Animation
+// Tapresente - Magical Card Reveal Animation
 // Giftly-inspired opening animation with confetti
 // ============================================
 

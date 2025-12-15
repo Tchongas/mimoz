@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// MIMOZ - Sidebar Navigation Component
+// Tapresente - Sidebar Navigation Component
 // ============================================
 
 import Link from 'next/link';

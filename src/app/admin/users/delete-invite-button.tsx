@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// MIMOZ - Delete Invite Button Component
+// Tapresente - Delete Invite Button Component
 // ============================================
 
 import { useState } from 'react';

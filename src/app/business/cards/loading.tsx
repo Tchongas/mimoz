@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Business Cards Loading State
+// Tapresente - Business Cards Loading State
 // ============================================
 
 import { SkeletonStats, SkeletonTable, Skeleton } from '@/components/ui';

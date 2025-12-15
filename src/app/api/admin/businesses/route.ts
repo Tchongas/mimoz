@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Admin Businesses API
+// Tapresente - Admin Businesses API
 // ============================================
 // GET /api/admin/businesses - List all businesses (admin only)
 // POST /api/admin/businesses - Create new business (admin only)

@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Admin New Gift Card Template Page
+// Tapresente - Admin New Gift Card Template Page
 // ============================================
 
 import { notFound } from 'next/navigation';

@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Next.js Middleware
+// Tapresente - Next.js Middleware
 // ============================================
 // Handles authentication and role-based route protection
 

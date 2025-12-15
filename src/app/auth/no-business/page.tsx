@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - No Business Assigned Page
+// Tapresente - No Business Assigned Page
 // ============================================
 // Shown when a user doesn't have a business assigned
 
@@ -34,7 +34,7 @@ export default function NoBusinessPage() {
             </form>
             
             <a
-              href="mailto:suporte@mimoz.com.br"
+              href="mailto:suporte@tapresente.com"
               className="block w-full px-4 py-3 border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition-colors"
             >
               Contatar Suporte

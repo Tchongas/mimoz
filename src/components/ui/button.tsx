@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Button Component
+// Tapresente - Button Component
 // ============================================
 
 import { forwardRef, type ButtonHTMLAttributes } from 'react';

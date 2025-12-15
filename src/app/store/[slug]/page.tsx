@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Professional Landing Page Store
+// Tapresente - Professional Landing Page Store
 // ============================================
 
 import { createClient } from '@/lib/supabase/server';
@@ -730,7 +730,7 @@ export default async function StorePage({ params }: StorePageProps) {
                   © {new Date().getFullYear()} {business.name}. Todos os direitos reservados.
                 </p>
                 <p className="text-xs" style={{ color: footerTextColor, opacity: 0.6 }}>
-                  Powered by <a href="https://mimoz.com.br" className="hover:text-white transition-colors font-medium">Mimoz</a>
+                  Powered by <a href="https://tapresente.com" className="hover:text-white transition-colors font-medium">Tapresente</a>
                 </p>
               </div>
             </div>

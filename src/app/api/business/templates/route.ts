@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Business Templates API
+// Tapresente - Business Templates API
 // ============================================
 // GET - List templates for current business
 // POST - Create new template

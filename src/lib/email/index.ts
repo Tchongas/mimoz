@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Email Module
+// Tapresente - Email Module
 // ============================================
 // Central exports for email functionality
 

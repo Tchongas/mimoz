@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Input Component
+// Tapresente - Input Component
 // ============================================
 
 import { forwardRef, type InputHTMLAttributes } from 'react';

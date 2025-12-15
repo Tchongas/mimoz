@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Utility Functions
+// Tapresente - Utility Functions
 // ============================================
 
 import { clsx, type ClassValue } from 'clsx';

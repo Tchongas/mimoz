@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Payment Gateway Types
+// Tapresente - Payment Gateway Types
 // ============================================
 // Abstract types for payment gateway integration
 // Designed to be gateway-agnostic for easy swapping

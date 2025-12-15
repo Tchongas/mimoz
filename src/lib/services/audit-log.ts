@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Audit Log Service
+// Tapresente - Audit Log Service
 // ============================================
 // Centralized service for creating audit logs
 

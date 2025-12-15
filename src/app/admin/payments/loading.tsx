@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Admin Payments Loading Skeleton
+// Tapresente - Admin Payments Loading Skeleton
 // ============================================
 
 import { Card, CardContent, CardHeader, Skeleton } from '@/components/ui';

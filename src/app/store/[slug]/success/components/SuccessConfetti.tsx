@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// MIMOZ - Success Confetti Animation
+// Tapresente - Success Confetti Animation
 // Celebratory confetti burst on purchase success
 // ============================================
 

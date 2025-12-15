@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Error State Component
+// Tapresente - Error State Component
 // ============================================
 // Reusable component for inline errors
 

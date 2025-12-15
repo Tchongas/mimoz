@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Spinner Component
+// Tapresente - Spinner Component
 // ============================================
 
 import { cn } from '@/lib/utils';

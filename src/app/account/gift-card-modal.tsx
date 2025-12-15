@@ -1,7 +1,7 @@
 "use client";
 
 // ============================================
-// MIMOZ - Gift Card Modal Component
+// Tapresente - Gift Card Modal Component
 // ============================================
 // Shows gift card in a popup for cashier scanning
 

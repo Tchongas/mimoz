@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Admin Edit Business Page
+// Tapresente - Admin Edit Business Page
 // ============================================
 
 import { notFound } from 'next/navigation';

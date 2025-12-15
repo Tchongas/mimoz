@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Code Redemption API
+// Tapresente - Code Redemption API
 // ============================================
 // POST /api/codes/redeem - Redeem (use) a gift card
 

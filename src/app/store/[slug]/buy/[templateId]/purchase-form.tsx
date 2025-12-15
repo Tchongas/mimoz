@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// MIMOZ - Purchase Form Component
+// Tapresente - Purchase Form Component
 // ============================================
 // Requires authentication - redirects to login if not logged in
 

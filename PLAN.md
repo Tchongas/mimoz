@@ -1,4 +1,4 @@
-# Mimoz - Whitelabel Gift Card Platform
+# Tapresente - Whitelabel Gift Card Platform
 
 ## Project Overview
 A whitelabel webpage generator for businesses to sell gift cards. This system includes:
@@ -132,7 +132,7 @@ A whitelabel webpage generator for businesses to sell gift cards. This system in
 | gift_card_id | uuid FK | Purchased card |
 | payment_provider_id | text | AbacatePay billing ID |
 | amount_cents | integer | Total charged |
-| platform_fee_cents | integer | Mimoz fee |
+| platform_fee_cents | integer | Tapresente fee |
 | status | text | PENDING, PAID, FAILED, REFUNDED |
 | customer_email | text | Customer email |
 | created_at | timestamp | Order date |

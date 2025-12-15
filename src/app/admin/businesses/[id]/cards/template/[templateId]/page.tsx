@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Admin Edit Gift Card Template Page
+// Tapresente - Admin Edit Gift Card Template Page
 // ============================================
 
 import { notFound } from 'next/navigation';

@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Cashier History Loading State
+// Tapresente - Cashier History Loading State
 // ============================================
 
 import { SkeletonTable, Skeleton } from '@/components/ui';

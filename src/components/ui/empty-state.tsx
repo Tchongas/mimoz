@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Empty State Component
+// Tapresente - Empty State Component
 // ============================================
 // Reusable component for empty tables/lists
 

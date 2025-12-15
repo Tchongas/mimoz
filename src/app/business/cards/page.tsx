@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Business Gift Card Templates Page
+// Tapresente - Business Gift Card Templates Page
 // ============================================
 
 import { requireBusiness } from '@/lib/auth';

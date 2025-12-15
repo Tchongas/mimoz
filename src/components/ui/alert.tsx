@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Alert Component
+// Tapresente - Alert Component
 // ============================================
 
 import { cn } from '@/lib/utils';

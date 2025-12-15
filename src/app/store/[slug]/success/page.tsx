@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Purchase Success Page
+// Tapresente - Purchase Success Page
 // ============================================
 
 import { createClient, createServiceClient } from '@/lib/supabase/server';

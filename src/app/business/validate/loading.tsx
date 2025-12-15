@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Business Validate Loading Skeleton
+// Tapresente - Business Validate Loading Skeleton
 // ============================================
 
 import { Card, CardContent, CardHeader, Skeleton } from '@/components/ui';

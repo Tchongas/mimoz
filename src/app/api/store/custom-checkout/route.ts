@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Custom Gift Card Checkout API
+// Tapresente - Custom Gift Card Checkout API
 // ============================================
 // POST - Create checkout for custom (user-designed) gift cards
 //

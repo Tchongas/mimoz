@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Cashier Layout
+// Tapresente - Cashier Layout
 // ============================================
 
 import { requireRole, requireBusiness } from '@/lib/auth';

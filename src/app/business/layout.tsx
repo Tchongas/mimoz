@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Business Owner Layout
+// Tapresente - Business Owner Layout
 // ============================================
 
 import { requireRole, requireBusiness } from '@/lib/auth';

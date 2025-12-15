@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Gift Card PDF Download API
+// Tapresente - Gift Card PDF Download API
 // ============================================
 // GET /api/gift-cards/[id]/pdf - Generate and download gift card PDF
 
@@ -103,7 +103,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       amount: giftCard.amount_cents,
       amountFormatted: formatCurrency(giftCard.amount_cents),
       expiresAt: formatDate(giftCard.expires_at),
-      businessName: giftCard.business?.name || 'Mimoz',
+      businessName: giftCard.business?.name || 'Tapresente',
       businessSlug: giftCard.business?.slug || '',
       templateName: giftCard.template?.name || 'Vale-Presente',
       cardColor,

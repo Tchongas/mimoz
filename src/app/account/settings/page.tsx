@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Account Settings Page
+// Tapresente - Account Settings Page
 // ============================================
 // User can view and update their profile settings
 

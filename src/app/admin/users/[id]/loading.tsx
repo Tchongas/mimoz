@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Admin Edit User Loading State
+// Tapresente - Admin Edit User Loading State
 // ============================================
 
 import { SkeletonForm, Skeleton } from '@/components/ui';

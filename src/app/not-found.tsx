@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - 404 Not Found Page
+// Tapresente - 404 Not Found Page
 // ============================================
 
 import Link from 'next/link';

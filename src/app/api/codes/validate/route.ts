@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Code Validation API
+// Tapresente - Code Validation API
 // ============================================
 // POST /api/codes/validate - Lookup a gift card code and return details
 

@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Admin Businesses Loading State
+// Tapresente - Admin Businesses Loading State
 // ============================================
 
 import { SkeletonTable } from '@/components/ui';

@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Business Loading State
+// Tapresente - Business Loading State
 // ============================================
 
 import { SkeletonPage } from '@/components/ui';

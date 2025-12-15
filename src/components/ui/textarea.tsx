@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Textarea Component
+// Tapresente - Textarea Component
 // ============================================
 
 import { cn } from '@/lib/utils';

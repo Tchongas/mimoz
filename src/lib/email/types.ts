@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Email Types
+// Tapresente - Email Types
 // ============================================
 
 export interface EmailRecipient {

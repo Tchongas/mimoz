@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Store Checkout API
+// Tapresente - Store Checkout API
 // ============================================
 // POST - Create checkout session and redirect to payment
 //

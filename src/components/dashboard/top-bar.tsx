@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// MIMOZ - Top Bar Component
+// Tapresente - Top Bar Component
 // ============================================
 
 import { useState } from 'react';

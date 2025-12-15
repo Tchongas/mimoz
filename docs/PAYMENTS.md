@@ -2,7 +2,7 @@
 
 ## Overview
 
-Mimoz uses [AbacatePay](https://abacatepay.com) as the payment gateway for processing gift card purchases via PIX (Brazilian instant payment system).
+Tapresente uses [AbacatePay](https://abacatepay.com) as the payment gateway for processing gift card purchases via PIX (Brazilian instant payment system).
 
 The integration is designed to be:
 - **Gateway-agnostic**: Easy to swap to another provider if needed

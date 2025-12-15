@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// MIMOZ - Business Form Component
+// Tapresente - Business Form Component
 // ============================================
 
 import { useState } from 'react';

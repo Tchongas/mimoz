@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Business Template API (Single)
+// Tapresente - Business Template API (Single)
 // ============================================
 // GET - Get single template
 // PATCH - Update template

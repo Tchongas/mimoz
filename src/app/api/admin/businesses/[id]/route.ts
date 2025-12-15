@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Admin Business API (Single)
+// Tapresente - Admin Business API (Single)
 // ============================================
 // GET /api/admin/businesses/[id] - Get single business
 // PATCH /api/admin/businesses/[id] - Update business

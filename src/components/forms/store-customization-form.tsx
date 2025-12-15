@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// MIMOZ - Store Customization Form Component
+// Tapresente - Store Customization Form Component
 // ============================================
 
 import { useState } from 'react';

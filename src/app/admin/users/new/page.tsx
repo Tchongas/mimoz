@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Admin New User Page
+// Tapresente - Admin New User Page
 // ============================================
 
 import { createClient } from '@/lib/supabase/server';

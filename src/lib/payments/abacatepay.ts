@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - AbacatePay Payment Gateway Client
+// Tapresente - AbacatePay Payment Gateway Client
 // ============================================
 // Brazilian payment gateway integration via PIX
 // Docs: https://docs.abacatepay.com/

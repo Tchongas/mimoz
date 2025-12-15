@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Gift Card Status API
+// Tapresente - Gift Card Status API
 // ============================================
 // GET /api/gift-cards/[id]/status - Check gift card payment status
 

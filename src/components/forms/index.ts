@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Form Components Export
+// Tapresente - Form Components Export
 // ============================================
 
 export { BusinessForm } from './business-form';

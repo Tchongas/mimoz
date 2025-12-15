@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Business Store Customization Page
+// Tapresente - Business Store Customization Page
 // ============================================
 
 import { requireBusiness } from '@/lib/auth';
@@ -33,7 +33,7 @@ export default async function BusinessStorePage() {
     );
   }
 
-  const storeUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://mimoz.com.br'}/store/${business.slug}`;
+  const storeUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://tapresente.com'}/store/${business.slug}`;
 
   return (
     <div className="space-y-6">

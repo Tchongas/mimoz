@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Admin Business Gift Cards Page
+// Tapresente - Admin Business Gift Cards Page
 // ============================================
 
 import { notFound } from 'next/navigation';

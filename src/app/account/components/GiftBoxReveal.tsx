@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// MIMOZ - Gift Box Reveal Animation
+// Tapresente - Gift Box Reveal Animation
 // ============================================
 // A fun animation for opening received gift cards
 

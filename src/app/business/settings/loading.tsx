@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Business Settings Loading State
+// Tapresente - Business Settings Loading State
 // ============================================
 
 import { SkeletonForm, Skeleton } from '@/components/ui';

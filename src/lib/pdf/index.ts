@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - PDF Generation
+// Tapresente - PDF Generation
 // ============================================
 
 export { GiftCardPDF } from './gift-card';

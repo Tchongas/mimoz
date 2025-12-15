@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - RBAC Utilities (BoxyHQ Compatible)
+// Tapresente - RBAC Utilities (BoxyHQ Compatible)
 // ============================================
 // Role-Based Access Control with multi-tenant support
 // Designed to be compatible with BoxyHQ SAML Jackson for future SSO

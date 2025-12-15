@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Gift Card Activation API (Debug/Admin)
+// Tapresente - Gift Card Activation API (Debug/Admin)
 // ============================================
 // POST /api/gift-cards/[id]/activate - Manually activate a gift card
 

@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Business Reports Page
+// Tapresente - Business Reports Page
 // ============================================
 
 import { requireBusiness } from '@/lib/auth';

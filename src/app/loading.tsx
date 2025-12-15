@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Global Loading State
+// Tapresente - Global Loading State
 // ============================================
 
 export default function Loading() {

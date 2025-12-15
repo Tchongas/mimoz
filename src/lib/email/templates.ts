@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Email Templates
+// Tapresente - Email Templates
 // ============================================
 // HTML email templates for gift card notifications
 
@@ -94,15 +94,15 @@ export function giftCardPurchasedEmail(data: GiftCardEmailData): string {
         <p>3. Se sobrar saldo, ele fica disponível para próximas compras</p>
         
         <center>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://mimoz.com.br'}/account" class="button">
+          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://tapresente.com'}/account" class="button">
             Ver meus vale-presentes
           </a>
         </center>
       </div>
       
       <div class="footer">
-        <p>Este email foi enviado por ${data.businessName} através da plataforma Mimoz.</p>
-        <p>© ${new Date().getFullYear()} Mimoz - Plataforma de Vale-Presentes</p>
+        <p>Este email foi enviado por ${data.businessName} através da plataforma Tapresente.</p>
+        <p>© ${new Date().getFullYear()} Tapresente - Plataforma de Vale-Presentes</p>
       </div>
     </div>
   </div>
@@ -173,7 +173,7 @@ export function giftCardReceivedEmail(data: GiftCardEmailData): string {
         <p>4. Se sobrar saldo, ele fica disponível para próximas compras</p>
         
         <center>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://mimoz.com.br'}/store/${data.businessSlug}" class="button" style="background: ${data.cardColor};">
+          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://tapresente.com'}/store/${data.businessSlug}" class="button" style="background: ${data.cardColor};">
             Ver loja ${data.businessName}
           </a>
         </center>
@@ -181,7 +181,7 @@ export function giftCardReceivedEmail(data: GiftCardEmailData): string {
       
       <div class="footer">
         <p>Este vale-presente foi enviado por ${data.purchaserName} através de ${data.businessName}.</p>
-        <p>© ${new Date().getFullYear()} Mimoz - Plataforma de Vale-Presentes</p>
+        <p>© ${new Date().getFullYear()} Tapresente - Plataforma de Vale-Presentes</p>
       </div>
     </div>
   </div>
@@ -248,7 +248,7 @@ export function giftCardRedeemedEmail(data: GiftCardEmailData & {
         ` : ''}
         
         <center>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://mimoz.com.br'}/account" class="button">
+          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://tapresente.com'}/account" class="button">
             Ver meus vale-presentes
           </a>
         </center>
@@ -256,7 +256,7 @@ export function giftCardRedeemedEmail(data: GiftCardEmailData & {
       
       <div class="footer">
         <p>Transação realizada em ${data.businessName}.</p>
-        <p>© ${new Date().getFullYear()} Mimoz - Plataforma de Vale-Presentes</p>
+        <p>© ${new Date().getFullYear()} Tapresente - Plataforma de Vale-Presentes</p>
       </div>
     </div>
   </div>
@@ -294,7 +294,7 @@ COMO USAR:
 3. Se sobrar saldo, ele fica disponível para próximas compras
 
 ---
-Este email foi enviado por ${data.businessName} através da plataforma Mimoz.
+Este email foi enviado por ${data.businessName} através da plataforma Tapresente.
 `;
 }
 

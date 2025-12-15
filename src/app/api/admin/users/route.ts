@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Admin Users API
+// Tapresente - Admin Users API
 // ============================================
 // GET /api/admin/users - List all users (admin only)
 // PATCH /api/admin/users - Update user role/business (admin only)

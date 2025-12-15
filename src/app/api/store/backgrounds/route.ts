@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Card Backgrounds API
+// Tapresente - Card Backgrounds API
 // ============================================
 // GET - Fetch available backgrounds for custom cards
 

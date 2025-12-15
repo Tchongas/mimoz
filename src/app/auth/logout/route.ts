@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Logout Route
+// Tapresente - Logout Route
 // ============================================
 // Handles user logout - POST only to prevent prefetch issues
 

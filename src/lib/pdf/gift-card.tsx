@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Gift Card PDF Template
+// Tapresente - Gift Card PDF Template
 // ============================================
 // Generates a printable PDF gift card using @react-pdf/renderer
 

@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - My Gift Cards Page
+// Tapresente - My Gift Cards Page
 // ============================================
 // Shows gift cards purchased by the user AND received as gifts
 

@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// MIMOZ - Global Error Boundary
+// Tapresente - Global Error Boundary
 // ============================================
 // Catches unhandled errors in the app
 

@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Services Export
+// Tapresente - Services Export
 // ============================================
 
 export * from './audit-log';

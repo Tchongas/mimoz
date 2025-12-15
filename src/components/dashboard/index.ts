@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Dashboard Components Export
+// Tapresente - Dashboard Components Export
 // ============================================
 
 export { DashboardLayout } from './dashboard-layout';

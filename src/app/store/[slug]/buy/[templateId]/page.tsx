@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Gift Card Purchase Page
+// Tapresente - Gift Card Purchase Page
 // ============================================
 // Requires authentication - form will redirect to login if needed
 

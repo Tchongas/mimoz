@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - UI Components Export
+// Tapresente - UI Components Export
 // ============================================
 
 export { Button, type ButtonProps } from './button';

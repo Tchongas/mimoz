@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Admin Reports Page
+// Tapresente - Admin Reports Page
 // ============================================
 
 import { createClient } from '@/lib/supabase/server';

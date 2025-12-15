@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Admin Edit Business Loading State
+// Tapresente - Admin Edit Business Loading State
 // ============================================
 
 import { SkeletonForm, SkeletonCard, Skeleton } from '@/components/ui';

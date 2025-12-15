@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - AbacatePay Webhook Handler
+// Tapresente - AbacatePay Webhook Handler
 // ============================================
 // Handles payment notifications from AbacatePay
 // Sends confirmation emails when payment is confirmed

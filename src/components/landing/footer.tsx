@@ -11,7 +11,7 @@ export function LandingFooter() {
             <div className="w-8 h-8 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-lg flex items-center justify-center">
               <Gift className="w-4 h-4 text-white" />
             </div>
-            <span className="text-lg font-bold text-white">Mimoz</span>
+            <span className="text-lg font-bold text-white">Tapresente</span>
           </Link>
           
           {/* Links */}
@@ -24,7 +24,7 @@ export function LandingFooter() {
         
         {/* Copyright */}
         <div className="mt-8 pt-8 border-t border-slate-800 text-center text-sm text-slate-500">
-          © {new Date().getFullYear()} Mimoz
+          © {new Date().getFullYear()} Tapresente
         </div>
       </div>
     </footer>

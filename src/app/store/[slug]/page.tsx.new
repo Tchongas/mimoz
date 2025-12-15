@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Public Store Page (Customizable)
+// Tapresente - Public Store Page (Customizable)
 // ============================================
 
 import { createClient } from '@/lib/supabase/server';
@@ -651,7 +651,7 @@ export default async function StorePage({ params }: StorePageProps) {
               © {new Date().getFullYear()} {business.name}. Todos os direitos reservados.
             </p>
             <p className="text-xs mt-2 opacity-60">
-              Powered by <a href="https://mimoz.com.br" className="hover:text-white">Mimoz</a>
+              Powered by <a href="https://tapresente.com" className="hover:text-white">Tapresente</a>
             </p>
           </div>
         </div>

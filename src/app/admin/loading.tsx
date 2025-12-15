@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Admin Loading State
+// Tapresente - Admin Loading State
 // ============================================
 
 import { SkeletonPage } from '@/components/ui';

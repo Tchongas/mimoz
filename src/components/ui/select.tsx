@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Select Component
+// Tapresente - Select Component
 // ============================================
 
 import { cn } from '@/lib/utils';

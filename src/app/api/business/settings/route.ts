@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Business Settings API
+// Tapresente - Business Settings API
 // ============================================
 // PATCH /api/business/settings - Update business settings
 

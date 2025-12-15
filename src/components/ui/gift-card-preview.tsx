@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// MIMOZ - Shared Gift Card Preview Component
+// Tapresente - Shared Gift Card Preview Component
 // Giftly-inspired design with title as main focus
 // ============================================
 

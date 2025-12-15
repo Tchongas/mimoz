@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Auth Error Page
+// Tapresente - Auth Error Page
 // ============================================
 // Shown when authentication fails
 
@@ -50,7 +50,7 @@ export default async function AuthErrorPage({
             </Link>
             
             <a
-              href="mailto:suporte@mimoz.com.br"
+              href="mailto:suporte@tapresente.com"
               className="block w-full px-4 py-3 border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition-colors"
             >
               Contatar Suporte

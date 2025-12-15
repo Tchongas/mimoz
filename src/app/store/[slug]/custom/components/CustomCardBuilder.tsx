@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// MIMOZ - Custom Gift Card Builder Component
+// Tapresente - Custom Gift Card Builder Component
 // Tabbed interface with shared GiftCardPreview
 // ============================================
 

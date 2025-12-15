@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Label Component
+// Tapresente - Label Component
 // ============================================
 
 import { cn } from '@/lib/utils';

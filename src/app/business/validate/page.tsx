@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Business Owner Code Validation Page
+// Tapresente - Business Owner Code Validation Page
 // ============================================
 // Allows business owners to validate and redeem gift cards
 

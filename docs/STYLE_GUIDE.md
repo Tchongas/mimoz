@@ -1,6 +1,6 @@
-# Mimoz UI Style Guide
+# Tapresente UI Style Guide
 
-This style guide defines how to build pages and components in Mimoz using React, Next.js (App Router), and Tailwind CSS.
+This style guide defines how to build pages and components in Tapresente using React, Next.js (App Router), and Tailwind CSS.
 
 It is meant to be **practical and copy‑pasteable**. When in doubt, follow the examples here before inventing new patterns.
 
@@ -132,7 +132,7 @@ Rely on Tailwind + default font; keep the following scales consistent:
 
 ## 5. Color System
 
-Mimoz combines:
+Tapresente combines:
 
 - **Core neutral palette** (Tailwind `slate`)
 - **Business-specific colors** fetched from the database
@@ -223,7 +223,7 @@ For delete or dangerous actions (admin side):
 
 ## 7. Forms
 
-Forms are central to Mimoz (logins, purchase flows, admin panels).
+Forms are central to Tapresente (logins, purchase flows, admin panels).
 
 ### 7.1 Form layout
 

@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Payment Gateway Module
+// Tapresente - Payment Gateway Module
 // ============================================
 // Central export for payment gateway functionality
 //

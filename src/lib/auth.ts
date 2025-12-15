@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Authentication Utilities
+// Tapresente - Authentication Utilities
 // ============================================
 // Server-side auth helpers for session and user management
 

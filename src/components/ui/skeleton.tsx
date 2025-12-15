@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Skeleton Loading Component
+// Tapresente - Skeleton Loading Component
 // ============================================
 
 import { cn } from '@/lib/utils';

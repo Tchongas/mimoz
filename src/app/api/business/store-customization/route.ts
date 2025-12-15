@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Store Customization API
+// Tapresente - Store Customization API
 // ============================================
 
 import { NextRequest, NextResponse } from 'next/server';

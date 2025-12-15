@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Business Owner Dashboard Home
+// Tapresente - Business Owner Dashboard Home
 // ============================================
 
 import { requireBusiness } from '@/lib/auth';

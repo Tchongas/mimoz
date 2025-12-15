@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Resend Email Client
+// Tapresente - Resend Email Client
 // ============================================
 // Email sending using Resend API
 
@@ -80,12 +80,12 @@ function getSenderAddress(businessName: string): string {
   
   if (fromEmail) {
     // Custom verified domain configured
-    return `${businessName} via Mimoz <${fromEmail}>`;
+    return `${businessName} via Tapresente <${fromEmail}>`;
   }
   
   // Use Resend's test domain (works without domain verification)
   // This only delivers to the email address of the Resend account owner
-  return `Mimoz <onboarding@resend.dev>`;
+  return `Tapresente <onboarding@resend.dev>`;
 }
 
 // ============================================

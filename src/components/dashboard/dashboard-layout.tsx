@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// MIMOZ - Dashboard Layout Component
+// Tapresente - Dashboard Layout Component
 // ============================================
 
 import { useState, Suspense } from 'react';
@@ -45,7 +45,7 @@ export function DashboardLayout({ children, user, businessName }: DashboardLayou
       >
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-6 border-b border-slate-200">
-          <h1 className="text-xl font-bold text-slate-900">Mimoz</h1>
+          <h1 className="text-xl font-bold text-slate-900">Tapresente</h1>
           <button
             onClick={() => setIsSidebarOpen(false)}
             className="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
@@ -62,7 +62,7 @@ export function DashboardLayout({ children, user, businessName }: DashboardLayou
         {/* Footer */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200">
           <p className="text-xs text-slate-400 text-center">
-            Mimoz v0.1.0
+            Tapresente v0.1.0
           </p>
         </div>
       </aside>

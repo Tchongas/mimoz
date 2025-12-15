@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// MIMOZ - Code Validation Form Component
+// Tapresente - Code Validation Form Component
 // ============================================
 // Validates gift card code and allows redemption
 

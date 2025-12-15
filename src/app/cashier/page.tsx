@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Cashier Code Validation Page
+// Tapresente - Cashier Code Validation Page
 // ============================================
 
 import { requireBusiness } from '@/lib/auth';

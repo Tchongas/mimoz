@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Landing Page
+// Tapresente - Landing Page
 // ============================================
 
 import { redirect } from 'next/navigation';

@@ -1,4 +1,4 @@
-# Mimoz - Plataforma de Gift Cards
+# Tapresente - Plataforma de Gift Cards
 
 Plataforma whitelabel para empresas venderem gift cards. Sistema completo com dashboards para administração, proprietários de negócios e operadores de caixa.
 

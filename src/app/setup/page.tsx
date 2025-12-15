@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Setup Page
+// Tapresente - Setup Page
 // ============================================
 // Shown when Supabase is not configured
 
@@ -28,7 +28,7 @@ export default function SetupPage() {
       <div className="max-w-lg w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Mimoz</h1>
+          <h1 className="text-4xl font-bold text-white mb-2">Tapresente</h1>
           <p className="text-slate-400">Configuração Inicial</p>
         </div>
 

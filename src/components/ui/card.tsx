@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Card Component
+// Tapresente - Card Component
 // ============================================
 
 import { cn } from '@/lib/utils';

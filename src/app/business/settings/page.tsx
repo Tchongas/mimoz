@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Business Settings Page
+// Tapresente - Business Settings Page
 // ============================================
 
 import { requireBusiness } from '@/lib/auth';
@@ -53,7 +53,7 @@ export default async function BusinessSettingsPage() {
     );
   }
 
-  const storeUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://mimoz.com.br'}/store/${business.slug}`;
+  const storeUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://tapresente.com'}/store/${business.slug}`;
 
   return (
     <div className="space-y-6">
@@ -152,7 +152,7 @@ export default async function BusinessSettingsPage() {
             Entre em contato com o administrador para solicitar alterações críticas na sua conta.
           </p>
           <a
-            href="mailto:suporte@mimoz.com.br"
+            href="mailto:suporte@tapresente.com"
             className="inline-flex items-center px-4 py-2 border border-red-300 text-red-600 rounded-lg font-medium hover:bg-red-50 transition-colors"
           >
             Contatar Suporte

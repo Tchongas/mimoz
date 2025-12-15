@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Admin New Business Page
+// Tapresente - Admin New Business Page
 // ============================================
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui';

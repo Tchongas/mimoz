@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Safe Data Fetching Utilities
+// Tapresente - Safe Data Fetching Utilities
 // ============================================
 // Wraps database calls with error handling and fallbacks
 

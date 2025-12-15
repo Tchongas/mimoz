@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// MIMOZ - Gift Card Template Form
+// Tapresente - Gift Card Template Form
 // ============================================
 
 import { useState } from 'react';

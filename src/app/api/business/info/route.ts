@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Business Info API
+// Tapresente - Business Info API
 // ============================================
 // GET /api/business/info - Get current user's business info
 

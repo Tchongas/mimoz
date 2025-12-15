@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Admin Invites API (Single)
+// Tapresente - Admin Invites API (Single)
 // ============================================
 // DELETE /api/admin/invites/[id] - Delete an invite
 

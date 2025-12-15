@@ -1,4 +1,4 @@
-# Mimoz - Progress Report
+# Tapresente - Progress Report
 
 > Last updated: December 3, 2025
 

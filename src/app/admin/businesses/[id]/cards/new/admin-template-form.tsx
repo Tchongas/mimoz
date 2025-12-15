@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// MIMOZ - Admin Gift Card Template Form
+// Tapresente - Admin Gift Card Template Form
 // ============================================
 // Form for creating/editing gift card templates from admin panel
 

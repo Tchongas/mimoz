@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// MIMOZ - Navigation Progress Bar
+// Tapresente - Navigation Progress Bar
 // ============================================
 // Shows a progress bar at the top during navigation
 

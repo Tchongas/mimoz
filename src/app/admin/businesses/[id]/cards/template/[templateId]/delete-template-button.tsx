@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// MIMOZ - Delete Template Button
+// Tapresente - Delete Template Button
 // ============================================
 
 import { useState } from 'react';

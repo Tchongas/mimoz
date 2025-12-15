@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Admin Edit User Page
+// Tapresente - Admin Edit User Page
 // ============================================
 
 import { notFound } from 'next/navigation';

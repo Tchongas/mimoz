@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Test Email API (Development Only)
+// Tapresente - Test Email API (Development Only)
 // ============================================
 // GET /api/test/email - Test if Resend is configured correctly
 // POST /api/test/email - Send a test email
@@ -54,13 +54,13 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: `Mimoz Test <${fromEmail}>`,
+        from: `Tapresente Test <${fromEmail}>`,
         to: toEmail,
-        subject: '✅ Teste de Email - Mimoz',
+        subject: '✅ Teste de Email - Tapresente',
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h1 style="color: #1e3a5f;">🎉 Email funcionando!</h1>
-            <p>Este é um email de teste do sistema Mimoz.</p>
+            <p>Este é um email de teste do sistema Tapresente.</p>
             <p>Se você está vendo isso, significa que o Resend está configurado corretamente.</p>
             <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
             <p style="color: #666; font-size: 12px;">

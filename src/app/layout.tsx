@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Mimoz - Plataforma de Gift Cards",
+  title: "Tapresente - Plataforma de Gift Cards",
   description: "Plataforma whitelabel para venda de gift cards",
 };
 

@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Edit Gift Card Template Page
+// Tapresente - Edit Gift Card Template Page
 // ============================================
 
 import { requireBusiness } from '@/lib/auth';

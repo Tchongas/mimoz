@@ -58,7 +58,7 @@ Payment transactions.
 | stripe_checkout_session_id | text | Stripe session |
 | stripe_payment_intent_id | text | Stripe payment |
 | amount_cents | integer | Total charged |
-| platform_fee_cents | integer | Mimoz fee |
+| platform_fee_cents | integer | Tapresente fee |
 | status | text | PENDING, PAID, FAILED, REFUNDED |
 | customer_email | text | Customer email |
 | customer_name | text | Customer name |

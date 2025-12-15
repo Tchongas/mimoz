@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Admin Reports Loading State
+// Tapresente - Admin Reports Loading State
 // ============================================
 
 import { SkeletonStats, SkeletonTable, Skeleton } from '@/components/ui';

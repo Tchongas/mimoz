@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Store Loading State
+// Tapresente - Store Loading State
 // ============================================
 
 import { Skeleton } from '@/components/ui';

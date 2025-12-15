@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================
-// MIMOZ - Delete Business Button
+// Tapresente - Delete Business Button
 // ============================================
 
 import { useState } from 'react';

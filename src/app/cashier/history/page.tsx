@@ -1,5 +1,5 @@
 // ============================================
-// MIMOZ - Cashier History Page
+// Tapresente - Cashier History Page
 // ============================================
 
 import { requireBusiness } from '@/lib/auth';
