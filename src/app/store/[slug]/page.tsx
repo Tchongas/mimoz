@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { CustomCardShowcase } from './components/CustomCardShowcase';
+import { StoreTracker } from './components/StoreTracker';
 
 interface StorePageProps {
   params: Promise<{ slug: string }>;
@@ -272,6 +273,9 @@ export default async function StorePage({ params }: StorePageProps) {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: pageBgColor }}>
+      {/* Track last visited store for navigation */}
+      <StoreTracker slug={slug} name={business.name} />
+      
       {/* Professional Sticky Header */}
       {showHeader && (
         <header className="sticky top-0 z-50 transition-all duration-300">

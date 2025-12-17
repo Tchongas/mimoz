@@ -1,7 +1,29 @@
+'use client';
+
 import Link from 'next/link';
-import { Gift, Store, Sparkles } from 'lucide-react';
+import { Gift, Store, Sparkles, ArrowLeft } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
+interface LastVisitedStore {
+  slug: string;
+  name: string;
+}
 
 export function EmptyState() {
+  const [lastStore, setLastStore] = useState<LastVisitedStore | null>(null);
+
+  useEffect(() => {
+    // Check localStorage for last visited store
+    const stored = localStorage.getItem('tapresente_last_store');
+    if (stored) {
+      try {
+        setLastStore(JSON.parse(stored));
+      } catch {
+        // Invalid JSON, ignore
+      }
+    }
+  }, []);
+
   return (
     <div className="relative overflow-hidden bg-gradient-to-br from-violet-50 via-white to-purple-50 rounded-3xl p-12 text-center">
       {/* Decorative elements */}
@@ -22,13 +44,25 @@ export function EmptyState() {
           Você ainda não tem vale-presentes. Explore as lojas parceiras e descubra presentes incríveis para você ou para quem você ama.
         </p>
         
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl hover:from-violet-700 hover:to-purple-700 transition-all shadow-lg shadow-purple-200/50 font-medium"
-        >
-          <Store className="w-5 h-5" />
-          Explorar lojas
-        </Link>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          {lastStore && (
+            <Link
+              href={`/store/${lastStore.slug}`}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-white border-2 border-violet-200 text-violet-700 rounded-xl hover:bg-violet-50 hover:border-violet-300 transition-all font-medium"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Voltar para {lastStore.name}
+            </Link>
+          )}
+          
+          <Link
+            href="/stores"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl hover:from-violet-700 hover:to-purple-700 transition-all shadow-lg shadow-purple-200/50 font-medium"
+          >
+            <Store className="w-5 h-5" />
+            Ver todas as lojas
+          </Link>
+        </div>
       </div>
     </div>
   );
