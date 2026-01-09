@@ -1,8 +1,8 @@
-# Payment Integration - AbacatePay
+# Payment Integration - Mercado Pago
 
 ## Overview
 
-Tapresente uses [AbacatePay](https://abacatepay.com) as the payment gateway for processing gift card purchases via PIX (Brazilian instant payment system).
+Tapresente uses [Mercado Pago](https://www.mercadopago.com.br/developers/en/docs) as the payment gateway for processing gift card purchases via Checkout Pro.
 
 The integration is designed to be:
 - **Gateway-agnostic**: Easy to swap to another provider if needed
@@ -14,7 +14,7 @@ The integration is designed to be:
 
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   Store Page    │────▶│  Checkout API    │────▶│   AbacatePay    │
+│   Store Page    │────▶│  Checkout API    │────▶│  Mercado Pago   │
 │  /store/[slug]  │     │ /api/store/      │     │   (Payment)     │
 │     /buy/...    │     │    checkout      │     │                 │
 └─────────────────┘     └──────────────────┘     └────────┬────────┘
@@ -23,8 +23,8 @@ The integration is designed to be:
                                                           ▼
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
 │  Success Page   │◀────│  Webhook Handler │◀────│  billing.paid   │
-│ /store/[slug]/  │     │ /api/webhooks/   │     │     event       │
-│    success      │     │   abacatepay     │     │                 │
+│ /store/[slug]/  │     │ /api/webhooks/   │     │ payment.* event │
+│    success      │     │  mercadopago     │     │                 │
 └─────────────────┘     └──────────────────┘     └─────────────────┘
 ```
 
@@ -33,19 +33,18 @@ The integration is designed to be:
 Add these to your `.env.local`:
 
 ```bash
-# AbacatePay API Key (get from dashboard)
-ABACATEPAY_API_KEY=your_api_key_here
+# Mercado Pago access token
+MERCADOPAGO_ACCESS_TOKEN=your_access_token_here
 
-# Webhook secret for URL validation (optional but recommended)
-ABACATEPAY_WEBHOOK_SECRET=your_random_secret_here
+# Webhook secret for signature validation (Your integrations -> Webhooks)
+MERCADOPAGO_WEBHOOK_SECRET=your_webhook_secret_here
 ```
 
-### Getting Your API Key
+### Getting Your Access Token
 
-1. Create an account at [abacatepay.com](https://abacatepay.com)
-2. Go to Settings → API Keys
-3. Create a new API key
-4. Use the dev/sandbox key for testing
+1. Create an application in the Mercado Pago developers panel
+2. Copy the Access Token for your environment
+3. Configure it as `MERCADOPAGO_ACCESS_TOKEN`
 
 ## Payment Flow
 
@@ -53,13 +52,15 @@ ABACATEPAY_WEBHOOK_SECRET=your_random_secret_here
 
 Customer fills out the purchase form on `/store/[slug]/buy/[templateId]`.
 
-### 2. Checkout API Creates Billing
+### 2. Checkout API Creates Checkout Session
 
 ```typescript
 // POST /api/store/checkout
 {
   businessId: "uuid",
   templateId: "uuid",
+  paymentProvider: "mercadopago",
+  paymentMethod: "PIX" | "CARD",
   purchaserName: "João Silva",
   purchaserEmail: "joao@email.com",
   recipientName: "Maria Santos",
@@ -71,22 +72,23 @@ Customer fills out the purchase form on `/store/[slug]/buy/[templateId]`.
 The API:
 1. Validates the request
 2. Creates a **pending** gift card in the database
-3. Creates an AbacatePay billing (payment link)
+3. Creates a Mercado Pago Checkout Pro preference
 4. Returns the payment URL
 
-### 3. Customer Pays via PIX
+### 3. Customer Pays via Mercado Pago
 
-Customer is redirected to AbacatePay's payment page where they can pay via PIX QR code.
+Customer is redirected to Mercado Pago's checkout page. The user-selected method (PIX or card) is enforced via preference configuration.
 
 ### 4. Webhook Activates Gift Card
 
-After payment, AbacatePay sends a `billing.paid` webhook to `/api/webhooks/abacatepay`.
+After payment, Mercado Pago sends a webhook to `/api/webhooks/mercadopago`.
 
 The webhook handler:
-1. Verifies the signature
-2. Finds the pending gift card
-3. Updates status to `active`
-4. (Future) Sends confirmation emails
+1. Verifies the signature (recommended)
+2. Fetches payment details from Mercado Pago API
+3. Finds the pending gift card via `external_reference`
+4. Updates status to `ACTIVE` and `payment_status` to `COMPLETED`
+5. Sends confirmation emails
 
 ### 5. Customer Sees Success
 
@@ -97,119 +99,73 @@ Customer is redirected to the success page with their gift card code.
 ```
 src/lib/payments/
 ├── types.ts          # TypeScript interfaces (gateway-agnostic)
-├── abacatepay.ts     # AbacatePay client implementation
+├── mercadopago.ts    # Mercado Pago client implementation
+├── abacatepay.ts     # (Legacy) AbacatePay client implementation
 └── index.ts          # Central exports
 
 src/app/api/
-├── store/checkout/route.ts           # Creates billing
-└── webhooks/abacatepay/route.ts      # Handles payment events
+├── store/checkout/route.ts             # Creates checkout session
+└── webhooks/mercadopago/route.ts       # Handles payment events
 ```
 
 ## Types Reference
 
-### CreateBillingRequest
+The integration uses Mercado Pago Checkout Pro preferences and payment notifications.
 
-```typescript
-interface CreateBillingRequest {
-  frequency: 'ONE_TIME' | 'MULTIPLE_PAYMENTS';
-  methods: ('PIX' | 'CARD')[];
-  products: BillingProduct[];
-  completionUrl: string;  // Redirect after payment
-  returnUrl: string;      // Redirect on cancel
-  customer: CustomerMetadata;
-  externalId?: string;    // Your reference ID
-  metadata?: Record<string, unknown>;
-}
-```
-
-### Billing Response
-
-```typescript
-interface Billing {
-  id: string;           // bill_xxx
-  url: string;          // Payment page URL
-  status: 'PENDING' | 'PAID' | 'EXPIRED' | 'CANCELLED' | 'REFUNDED';
-  devMode: boolean;     // true in sandbox
-  amount?: number;      // Total in cents
-  customer: Customer;
-  // ...
-}
-```
-
-### Webhook Event
-
-```typescript
-interface BillingPaidEvent {
-  id: string;           // log_xxx
-  event: 'billing.paid';
-  devMode: boolean;
-  data: {
-    payment: {
-      amount: number;   // Amount in cents
-      fee: number;      // Platform fee
-      method: 'PIX';
-    };
-    pixQrCode?: {
-      id: string;       // pix_char_xxx
-      status: 'PAID';
-    };
-  };
-}
-```
+- `external_reference` is set to the `giftCardId` so the webhook can map payments back to a gift card.
 
 ## Usage Examples
 
-### Creating a Billing
+### Creating a Checkout Session
 
 ```typescript
-import { createBilling } from '@/lib/payments';
+import { createCheckoutSession } from '@/lib/payments';
 
-const billing = await createBilling({
-  frequency: 'ONE_TIME',
-  methods: ['PIX'],
-  products: [{
-    externalId: 'gift-card-123',
-    name: 'Vale-Presente R$50',
-    quantity: 1,
-    price: 5000, // R$50.00 in cents
-  }],
-  completionUrl: 'https://mysite.com/success',
-  returnUrl: 'https://mysite.com/store',
-  customer: { email: 'customer@email.com' },
+const checkout = await createCheckoutSession({
+  provider: 'mercadopago',
+  paymentMethod: 'PIX',
+  title: 'Vale-Presente R$50',
+  amountCents: 5000,
+  giftCardId: 'gift-card-123',
+  successUrl: 'https://mysite.com/success',
+  pendingUrl: 'https://mysite.com/success',
+  failureUrl: 'https://mysite.com/store',
+  notificationUrl: 'https://mysite.com/api/webhooks/mercadopago',
 });
 
-// Redirect customer to billing.url
+// Redirect customer to checkout.url
 ```
 
 ### Verifying Webhook
 
 ```typescript
-import { verifyWebhookSignature, parseWebhookEvent } from '@/lib/payments';
+import { verifyMercadoPagoWebhookSignature } from '@/lib/payments';
 
-// Method 1: HMAC signature
-const signature = request.headers.get('x-webhook-signature');
-if (!verifyWebhookSignature(rawBody, signature)) {
+const xSignature = request.headers.get('x-signature');
+const xRequestId = request.headers.get('x-request-id');
+const dataId = request.nextUrl.searchParams.get('data.id');
+
+const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+const isValid = verifyMercadoPagoWebhookSignature({
+  secret,
+  xSignature,
+  xRequestId,
+  dataId,
+});
+
+if (!isValid) {
   return { error: 'Invalid signature' };
 }
-
-// Method 2: URL secret
-const secret = request.nextUrl.searchParams.get('webhookSecret');
-if (!verifyWebhookSecret(secret)) {
-  return { error: 'Invalid secret' };
-}
-
-const event = parseWebhookEvent(rawBody);
 ```
 
 ## Webhook Configuration
 
-### In AbacatePay Dashboard
+### In Mercado Pago Developers Panel
 
-1. Go to Settings → Webhooks
-2. Click "Create Webhook"
-3. Enter URL: `https://your-domain.com/api/webhooks/abacatepay?webhookSecret=YOUR_SECRET`
-4. Select events: `billing.paid`
-5. Save
+1. Go to Your integrations → Webhooks
+2. Add URL: `https://your-domain.com/api/webhooks/mercadopago`
+3. Select event type(s) that include payments (payment topic)
+4. Copy the generated webhook secret and set `MERCADOPAGO_WEBHOOK_SECRET`
 
 ### Local Development
 
@@ -223,7 +179,7 @@ Then use the ngrok URL in your webhook configuration.
 
 ## Dev Mode
 
-When `ABACATEPAY_API_KEY` is not set, the checkout API creates gift cards directly without payment. This is useful for:
+When `MERCADOPAGO_ACCESS_TOKEN` is not set, the checkout API creates gift cards directly without payment. This is useful for:
 
 - Local development
 - Testing the UI flow
@@ -248,45 +204,40 @@ export const paymentGateway = newGateway;
 
 ## Troubleshooting
 
-### "ABACATEPAY_API_KEY not set"
+### "MERCADOPAGO_ACCESS_TOKEN not set"
 
-Add the API key to your `.env.local` file.
+Add the access token to your `.env.local` file.
 
 ### Webhook not receiving events
 
-1. Check the webhook URL is correct in AbacatePay dashboard
-2. Verify the webhook secret matches
+1. Check the webhook URL is correct in Mercado Pago dashboard
+2. Verify the webhook secret matches `MERCADOPAGO_WEBHOOK_SECRET`
 3. Check server logs for errors
 4. Use ngrok for local testing
 
 ### Payment created but gift card not activated
 
-1. Check webhook logs in AbacatePay dashboard
+1. Check webhook logs in Mercado Pago dashboard
 2. Verify `payment_provider_id` is being saved
 3. Check database for pending gift cards
 
 ## API Reference
 
-### AbacatePay Endpoints Used
+### Mercado Pago Endpoints Used
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/v1/billing/create` | POST | Create payment link |
-| `/v1/billing/get` | GET | Get billing details |
-| `/v1/billing/list` | GET | List all billings |
-| `/v1/customer/create` | POST | Create customer |
-| `/v1/customer/list` | GET | List customers |
+| `/checkout/preferences` | POST | Create Checkout Pro preference |
+| `/v1/payments/{id}` | GET | Fetch payment details |
 
 ### Webhook Events
 
 | Event | Description |
 |-------|-------------|
-| `billing.paid` | Payment completed |
-| `withdraw.done` | Withdrawal completed |
-| `withdraw.failed` | Withdrawal failed |
+| `payment.*` | Payment status changes |
 
 ## Resources
 
-- [AbacatePay Documentation](https://docs.abacatepay.com/)
-- [AbacatePay GitHub](https://github.com/AbacatePay)
+- [Mercado Pago Docs](https://www.mercadopago.com.br/developers/en/docs)
+- [Webhooks - Validate origin](https://www.mercadopago.com.br/developers/en/docs/your-integrations/notifications/webhooks)
 - [PIX Documentation](https://www.bcb.gov.br/estabilidadefinanceira/pix)
