@@ -289,8 +289,12 @@ export async function POST(request: NextRequest) {
         console.error('Error creating payment:', paymentError);
         await supabase.from('gift_cards').delete().eq('id', giftCard.id);
         
+        const errorMessage = paymentError instanceof Error ? paymentError.message : 'Erro ao criar pagamento. Tente novamente.';
         return NextResponse.json(
-          { error: 'Erro ao criar pagamento. Tente novamente.' },
+          {
+            error: process.env.NODE_ENV === 'development' ? errorMessage : 'Erro ao criar pagamento. Tente novamente.',
+            details: process.env.NODE_ENV === 'development' ? String(paymentError) : undefined,
+          },
           { status: 500 }
         );
       }
@@ -382,6 +386,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         error: process.env.NODE_ENV === 'development' ? errorMessage : 'Erro interno do servidor',
+        details: process.env.NODE_ENV === 'development' ? String(error) : undefined,
       },
       { status: 500 }
     );
