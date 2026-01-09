@@ -23,7 +23,9 @@ interface MercadoPagoCreatePreferenceRequest {
   payment_methods?: {
     excluded_payment_methods?: Array<{ id: string }>;
     excluded_payment_types?: Array<{ id: string }>;
+    default_payment_method_id?: string;
     installments?: number;
+    default_installments?: number;
   };
   auto_return?: 'approved' | 'all';
 }
@@ -85,6 +87,7 @@ async function mpRequest<T>(path: string, options: { method: 'GET' | 'POST'; bod
 function paymentMethodsFor(method: MercadoPagoPaymentMethod): MercadoPagoCreatePreferenceRequest['payment_methods'] {
   if (method === 'PIX') {
     return {
+      default_payment_method_id: 'pix',
       excluded_payment_types: [
         { id: 'credit_card' },
         { id: 'debit_card' },
@@ -136,13 +139,7 @@ export async function createMercadoPagoPreference(params: {
       failure: params.failureUrl,
     },
     auto_return: 'approved',
-    payment_methods: {
-      ...paymentMethodsFor(params.paymentMethod),
-      excluded_payment_methods: [
-        // Prevent Mercado Pago balance from being offered (can show "saldo insuficiente")
-        { id: 'account_money' },
-      ],
-    },
+    payment_methods: paymentMethodsFor(params.paymentMethod),
     ...(params.notificationUrl ? { notification_url: params.notificationUrl } : {}),
   };
 
