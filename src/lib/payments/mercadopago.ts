@@ -23,7 +23,7 @@ interface MercadoPagoCreatePreferenceRequest {
   payment_methods?: {
     excluded_payment_methods?: Array<{ id: string }>;
     excluded_payment_types?: Array<{ id: string }>;
-    default_payment_method_id?: string;
+    default_payment_type_id?: string;
     installments?: number;
     default_installments?: number;
   };
@@ -87,19 +87,19 @@ async function mpRequest<T>(path: string, options: { method: 'GET' | 'POST'; bod
 function paymentMethodsFor(method: MercadoPagoPaymentMethod): MercadoPagoCreatePreferenceRequest['payment_methods'] {
   if (method === 'PIX') {
     return {
-      default_payment_method_id: 'pix',
+      default_payment_type_id: 'bank_transfer',
       excluded_payment_types: [
         { id: 'credit_card' },
         { id: 'debit_card' },
         { id: 'prepaid_card' },
         { id: 'ticket' },
         { id: 'atm' },
-        { id: 'wallet_purchase' },
       ],
     };
   }
 
   return {
+    default_payment_type_id: 'credit_card',
     excluded_payment_types: [
       { id: 'bank_transfer' },
       { id: 'ticket' },
