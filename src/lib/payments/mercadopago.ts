@@ -136,7 +136,13 @@ export async function createMercadoPagoPreference(params: {
       failure: params.failureUrl,
     },
     auto_return: 'approved',
-    payment_methods: paymentMethodsFor(params.paymentMethod),
+    payment_methods: {
+      ...paymentMethodsFor(params.paymentMethod),
+      excluded_payment_methods: [
+        // Prevent Mercado Pago balance from being offered (can show "saldo insuficiente")
+        { id: 'account_money' },
+      ],
+    },
     ...(params.notificationUrl ? { notification_url: params.notificationUrl } : {}),
   };
 
@@ -145,9 +151,13 @@ export async function createMercadoPagoPreference(params: {
     body,
   });
 
+  const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
+  const isTestToken = !!token && token.startsWith('TEST-');
+  const url = isTestToken && preference.sandbox_init_point ? preference.sandbox_init_point : preference.init_point;
+
   return {
     id: preference.id,
-    url: preference.init_point,
+    url,
   };
 }
 
