@@ -84,6 +84,8 @@ export function CustomCardBuilder({
   const [customTitle, setCustomTitle] = useState('');
   const [selectedEmoji, setSelectedEmoji] = useState<string>('🎁');
   const [message, setMessage] = useState('');
+
+  const [paymentMethod, setPaymentMethod] = useState<'PIX' | 'CARD'>('PIX');
   
   // Recipient
   const [recipientName, setRecipientName] = useState('');
@@ -153,6 +155,8 @@ export function CustomCardBuilder({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           businessId,
+          paymentProvider: 'mercadopago',
+          paymentMethod,
           amountCents: actualAmount,
           customTitle: customTitle || undefined,
           customEmoji: selectedEmoji || undefined,
@@ -543,6 +547,32 @@ export function CustomCardBuilder({
                     </span>
                   </div>
 
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Forma de pagamento
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('PIX')}
+                        disabled={isLoading}
+                        className={`p-3 rounded-xl border text-left transition-colors ${paymentMethod === 'PIX' ? 'border-slate-900 bg-slate-50' : 'border-slate-200 hover:bg-slate-50'}`}
+                      >
+                        <div className="font-semibold text-slate-900">PIX</div>
+                        <div className="text-xs text-slate-500">Aprovação rápida</div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('CARD')}
+                        disabled={isLoading}
+                        className={`p-3 rounded-xl border text-left transition-colors ${paymentMethod === 'CARD' ? 'border-slate-900 bg-slate-50' : 'border-slate-200 hover:bg-slate-50'}`}
+                      >
+                        <div className="font-semibold text-slate-900">Cartão</div>
+                        <div className="text-xs text-slate-500">Crédito ou débito</div>
+                      </button>
+                    </div>
+                  </div>
+
                   <div className="flex gap-3">
                     <button
                       onClick={() => setActiveTab('amount')}
@@ -583,7 +613,7 @@ export function CustomCardBuilder({
                   </div>
 
                   <p className="text-xs text-slate-500 text-center mt-3">
-                    Pagamento seguro via PIX
+                    Pagamento seguro
                   </p>
                 </div>
               </div>

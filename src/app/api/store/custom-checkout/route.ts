@@ -10,18 +10,20 @@
 // 2. Validate custom card data (amount within limits, etc.)
 // 3. Generate unique gift card code
 // 4. Create pending gift card with custom design
-// 5. Create AbacatePay billing (payment link)
+// 5. Create Mercado Pago Checkout Pro session
 // 6. Return payment URL for redirect
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { createBilling } from '@/lib/payments';
+import { createCheckoutSession, isMercadoPagoConfigured, type PaymentProviderId } from '@/lib/payments';
 import { sendGiftCardEmails } from '@/lib/email/resend';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { z } from 'zod';
 
 const customCheckoutSchema = z.object({
   businessId: z.string().uuid(),
+  paymentProvider: z.custom<PaymentProviderId>().optional().default('mercadopago'),
+  paymentMethod: z.enum(['PIX', 'CARD']).optional().default('PIX'),
   // Amount in cents
   amountCents: z.number().int().positive(),
   // Custom design
@@ -104,6 +106,8 @@ export async function POST(request: NextRequest) {
 
     const {
       businessId,
+      paymentProvider,
+      paymentMethod,
       amountCents,
       customTitle,
       bgType,
@@ -199,7 +203,7 @@ export async function POST(request: NextRequest) {
     const successUrl = `${baseUrl}/store/${business.slug}/success`;
 
     // Check if payment gateway is configured
-    const usePaymentGateway = !!process.env.ABACATEPAY_API_KEY;
+    const usePaymentGateway = isMercadoPagoConfigured();
 
     // Determine background color for display
     const displayBgColor = bgType === 'color' ? (bgColor || '#1e3a5f') : (bgGradientStart || '#1e3a5f');
@@ -236,6 +240,7 @@ export async function POST(request: NextRequest) {
           custom_bg_gradient_end: bgGradientEnd || null,
           custom_bg_image_url: bgImageUrl || null,
           custom_text_color: textColor,
+          payment_method: paymentMethod,
         })
         .select()
         .single();
@@ -249,44 +254,35 @@ export async function POST(request: NextRequest) {
       }
 
       try {
-        const billing = await createBilling({
-          frequency: 'ONE_TIME',
-          methods: ['PIX'],
-          products: [{
-            externalId: giftCard.id,
-            name: `Vale-Presente Personalizado ${business.name}`,
-            description: customTitle || 'Vale-presente personalizado',
-            quantity: 1,
-            price: amountCents,
-          }],
-          completionUrl: `${successUrl}?code=${encodeURIComponent(giftCard.code)}`,
-          returnUrl: storeUrl,
-          externalId: giftCard.id,
-          metadata: {
-            giftCardId: giftCard.id,
-            giftCardCode: giftCard.code,
-            businessId,
-            isCustom: true,
-            purchaserEmail,
-            purchaserName,
-          },
+        const provider: PaymentProviderId = paymentProvider || 'mercadopago';
+        const checkout = await createCheckoutSession({
+          provider,
+          paymentMethod,
+          title: `Vale-Presente Personalizado ${business.name}`,
+          description: customTitle || 'Vale-presente personalizado',
+          amountCents,
+          giftCardId: giftCard.id,
+          successUrl: `${successUrl}?code=${encodeURIComponent(giftCard.code)}`,
+          pendingUrl: `${successUrl}?code=${encodeURIComponent(giftCard.code)}`,
+          failureUrl: storeUrl,
+          notificationUrl: `${baseUrl}/api/webhooks/mercadopago`,
         });
 
         await supabase
           .from('gift_cards')
-          .update({ payment_provider_id: billing.id })
+          .update({ payment_provider_id: checkout.id })
           .eq('id', giftCard.id);
 
         console.log('[CustomCheckout] Created billing:', {
-          billingId: billing.id,
+          billingId: checkout.id,
           giftCardId: giftCard.id,
           amount: amountCents,
         });
 
         return NextResponse.json({
           success: true,
-          checkoutUrl: billing.url,
-          billingId: billing.id,
+          checkoutUrl: checkout.url,
+          billingId: checkout.id,
         });
 
       } catch (paymentError) {
@@ -303,7 +299,7 @@ export async function POST(request: NextRequest) {
       // ========================================
       // DEV/TEST FLOW
       // ========================================
-      console.warn('[CustomCheckout] ABACATEPAY_API_KEY not set, creating card without payment');
+      console.warn('[CustomCheckout] MERCADOPAGO_ACCESS_TOKEN not set, creating card without payment');
 
       const { data: giftCard, error: giftCardError } = await supabase
         .from('gift_cards')

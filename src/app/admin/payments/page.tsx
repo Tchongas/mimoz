@@ -58,7 +58,7 @@ async function getBusinessEarnings(): Promise<BusinessEarnings[]> {
     // Calculate platform fees (what Tapresente takes)
     const platformFees = Math.round(totalRevenue * (PLATFORM_FEE_PERCENT / 100));
     
-    // Payment gateway fees (already deducted by AbacatePay)
+    // Payment gateway fees (already deducted by the payment provider)
     const gatewayFees = cards.reduce((sum, card) => sum + (card.payment_fee_cents || 0), 0);
     
     // Net earnings for the business
@@ -312,7 +312,7 @@ export default async function AdminPaymentsPage() {
               <h3 className="font-medium text-blue-900">Como funciona o pagamento</h3>
               <ul className="mt-2 space-y-1 text-sm text-blue-800">
                 <li>• A taxa Tapresente de {PLATFORM_FEE_PERCENT}% é calculada sobre cada venda</li>
-                <li>• As taxas do gateway de pagamento (AbacatePay) já são descontadas automaticamente</li>
+                <li>• As taxas do gateway de pagamento já são descontadas automaticamente</li>
               </ul>
             </div>
           </div>

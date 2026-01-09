@@ -25,6 +25,8 @@ export function PurchaseForm({ businessId, businessSlug, templateId, amount, acc
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [paymentMethod, setPaymentMethod] = useState<'PIX' | 'CARD'>('PIX');
+
   // Recipient info (only needed if sending as gift)
   const [isGift, setIsGift] = useState(false);
   const [recipientName, setRecipientName] = useState('');
@@ -43,6 +45,8 @@ export function PurchaseForm({ businessId, businessSlug, templateId, amount, acc
         body: JSON.stringify({
           businessId,
           templateId,
+          paymentProvider: 'mercadopago',
+          paymentMethod,
           recipientName: isGift ? recipientName : '',
           recipientEmail: isGift ? recipientEmail : '',
           recipientMessage: isGift ? recipientMessage : null,
@@ -63,7 +67,6 @@ export function PurchaseForm({ businessId, businessSlug, templateId, amount, acc
 
       // Redirect to payment page or success page
       if (data.checkoutUrl) {
-        // AbacatePay payment link - redirect to payment
         window.location.href = data.checkoutUrl;
       } else if (data.giftCardCode) {
         // Dev mode without payment - redirect to success directly
@@ -163,6 +166,43 @@ export function PurchaseForm({ businessId, businessSlug, templateId, amount, acc
         </div>
       </div>
 
+      {/* Payment Method */}
+      <div className="space-y-3">
+        <Label>Forma de pagamento</Label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-colors ${paymentMethod === 'PIX' ? 'border-slate-900 bg-slate-50' : 'border-slate-200 hover:bg-slate-50'}`}>
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="PIX"
+              checked={paymentMethod === 'PIX'}
+              onChange={() => setPaymentMethod('PIX')}
+              className="w-4 h-4"
+              disabled={isLoading}
+            />
+            <div>
+              <div className="font-medium text-slate-900">PIX</div>
+              <div className="text-xs text-slate-500">Aprovação rápida</div>
+            </div>
+          </label>
+          <label className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-colors ${paymentMethod === 'CARD' ? 'border-slate-900 bg-slate-50' : 'border-slate-200 hover:bg-slate-50'}`}>
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="CARD"
+              checked={paymentMethod === 'CARD'}
+              onChange={() => setPaymentMethod('CARD')}
+              className="w-4 h-4"
+              disabled={isLoading}
+            />
+            <div>
+              <div className="font-medium text-slate-900">Cartão</div>
+              <div className="text-xs text-slate-500">Crédito ou débito</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
       {/* Submit */}
       <button
         type="submit"
@@ -181,7 +221,7 @@ export function PurchaseForm({ businessId, businessSlug, templateId, amount, acc
       </button>
 
       <p className="text-xs text-slate-500 text-center">
-        Pagamento seguro via PIX
+        Pagamento seguro
       </p>
     </form>
   );

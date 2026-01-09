@@ -2,7 +2,7 @@
 // Tapresente - Purchase Success Page
 // ============================================
 
-import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { Gift, Home, User, Download, Sparkles } from 'lucide-react';
@@ -34,60 +34,6 @@ async function getGiftCardData(code: string) {
     `)
     .eq('code', code)
     .single();
-
-  // If card is PENDING and user reached success page, activate it
-  // AbacatePay only redirects to completionUrl after payment is confirmed
-  // Use service client to bypass RLS (user might not be authenticated)
-  console.log('[SuccessPage] Gift card status:', giftCard?.id, giftCard?.status);
-  
-  if (giftCard && giftCard.status === 'PENDING') {
-    console.log('[SuccessPage] Attempting to activate gift card:', giftCard.id);
-    
-    // Use service role client to bypass RLS policies
-    const serviceClient = createServiceClient();
-    
-    // First verify the card exists with service client
-    const { data: checkCard } = await serviceClient
-      .from('gift_cards')
-      .select('id, status')
-      .eq('id', giftCard.id)
-      .single();
-    
-    console.log('[SuccessPage] Service client check:', checkCard);
-    
-    if (checkCard) {
-      const { error } = await serviceClient
-        .from('gift_cards')
-        .update({
-          status: 'ACTIVE',
-          payment_status: 'COMPLETED',
-        })
-        .eq('id', giftCard.id);
-      
-      if (error) {
-        console.error('[SuccessPage] Error activating gift card:', error);
-      } else {
-        // Verify the update persisted
-        const { data: verifyCard } = await serviceClient
-          .from('gift_cards')
-          .select('id, status, payment_status')
-          .eq('id', giftCard.id)
-          .single();
-        
-        console.log('[SuccessPage] After update verification:', verifyCard);
-        
-        if (verifyCard?.status === 'ACTIVE') {
-          console.log('[SuccessPage] Gift card activated and verified!');
-          giftCard.status = 'ACTIVE';
-          giftCard.payment_status = 'COMPLETED';
-        } else {
-          console.error('[SuccessPage] Update did not persist! Card still:', verifyCard?.status);
-        }
-      }
-    } else {
-      console.error('[SuccessPage] Card not found with service client - check SUPABASE_SERVICE_ROLE_KEY');
-    }
-  }
 
   return giftCard;
 }

@@ -30,7 +30,7 @@ export function PurchaseSection({
       <div className="bg-white rounded-2xl border border-slate-200 p-6 md:p-7 shadow-sm">
         <h2 className="text-xl font-bold text-slate-900 mb-1">Finalizar Compra</h2>
         <p className="text-sm text-slate-600 mb-6">
-          Revise os dados e continue para o pagamento seguro via PIX.
+          Revise os dados e continue para o pagamento seguro.
         </p>
 
         {isAuthenticated ? (

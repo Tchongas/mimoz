@@ -10,13 +10,13 @@
 // 2. Validate request and template
 // 3. Generate unique gift card code
 // 4. Create pending gift card linked to user
-// 5. Create AbacatePay billing (payment link)
+// 5. Create Mercado Pago checkout session (payment link)
 // 6. Return payment URL for redirect
 // 7. Webhook handles activation after payment
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { createBilling } from '@/lib/payments';
+import { createCheckoutSession, isMercadoPagoConfigured, type PaymentProviderId } from '@/lib/payments';
 import { sendGiftCardEmails } from '@/lib/email/resend';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { z } from 'zod';
@@ -25,6 +25,8 @@ const checkoutSchema = z.object({
   // businessId is UUID in businesses table
   businessId: z.string().uuid(),
   templateId: z.string().uuid(),
+  paymentProvider: z.custom<PaymentProviderId>().optional().default('mercadopago'),
+  paymentMethod: z.enum(['PIX', 'CARD']).optional().default('PIX'),
   // Recipient info - only required if isGift is true
   recipientName: z.string().optional().default(''),
   recipientEmail: z.string().optional().default(''),
@@ -111,6 +113,8 @@ export async function POST(request: NextRequest) {
     const {
       businessId,
       templateId,
+      paymentProvider,
+      paymentMethod,
       recipientName,
       recipientEmail,
       recipientMessage,
@@ -172,8 +176,8 @@ export async function POST(request: NextRequest) {
     const storeUrl = `${baseUrl}/store/${business.slug}`;
     const successUrl = `${baseUrl}/store/${business.slug}/success`;
 
-    // Check if AbacatePay is configured
-    const usePaymentGateway = !!process.env.ABACATEPAY_API_KEY;
+    // Check if Mercado Pago is configured
+    const usePaymentGateway = isMercadoPagoConfigured();
 
     if (usePaymentGateway) {
       // ========================================
@@ -199,6 +203,7 @@ export async function POST(request: NextRequest) {
           recipient_name: finalRecipientName,
           recipient_message: recipientMessage || null,
           expires_at: expiresAt.toISOString(),
+          payment_method: paymentMethod,
         })
         .select()
         .single();
@@ -212,48 +217,36 @@ export async function POST(request: NextRequest) {
       }
 
       try {
-        // Create AbacatePay billing
-        // Note: We don't pass customer object - AbacatePay will collect customer info on their checkout page
-        // If we pass customer, ALL fields are required (name, cellphone, email, taxId)
-        const billing = await createBilling({
-          frequency: 'ONE_TIME',
-          methods: ['PIX'],
-          products: [{
-            externalId: giftCard.id,
-            name: `Vale-Presente ${business.name} - ${template.name}`,
-            description: template.description || undefined,
-            quantity: 1,
-            price: template.amount_cents,
-          }],
-          completionUrl: `${successUrl}?code=${encodeURIComponent(giftCard.code)}`,
-          returnUrl: storeUrl,
-          externalId: giftCard.id,
-          metadata: {
-            giftCardId: giftCard.id,
-            giftCardCode: giftCard.code,
-            businessId,
-            templateId,
-            purchaserEmail,
-            purchaserName,
-          },
+        const provider: PaymentProviderId = paymentProvider || 'mercadopago';
+        const checkout = await createCheckoutSession({
+          provider,
+          paymentMethod,
+          title: `Vale-Presente ${business.name} - ${template.name}`,
+          description: template.description || undefined,
+          amountCents: template.amount_cents,
+          giftCardId: giftCard.id,
+          successUrl: `${successUrl}?code=${encodeURIComponent(giftCard.code)}`,
+          pendingUrl: `${successUrl}?code=${encodeURIComponent(giftCard.code)}`,
+          failureUrl: storeUrl,
+          notificationUrl: `${baseUrl}/api/webhooks/mercadopago`,
         });
 
         // Update gift card with payment provider ID
         await supabase
           .from('gift_cards')
-          .update({ payment_provider_id: billing.id })
+          .update({ payment_provider_id: checkout.id })
           .eq('id', giftCard.id);
 
         console.log('[Checkout] Created billing:', {
-          billingId: billing.id,
+          billingId: checkout.id,
           giftCardId: giftCard.id,
           amount: template.amount_cents,
         });
 
         return NextResponse.json({
           success: true,
-          checkoutUrl: billing.url,
-          billingId: billing.id,
+          checkoutUrl: checkout.url,
+          billingId: checkout.id,
         });
 
       } catch (paymentError) {
@@ -271,7 +264,7 @@ export async function POST(request: NextRequest) {
       // ========================================
       // DEV/TEST FLOW: Create active card directly (no payment)
       // ========================================
-      console.warn('[Checkout] ABACATEPAY_API_KEY not set, creating card without payment');
+      console.warn('[Checkout] MERCADOPAGO_ACCESS_TOKEN not set, creating card without payment');
 
       const { data: giftCard, error: giftCardError } = await supabase
         .from('gift_cards')
