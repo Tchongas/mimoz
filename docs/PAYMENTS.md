@@ -60,7 +60,6 @@ Customer fills out the purchase form on `/store/[slug]/buy/[templateId]`.
   businessId: "uuid",
   templateId: "uuid",
   paymentProvider: "mercadopago",
-  paymentMethod: "PIX" | "CARD",
   purchaserName: "João Silva",
   purchaserEmail: "joao@email.com",
   recipientName: "Maria Santos",
@@ -77,7 +76,7 @@ The API:
 
 ### 3. Customer Pays via Mercado Pago
 
-Customer is redirected to Mercado Pago's checkout page. The user-selected method (PIX or card) is enforced via preference configuration.
+Customer is redirected to Mercado Pago's checkout page, where they can choose the available payment method (PIX, card, etc.).
 
 ### 4. Webhook Activates Gift Card
 
@@ -123,7 +122,6 @@ import { createCheckoutSession } from '@/lib/payments';
 
 const checkout = await createCheckoutSession({
   provider: 'mercadopago',
-  paymentMethod: 'PIX',
   title: 'Vale-Presente R$50',
   amountCents: 5000,
   giftCardId: 'gift-card-123',

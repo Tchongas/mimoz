@@ -89,7 +89,12 @@ function paymentMethodsFor(method: MercadoPagoPaymentMethod): MercadoPagoCreateP
   // - Excluding the payment type `wallet_purchase` is allowed and helps avoid balance-only flows.
   if (method === 'AUTO') {
     return {
-      excluded_payment_types: [{ id: 'wallet_purchase' }],
+      // Keep PIX available (it is typically under `bank_transfer`), but remove boleto/atm and wallet flows
+      excluded_payment_types: [
+        { id: 'wallet_purchase' },
+        { id: 'ticket' },
+        { id: 'atm' },
+      ],
     };
   }
 
