@@ -45,7 +45,7 @@ export type PaymentProviderId = 'mercadopago' | 'abacatepay';
 
 export async function createCheckoutSession(params: {
   provider: PaymentProviderId;
-  paymentMethod: 'PIX' | 'CARD';
+  paymentMethod: 'PIX' | 'CARD' | 'AUTO';
   title: string;
   description?: string;
   amountCents: number;
@@ -72,9 +72,10 @@ export async function createCheckoutSession(params: {
   }
 
   const { createBilling } = await import('./abacatepay');
+  const methodForAbacatePay = params.paymentMethod === 'AUTO' ? 'PIX' : params.paymentMethod;
   const billing = await createBilling({
     frequency: 'ONE_TIME',
-    methods: [params.paymentMethod],
+    methods: [methodForAbacatePay],
     products: [
       {
         externalId: params.giftCardId,

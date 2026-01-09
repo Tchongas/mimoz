@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 
-export type MercadoPagoPaymentMethod = 'PIX' | 'CARD';
+export type MercadoPagoPaymentMethod = 'PIX' | 'CARD' | 'AUTO';
 
 interface MercadoPagoPreferenceItem {
   id: string;
@@ -23,7 +23,6 @@ interface MercadoPagoCreatePreferenceRequest {
   payment_methods?: {
     excluded_payment_methods?: Array<{ id: string }>;
     excluded_payment_types?: Array<{ id: string }>;
-    default_payment_type_id?: string;
     installments?: number;
     default_installments?: number;
   };
@@ -85,10 +84,19 @@ async function mpRequest<T>(path: string, options: { method: 'GET' | 'POST'; bod
 }
 
 function paymentMethodsFor(method: MercadoPagoPaymentMethod): MercadoPagoCreatePreferenceRequest['payment_methods'] {
+  // Notes:
+  // - `account_money` cannot be excluded via excluded_payment_methods in Preferences.
+  // - Excluding the payment type `wallet_purchase` is allowed and helps avoid balance-only flows.
+  if (method === 'AUTO') {
+    return {
+      excluded_payment_types: [{ id: 'wallet_purchase' }],
+    };
+  }
+
   if (method === 'PIX') {
     return {
-      default_payment_type_id: 'bank_transfer',
       excluded_payment_types: [
+        { id: 'wallet_purchase' },
         { id: 'credit_card' },
         { id: 'debit_card' },
         { id: 'prepaid_card' },
@@ -99,8 +107,8 @@ function paymentMethodsFor(method: MercadoPagoPaymentMethod): MercadoPagoCreateP
   }
 
   return {
-    default_payment_type_id: 'credit_card',
     excluded_payment_types: [
+      { id: 'wallet_purchase' },
       { id: 'bank_transfer' },
       { id: 'ticket' },
       { id: 'atm' },

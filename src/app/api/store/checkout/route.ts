@@ -26,7 +26,7 @@ const checkoutSchema = z.object({
   businessId: z.string().uuid(),
   templateId: z.string().uuid(),
   paymentProvider: z.custom<PaymentProviderId>().optional().default('mercadopago'),
-  paymentMethod: z.enum(['PIX', 'CARD']).optional().default('PIX'),
+  paymentMethod: z.enum(['AUTO', 'PIX', 'CARD']).optional().default('AUTO'),
   // Recipient info - only required if isGift is true
   recipientName: z.string().optional().default(''),
   recipientEmail: z.string().optional().default(''),
@@ -203,7 +203,7 @@ export async function POST(request: NextRequest) {
           recipient_name: finalRecipientName,
           recipient_message: recipientMessage || null,
           expires_at: expiresAt.toISOString(),
-          payment_method: paymentMethod,
+          payment_method: paymentMethod === 'AUTO' ? null : paymentMethod,
         })
         .select()
         .single();

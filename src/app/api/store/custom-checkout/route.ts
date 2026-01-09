@@ -23,7 +23,7 @@ import { z } from 'zod';
 const customCheckoutSchema = z.object({
   businessId: z.string().uuid(),
   paymentProvider: z.custom<PaymentProviderId>().optional().default('mercadopago'),
-  paymentMethod: z.enum(['PIX', 'CARD']).optional().default('PIX'),
+  paymentMethod: z.enum(['AUTO', 'PIX', 'CARD']).optional().default('AUTO'),
   // Amount in cents
   amountCents: z.number().int().positive(),
   // Custom design
@@ -240,7 +240,7 @@ export async function POST(request: NextRequest) {
           custom_bg_gradient_end: bgGradientEnd || null,
           custom_bg_image_url: bgImageUrl || null,
           custom_text_color: textColor,
-          payment_method: paymentMethod,
+          payment_method: paymentMethod === 'AUTO' ? null : paymentMethod,
         })
         .select()
         .single();
