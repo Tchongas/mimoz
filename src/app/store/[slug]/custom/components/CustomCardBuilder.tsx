@@ -177,7 +177,7 @@ export function CustomCardBuilder({
 
       if (data.checkoutUrl) {
         window.location.href = data.checkoutUrl;
-      } else if (data.devMode && data.giftCardCode) {
+      } else if (data.giftCardCode) {
         router.push(`/store/${businessSlug}/success?code=${data.giftCardCode}`);
       }
     } catch (err) {

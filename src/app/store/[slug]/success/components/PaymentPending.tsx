@@ -88,8 +88,13 @@ export function PaymentPending({ giftCardId, giftCardCode }: PaymentPendingProps
       <p className="text-slate-600 mb-6">
         Aguarde enquanto confirmamos seu pagamento. Isso pode levar alguns segundos.
       </p>
+
       <p className="text-sm text-slate-500">
         Verificando... ({attempts}/{maxAttempts})
+      </p>
+
+      <p className="text-xs text-slate-400 mt-2">
+        Código do vale: <span className="font-mono">{giftCardCode}</span>
       </p>
     </div>
   );

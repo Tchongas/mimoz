@@ -2,6 +2,49 @@ import crypto from 'crypto';
 
 export type MercadoPagoPaymentMethod = 'PIX' | 'CARD' | 'AUTO';
 
+type MercadoPagoOrderStatus =
+  | 'created'
+  | 'processing'
+  | 'action_required'
+  | 'processed'
+  | 'approved'
+  | 'rejected'
+  | 'cancelled'
+  | 'expired';
+
+type MercadoPagoOrderPaymentStatus =
+  | 'approved'
+  | 'pending'
+  | 'in_process'
+  | 'rejected'
+  | 'cancelled'
+  | 'refunded'
+  | 'charged_back'
+  | 'action_required';
+
+interface MercadoPagoOrder {
+  id: string;
+  status?: MercadoPagoOrderStatus;
+  status_detail?: string;
+  external_reference?: string;
+  total_amount?: string | number;
+  transactions?: {
+    payments?: Array<{
+      id: string;
+      status?: MercadoPagoOrderPaymentStatus;
+      status_detail?: string;
+      amount?: string | number;
+      payment_method?: {
+        id?: string;
+        type?: string;
+        ticket_url?: string;
+        qr_code?: string;
+        qr_code_base64?: string;
+      };
+    }>;
+  };
+}
+
 interface MercadoPagoPreferenceItem {
   id: string;
   title: string;
@@ -61,7 +104,10 @@ export function isMercadoPagoConfigured(): boolean {
   return !!process.env.MERCADOPAGO_ACCESS_TOKEN;
 }
 
-async function mpRequest<T>(path: string, options: { method: 'GET' | 'POST'; body?: unknown }): Promise<T> {
+async function mpRequest<T>(
+  path: string,
+  options: { method: 'GET' | 'POST'; body?: unknown; headers?: Record<string, string> }
+): Promise<T> {
   const token = getAccessToken();
 
   const response = await fetch(`${MERCADOPAGO_API_URL}${path}`, {
@@ -69,6 +115,7 @@ async function mpRequest<T>(path: string, options: { method: 'GET' | 'POST'; bod
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
+      ...(options.headers || {}),
     },
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
@@ -83,19 +130,72 @@ async function mpRequest<T>(path: string, options: { method: 'GET' | 'POST'; bod
   return data as T;
 }
 
+export async function createMercadoPagoPixOrder(params: {
+  amountCents: number;
+  giftCardId: string;
+  payerEmail: string;
+  processingMode?: 'automatic' | 'manual';
+}): Promise<{
+  orderId: string;
+  paymentId: string | null;
+  ticketUrl: string | null;
+  qrCode: string | null;
+  qrCodeBase64: string | null;
+}> {
+  const amountBRL = (Math.round(params.amountCents) / 100).toFixed(2);
+
+  const body = {
+    type: 'online',
+    total_amount: amountBRL,
+    external_reference: params.giftCardId,
+    processing_mode: params.processingMode || 'automatic',
+    transactions: {
+      payments: [
+        {
+          amount: amountBRL,
+          payment_method: {
+            id: 'pix',
+            type: 'bank_transfer',
+          },
+        },
+      ],
+    },
+    payer: {
+      email: params.payerEmail,
+    },
+  };
+
+  const idempotencyKey = crypto.randomUUID();
+
+  const order = await mpRequest<MercadoPagoOrder>('/v1/orders', {
+    method: 'POST',
+    body,
+    headers: {
+      'X-Idempotency-Key': idempotencyKey,
+    },
+  });
+
+  const payment = order.transactions?.payments?.[0];
+
+  return {
+    orderId: order.id,
+    paymentId: payment?.id || null,
+    ticketUrl: payment?.payment_method?.ticket_url || null,
+    qrCode: payment?.payment_method?.qr_code || null,
+    qrCodeBase64: payment?.payment_method?.qr_code_base64 || null,
+  };
+}
+
+export async function getMercadoPagoOrder(orderId: string): Promise<MercadoPagoOrder> {
+  return mpRequest<MercadoPagoOrder>(`/v1/orders/${encodeURIComponent(orderId)}`, { method: 'GET' });
+}
+
 function paymentMethodsFor(method: MercadoPagoPaymentMethod): MercadoPagoCreatePreferenceRequest['payment_methods'] {
   // Notes:
   // - `account_money` cannot be excluded via excluded_payment_methods in Preferences.
   // - Excluding the payment type `wallet_purchase` is allowed and helps avoid balance-only flows.
   if (method === 'AUTO') {
-    return {
-      // Keep PIX available (it is typically under `bank_transfer`), but remove boleto/atm and wallet flows
-      excluded_payment_types: [
-        { id: 'wallet_purchase' },
-        { id: 'ticket' },
-        { id: 'atm' },
-      ],
-    };
+    return undefined;
   }
 
   if (method === 'PIX') {

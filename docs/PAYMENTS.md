@@ -2,7 +2,7 @@
 
 ## Overview
 
-Tapresente uses [Mercado Pago](https://www.mercadopago.com.br/developers/en/docs) as the payment gateway for processing gift card purchases via Checkout Pro.
+Tapresente uses [Mercado Pago](https://www.mercadopago.com.br/developers/en/docs) as the payment gateway for processing gift card purchases via **Checkout Pro (payment link)**.
 
 The integration is designed to be:
 - **Gateway-agnostic**: Easy to swap to another provider if needed
@@ -13,19 +13,19 @@ The integration is designed to be:
 ## Architecture
 
 ```
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   Store Page    │────▶│  Checkout API    │────▶│  Mercado Pago   │
-│  /store/[slug]  │     │ /api/store/      │     │   (Payment)     │
-│     /buy/...    │     │    checkout      │     │                 │
-└─────────────────┘     └──────────────────┘     └────────┬────────┘
-                                                          │
-                                                          │ Webhook
-                                                          ▼
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│  Success Page   │◀────│  Webhook Handler │◀────│  billing.paid   │
-│ /store/[slug]/  │     │ /api/webhooks/   │     │ payment.* event │
-│    success      │     │  mercadopago     │     │                 │
-└─────────────────┘     └──────────────────┘     └─────────────────┘
+┌─────────────────┐     ┌──────────────────┐     ┌──────────────────────┐
+│   Store Page    │────▶│  Checkout API    │────▶│ Mercado Pago Checkout │
+│  /store/[slug]  │     │ /api/store/      │     │ Pro (Preference Link) │
+│     /buy/...    │     │    checkout      │     │ POST /checkout/       │
+└─────────────────┘     └──────────────────┘     └──────────┬───────────┘
+                                                             │
+                                                             │ Webhook (payment)
+                                                             ▼
+┌─────────────────┐     ┌──────────────────┐     ┌──────────────────────┐
+│  Success Page   │◀────│  Webhook Handler │◀────│ payment.* notifications│
+│ /store/[slug]/  │     │ /api/webhooks/   │     │                      │
+│    success      │     │  mercadopago     │     │                      │
+└─────────────────┘     └──────────────────┘     └──────────────────────┘
 ```
 
 ## Environment Variables
@@ -52,7 +52,7 @@ MERCADOPAGO_WEBHOOK_SECRET=your_webhook_secret_here
 
 Customer fills out the purchase form on `/store/[slug]/buy/[templateId]`.
 
-### 2. Checkout API Creates Checkout Session
+### 2. Checkout API Creates Payment Link
 
 ```typescript
 // POST /api/store/checkout
@@ -60,8 +60,6 @@ Customer fills out the purchase form on `/store/[slug]/buy/[templateId]`.
   businessId: "uuid",
   templateId: "uuid",
   paymentProvider: "mercadopago",
-  purchaserName: "João Silva",
-  purchaserEmail: "joao@email.com",
   recipientName: "Maria Santos",
   recipientEmail: "maria@email.com",
   recipientMessage: "Feliz aniversário!"
@@ -71,12 +69,12 @@ Customer fills out the purchase form on `/store/[slug]/buy/[templateId]`.
 The API:
 1. Validates the request
 2. Creates a **pending** gift card in the database
-3. Creates a Mercado Pago Checkout Pro preference
-4. Returns the payment URL
+3. Creates a Mercado Pago Checkout Pro preference (payment link)
+4. Returns `checkoutUrl` to redirect the customer to Mercado Pago
 
 ### 3. Customer Pays via Mercado Pago
 
-Customer is redirected to Mercado Pago's checkout page, where they can choose the available payment method (PIX, card, etc.).
+Customer is redirected to Mercado Pago's checkout page to complete payment.
 
 ### 4. Webhook Activates Gift Card
 
@@ -84,7 +82,7 @@ After payment, Mercado Pago sends a webhook to `/api/webhooks/mercadopago`.
 
 The webhook handler:
 1. Verifies the signature (recommended)
-2. Fetches payment details from Mercado Pago API
+2. Fetches payment details from Mercado Pago Payments API (`GET /v1/payments/{id}`)
 3. Finds the pending gift card via `external_reference`
 4. Updates status to `ACTIVE` and `payment_status` to `COMPLETED`
 5. Sends confirmation emails
@@ -103,8 +101,9 @@ src/lib/payments/
 └── index.ts          # Central exports
 
 src/app/api/
-├── store/checkout/route.ts             # Creates checkout session
-└── webhooks/mercadopago/route.ts       # Handles payment events
+├── store/checkout/route.ts             # Creates Checkout Pro preference
+├── store/custom-checkout/route.ts      # Creates Checkout Pro preference for custom cards
+└── webhooks/mercadopago/route.ts       # Handles payment notifications
 ```
 
 ## Types Reference
@@ -122,6 +121,7 @@ import { createCheckoutSession } from '@/lib/payments';
 
 const checkout = await createCheckoutSession({
   provider: 'mercadopago',
+  paymentMethod: 'AUTO',
   title: 'Vale-Presente R$50',
   amountCents: 5000,
   giftCardId: 'gift-card-123',

@@ -273,12 +273,6 @@ export async function POST(request: NextRequest) {
           .update({ payment_provider_id: checkout.id })
           .eq('id', giftCard.id);
 
-        console.log('[CustomCheckout] Created billing:', {
-          billingId: checkout.id,
-          giftCardId: giftCard.id,
-          amount: amountCents,
-        });
-
         return NextResponse.json({
           success: true,
           checkoutUrl: checkout.url,

@@ -218,6 +218,7 @@ export async function POST(request: NextRequest) {
 
       try {
         const provider: PaymentProviderId = paymentProvider || 'mercadopago';
+
         const checkout = await createCheckoutSession({
           provider,
           paymentMethod,
@@ -231,17 +232,10 @@ export async function POST(request: NextRequest) {
           notificationUrl: `${baseUrl}/api/webhooks/mercadopago`,
         });
 
-        // Update gift card with payment provider ID
         await supabase
           .from('gift_cards')
           .update({ payment_provider_id: checkout.id })
           .eq('id', giftCard.id);
-
-        console.log('[Checkout] Created billing:', {
-          billingId: checkout.id,
-          giftCardId: giftCard.id,
-          amount: template.amount_cents,
-        });
 
         return NextResponse.json({
           success: true,

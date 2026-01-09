@@ -90,29 +90,31 @@ export async function POST(request: NextRequest) {
 
     const payload = JSON.parse(rawBody) as {
       type?: string;
+      topic?: string;
       action?: string;
       data?: { id?: string | number };
     };
 
-    const type = payload.type;
+    const type = payload.type || payload.topic;
+    const dataId = payload.data?.id;
+    if (!type || !dataId) {
+      return NextResponse.json({ received: true });
+    }
+
+    const supabase = createServiceClient();
+
     if (type !== 'payment') {
       return NextResponse.json({ received: true });
     }
 
-    const paymentId = payload.data?.id;
-    if (!paymentId) {
-      return NextResponse.json({ received: true });
-    }
-
-    const payment = await getMercadoPagoPayment(String(paymentId));
+    const paymentId = String(dataId);
+    const payment = await getMercadoPagoPayment(paymentId);
 
     const giftCardId = payment.external_reference;
     if (!giftCardId) {
       console.warn('[MercadoPagoWebhook] No external_reference on payment', paymentId);
       return NextResponse.json({ received: true });
     }
-
-    const supabase = createServiceClient();
 
     if (payment.status === 'approved') {
       const feeBRL = (payment.fee_details || []).reduce((sum, f) => sum + (f.amount || 0), 0);
