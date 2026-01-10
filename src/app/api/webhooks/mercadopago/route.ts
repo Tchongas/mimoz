@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  getMercadoPagoPayment,
-  verifyMercadoPagoWebhookSignature,
-} from '@/lib/payments';
+import crypto from 'crypto';
+import { getMercadoPagoPayment } from '@/lib/payments';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendGiftCardEmails } from '@/lib/email/resend';
 import { formatCurrency, formatDate } from '@/lib/utils';
@@ -76,39 +74,57 @@ export async function POST(request: NextRequest) {
 
     const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
     if (secret && xSignature && xRequestId && dataIdFromQuery) {
-      const isValid = verifyMercadoPagoWebhookSignature({
-        secret,
-        xSignature,
-        xRequestId,
-        dataId: dataIdFromQuery,
+      // Parse x-signature header: "ts=...,v1=..."
+      const parts = xSignature.split(',');
+      let ts: string | undefined;
+      let v1: string | undefined;
+      for (const part of parts) {
+        const [k, val] = part.split('=', 2);
+        if (!k || !val) continue;
+        const key = k.trim();
+        const value = val.trim();
+        if (key === 'ts') ts = value;
+        if (key === 'v1') v1 = value;
+      }
+
+      if (!ts || !v1) {
+        console.error('[MercadoPagoWebhook] Missing ts or v1 in x-signature', { xSignature });
+        return NextResponse.json({ error: 'Invalid signature format' }, { status: 401 });
+      }
+
+      // Build manifest exactly as Mercado Pago specifies:
+      // id:{data.id};request-id:{x-request-id};ts:{ts};
+      const manifest = `id:${dataIdFromQuery};request-id:${xRequestId};ts:${ts};`;
+
+      // Compute HMAC SHA256 hex
+      const computed = crypto
+        .createHmac('sha256', secret)
+        .update(manifest)
+        .digest('hex');
+
+      const received = v1.toLowerCase();
+
+      // Debug logging - will show exact mismatch
+      console.log('[MercadoPagoWebhook] Signature debug', {
+        manifest,
+        secretLength: secret.length,
+        secretFirst4: secret.substring(0, 4),
+        secretLast4: secret.substring(secret.length - 4),
+        computed,
+        received,
+        match: computed === received,
       });
 
-      if (!isValid) {
-        const parts = xSignature.split(',');
-        let ts: string | undefined;
-        let v1: string | undefined;
-        for (const part of parts) {
-          const [k, v] = part.split('=', 2);
-          if (!k || !v) continue;
-          const key = k.trim();
-          const value = v.trim();
-          if (key === 'ts') ts = value;
-          if (key === 'v1') v1 = value;
-        }
-
-        console.error('[MercadoPagoWebhook] Invalid signature', {
-          hasSecret: true,
-          hasXSignature: !!xSignature,
-          hasXRequestId: !!xRequestId,
-          dataIdFromQuery,
-          ts,
-          v1Length: v1?.length,
-          xRequestId,
-        });
+      if (computed !== received) {
+        console.error('[MercadoPagoWebhook] Invalid signature - HMAC mismatch');
         return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
       }
     } else if (secret) {
-      console.warn('[MercadoPagoWebhook] Signature headers/query missing; cannot verify');
+      console.warn('[MercadoPagoWebhook] Signature headers/query missing; cannot verify', {
+        hasXSignature: !!xSignature,
+        hasXRequestId: !!xRequestId,
+        hasDataId: !!dataIdFromQuery,
+      });
     }
 
     const payload = JSON.parse(rawBody) as {
