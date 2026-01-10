@@ -318,7 +318,9 @@ export function verifyMercadoPagoWebhookSignature(params: {
     const dataId = /[a-z]/i.test(dataIdRaw) ? dataIdRaw.toLowerCase() : dataIdRaw;
     const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
 
-    const expected = crypto.createHmac('sha256', secret).update(manifest).digest('hex');
+    // Decode secret from hex to bytes (MP secret is hex-encoded)
+    const secretBytes = Buffer.from(secret, 'hex');
+    const expected = crypto.createHmac('sha256', secretBytes).update(manifest).digest('hex');
 
     const received = v1.trim().toLowerCase();
     if (!isValidHex(expected) || !isValidHex(received)) return false;

@@ -96,9 +96,12 @@ export async function POST(request: NextRequest) {
       // id:{data.id};request-id:{x-request-id};ts:{ts};
       const manifest = `id:${dataIdFromQuery};request-id:${xRequestId};ts:${ts};`;
 
+      // Decode secret from hex to bytes (MP secret is hex-encoded)
+      const secretBytes = Buffer.from(secret, 'hex');
+
       // Compute HMAC SHA256 hex
       const computed = crypto
-        .createHmac('sha256', secret)
+        .createHmac('sha256', secretBytes)
         .update(manifest)
         .digest('hex');
 
