@@ -153,7 +153,6 @@ export function CustomCardBuilder({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           businessId,
-          paymentProvider: 'mercadopago',
           amountCents: actualAmount,
           customTitle: customTitle || undefined,
           customEmoji: selectedEmoji || undefined,
@@ -175,8 +174,13 @@ export function CustomCardBuilder({
         throw new Error(data.error || 'Erro ao processar compra');
       }
 
+      // Redirect to payment or success page
       if (data.checkoutUrl) {
+        // Mercado Pago checkout - redirect to external payment page
         window.location.href = data.checkoutUrl;
+      } else if (data.redirectUrl) {
+        // Dev mode - redirect to success page
+        router.push(data.redirectUrl);
       } else if (data.giftCardCode) {
         router.push(`/store/${businessSlug}/success?code=${data.giftCardCode}`);
       }

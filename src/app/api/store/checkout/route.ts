@@ -1,39 +1,40 @@
 // ============================================
 // Tapresente - Store Checkout API
 // ============================================
-// POST - Create checkout session and redirect to payment
+// POST - Create checkout session for gift card purchase
 //
 // REQUIRES AUTHENTICATION - user must be logged in
 //
-// Flow:
+// Flow (with Mercado Pago):
 // 1. Verify user is authenticated
 // 2. Validate request and template
 // 3. Generate unique gift card code
-// 4. Create pending gift card linked to user
-// 5. Create Mercado Pago checkout session (payment link)
-// 6. Return payment URL for redirect
-// 7. Webhook handles activation after payment
+// 4. Create PENDING gift card
+// 5. Create Mercado Pago preference
+// 6. Return checkout URL for redirect
+// 7. Webhook activates card after payment
+//
+// Flow (without Mercado Pago - dev mode):
+// 1-4. Same as above
+// 5. Create ACTIVE gift card directly
+// 6. Send confirmation emails
+// 7. Return success URL
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { createCheckoutSession, isMercadoPagoConfigured, type PaymentProviderId } from '@/lib/payments';
+import { isMercadoPagoConfigured, createPreference } from '@/lib/payments';
 import { sendGiftCardEmails } from '@/lib/email/resend';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { z } from 'zod';
 
 const checkoutSchema = z.object({
-  // businessId is UUID in businesses table
   businessId: z.string().uuid(),
   templateId: z.string().uuid(),
-  paymentProvider: z.custom<PaymentProviderId>().optional().default('mercadopago'),
-  paymentMethod: z.enum(['AUTO', 'PIX', 'CARD']).optional().default('AUTO'),
-  // Recipient info - only required if isGift is true
   recipientName: z.string().optional().default(''),
   recipientEmail: z.string().optional().default(''),
   recipientMessage: z.string().nullable().optional(),
   isGift: z.boolean().default(false),
 }).refine((data) => {
-  // If it's a gift, require recipient name and email
   if (data.isGift) {
     return data.recipientName && data.recipientName.length >= 2 && 
            data.recipientEmail && data.recipientEmail.includes('@');
@@ -113,8 +114,6 @@ export async function POST(request: NextRequest) {
     const {
       businessId,
       templateId,
-      paymentProvider,
-      paymentMethod,
       recipientName,
       recipientEmail,
       recipientMessage,
@@ -171,20 +170,19 @@ export async function POST(request: NextRequest) {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + (template.valid_days || 365));
 
-    // Build URLs for payment flow
+    // Build URLs
     const baseUrl = getBaseUrl(request);
-    const storeUrl = `${baseUrl}/store/${business.slug}`;
     const successUrl = `${baseUrl}/store/${business.slug}/success`;
 
     // Check if Mercado Pago is configured
-    const usePaymentGateway = isMercadoPagoConfigured();
+    const useMercadoPago = isMercadoPagoConfigured();
 
-    if (usePaymentGateway) {
+    if (useMercadoPago) {
       // ========================================
-      // PRODUCTION FLOW: Create PENDING card, activate after payment
-      // Card will be activated by webhook when payment is confirmed
+      // PRODUCTION: Create PENDING card, redirect to Mercado Pago
       // ========================================
-      
+      console.log('[Checkout] Creating PENDING gift card for Mercado Pago checkout');
+
       const { data: giftCard, error: giftCardError } = await supabase
         .from('gift_cards')
         .insert({
@@ -194,7 +192,7 @@ export async function POST(request: NextRequest) {
           amount_cents: template.amount_cents,
           original_amount_cents: template.amount_cents,
           balance_cents: template.amount_cents,
-          status: 'PENDING',  // PENDING until payment is confirmed via webhook
+          status: 'PENDING',
           payment_status: 'PENDING',
           purchaser_user_id: user.id,
           purchaser_email: purchaserEmail,
@@ -203,13 +201,12 @@ export async function POST(request: NextRequest) {
           recipient_name: finalRecipientName,
           recipient_message: recipientMessage || null,
           expires_at: expiresAt.toISOString(),
-          payment_method: paymentMethod === 'AUTO' ? null : paymentMethod,
         })
         .select()
         .single();
 
       if (giftCardError) {
-        console.error('Error creating gift card:', giftCardError);
+        console.error('[Checkout] Error creating gift card:', giftCardError);
         return NextResponse.json(
           { error: 'Erro ao criar vale-presente' },
           { status: 500 }
@@ -217,48 +214,49 @@ export async function POST(request: NextRequest) {
       }
 
       try {
-        const provider: PaymentProviderId = paymentProvider || 'mercadopago';
-
-        const checkout = await createCheckoutSession({
-          provider,
-          paymentMethod,
+        // Create Mercado Pago preference
+        const preference = await createPreference({
           title: `Vale-Presente ${business.name} - ${template.name}`,
-          description: template.description || undefined,
+          description: template.description || `Vale-presente de ${formatCurrency(template.amount_cents)}`,
           amountCents: template.amount_cents,
-          giftCardId: giftCard.id,
+          externalReference: giftCard.id,
           successUrl: `${successUrl}?code=${encodeURIComponent(giftCard.code)}`,
-          pendingUrl: `${successUrl}?code=${encodeURIComponent(giftCard.code)}`,
-          failureUrl: storeUrl,
+          pendingUrl: `${successUrl}?code=${encodeURIComponent(giftCard.code)}&status=pending`,
+          failureUrl: `${baseUrl}/store/${business.slug}?error=payment_failed`,
           notificationUrl: `${baseUrl}/api/webhooks/mercadopago`,
+          payerEmail: purchaserEmail,
         });
 
+        console.log('[Checkout] Mercado Pago preference created:', preference.id);
+
+        // Update gift card with preference ID
         await supabase
           .from('gift_cards')
-          .update({ payment_provider_id: checkout.id })
+          .update({ payment_provider_id: preference.id })
           .eq('id', giftCard.id);
 
         return NextResponse.json({
           success: true,
-          checkoutUrl: checkout.url,
-          billingId: checkout.id,
+          giftCardId: giftCard.id,
+          checkoutUrl: preference.initPoint,
         });
 
       } catch (paymentError) {
-        // If payment creation fails, delete the pending gift card
-        console.error('Error creating payment:', paymentError);
+        console.error('[Checkout] Mercado Pago error:', paymentError);
+        // Delete the pending gift card if payment creation fails
         await supabase.from('gift_cards').delete().eq('id', giftCard.id);
         
         return NextResponse.json(
-          { error: 'Erro ao criar pagamento. Tente novamente.' },
+          { error: 'Erro ao criar sessão de pagamento. Tente novamente.' },
           { status: 500 }
         );
       }
 
     } else {
       // ========================================
-      // DEV/TEST FLOW: Create active card directly (no payment)
+      // DEV MODE: Create ACTIVE card directly (no payment)
       // ========================================
-      console.warn('[Checkout] MERCADOPAGO_ACCESS_TOKEN not set, creating card without payment');
+      console.log('[Checkout] DEV MODE - Creating ACTIVE gift card without payment');
 
       const { data: giftCard, error: giftCardError } = await supabase
         .from('gift_cards')
@@ -282,21 +280,21 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (giftCardError) {
-        console.error('Error creating gift card:', giftCardError);
+        console.error('[Checkout] Error creating gift card:', giftCardError);
         return NextResponse.json(
           { error: 'Erro ao criar vale-presente' },
           { status: 500 }
         );
       }
 
-      // Send confirmation emails (dev mode - card is already active)
+      // Send confirmation emails in dev mode
       try {
         const emailData = {
           code: giftCard.code,
           amount: template.amount_cents,
           amountFormatted: formatCurrency(template.amount_cents),
           expiresAt: formatDate(expiresAt.toISOString()),
-          validDays: 365,
+          validDays: template.valid_days || 365,
           businessName: business.name,
           businessSlug: business.slug,
           templateName: template.name,
@@ -322,6 +320,7 @@ export async function POST(request: NextRequest) {
         success: true,
         giftCardCode: giftCard.code,
         giftCardId: giftCard.id,
+        redirectUrl: `${successUrl}?code=${encodeURIComponent(giftCard.code)}`,
         devMode: true,
       });
     }

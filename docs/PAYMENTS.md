@@ -1,241 +1,127 @@
-# Payment Integration - Mercado Pago
+# Tapresente - Payment Integration
 
 ## Overview
 
-Tapresente uses [Mercado Pago](https://www.mercadopago.com.br/developers/en/docs) as the payment gateway for processing gift card purchases via **Checkout Pro (payment link)**.
-
-The integration is designed to be:
-- **Gateway-agnostic**: Easy to swap to another provider if needed
-- **Type-safe**: Full TypeScript types for all API interactions
-- **Secure**: Webhook signature verification
-- **Dev-friendly**: Works without payment in dev mode
-
-## Architecture
-
-```
-┌─────────────────┐     ┌──────────────────┐     ┌──────────────────────┐
-│   Store Page    │────▶│  Checkout API    │────▶│ Mercado Pago Checkout │
-│  /store/[slug]  │     │ /api/store/      │     │ Pro (Preference Link) │
-│     /buy/...    │     │    checkout      │     │ POST /checkout/       │
-└─────────────────┘     └──────────────────┘     └──────────┬───────────┘
-                                                             │
-                                                             │ Webhook (payment)
-                                                             ▼
-┌─────────────────┐     ┌──────────────────┐     ┌──────────────────────┐
-│  Success Page   │◀────│  Webhook Handler │◀────│ payment.* notifications│
-│ /store/[slug]/  │     │ /api/webhooks/   │     │                      │
-│    success      │     │  mercadopago     │     │                      │
-└─────────────────┘     └──────────────────┘     └──────────────────────┘
-```
+Tapresente uses **Mercado Pago Checkout Pro** for payment processing. This integration handles PIX, credit cards, and other payment methods available through Mercado Pago.
 
 ## Environment Variables
 
-Add these to your `.env.local`:
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `MERCADOPAGO_ACCESS_TOKEN` | Yes (production) | Your Mercado Pago access token from the [credentials page](https://www.mercadopago.com/developers/panel/app) |
 
-```bash
-# Mercado Pago access token
-MERCADOPAGO_ACCESS_TOKEN=your_access_token_here
-
-# Webhook secret for signature validation (Your integrations -> Webhooks)
-MERCADOPAGO_WEBHOOK_SECRET=your_webhook_secret_here
-```
-
-### Getting Your Access Token
-
-1. Create an application in the Mercado Pago developers panel
-2. Copy the Access Token for your environment
-3. Configure it as `MERCADOPAGO_ACCESS_TOKEN`
+**Dev Mode**: When `MERCADOPAGO_ACCESS_TOKEN` is not set, gift cards are created directly as ACTIVE without payment processing.
 
 ## Payment Flow
 
-### 1. Customer Initiates Purchase
+### Production (with Mercado Pago)
 
-Customer fills out the purchase form on `/store/[slug]/buy/[templateId]`.
-
-### 2. Checkout API Creates Payment Link
-
-```typescript
-// POST /api/store/checkout
-{
-  businessId: "uuid",
-  templateId: "uuid",
-  paymentProvider: "mercadopago",
-  recipientName: "Maria Santos",
-  recipientEmail: "maria@email.com",
-  recipientMessage: "Feliz aniversário!"
-}
+```
+1. Customer fills purchase form
+2. POST /api/store/checkout or /api/store/custom-checkout
+3. API creates PENDING gift card in database
+4. API creates Mercado Pago preference
+5. Customer redirected to Mercado Pago payment page
+6. Customer completes payment (PIX, credit card, etc.)
+7. Mercado Pago sends webhook to /api/webhooks/mercadopago
+8. Webhook verifies payment and activates gift card
+9. Confirmation emails sent to purchaser and recipient
+10. Customer redirected to success page
 ```
 
-The API:
-1. Validates the request
-2. Creates a **pending** gift card in the database
-3. Creates a Mercado Pago Checkout Pro preference (payment link)
-4. Returns `checkoutUrl` to redirect the customer to Mercado Pago
+### Development (without Mercado Pago)
 
-### 3. Customer Pays via Mercado Pago
-
-Customer is redirected to Mercado Pago's checkout page to complete payment.
-
-### 4. Webhook Activates Gift Card
-
-After payment, Mercado Pago sends a webhook to `/api/webhooks/mercadopago`.
-
-The webhook handler:
-1. Verifies the signature (recommended)
-2. Fetches payment details from Mercado Pago Payments API (`GET /v1/payments/{id}`)
-3. Finds the pending gift card via `external_reference`
-4. Updates status to `ACTIVE` and `payment_status` to `COMPLETED`
-5. Sends confirmation emails
-
-### 5. Customer Sees Success
-
-Customer is redirected to the success page with their gift card code.
+```
+1. Customer fills purchase form
+2. POST /api/store/checkout or /api/store/custom-checkout
+3. API creates ACTIVE gift card directly
+4. Confirmation emails sent
+5. Customer redirected to success page
+```
 
 ## File Structure
 
 ```
 src/lib/payments/
-├── types.ts          # TypeScript interfaces (gateway-agnostic)
-├── mercadopago.ts    # Mercado Pago client implementation
-├── abacatepay.ts     # (Legacy) AbacatePay client implementation
-└── index.ts          # Central exports
+├── index.ts          # Central exports
+└── mercadopago.ts    # Mercado Pago Checkout Pro implementation
 
 src/app/api/
-├── store/checkout/route.ts             # Creates Checkout Pro preference
-├── store/custom-checkout/route.ts      # Creates Checkout Pro preference for custom cards
-└── webhooks/mercadopago/route.ts       # Handles payment notifications
+├── store/
+│   ├── checkout/route.ts         # Standard gift card checkout
+│   └── custom-checkout/route.ts  # Custom card checkout
+└── webhooks/
+    └── mercadopago/route.ts      # Payment notifications handler
 ```
 
-## Types Reference
+## API Responses
 
-The integration uses Mercado Pago Checkout Pro preferences and payment notifications.
+### Checkout API (POST /api/store/checkout)
 
-- `external_reference` is set to the `giftCardId` so the webhook can map payments back to a gift card.
-
-## Usage Examples
-
-### Creating a Checkout Session
-
-```typescript
-import { createCheckoutSession } from '@/lib/payments';
-
-const checkout = await createCheckoutSession({
-  provider: 'mercadopago',
-  paymentMethod: 'AUTO',
-  title: 'Vale-Presente R$50',
-  amountCents: 5000,
-  giftCardId: 'gift-card-123',
-  successUrl: 'https://mysite.com/success',
-  pendingUrl: 'https://mysite.com/success',
-  failureUrl: 'https://mysite.com/store',
-  notificationUrl: 'https://mysite.com/api/webhooks/mercadopago',
-});
-
-// Redirect customer to checkout.url
-```
-
-### Verifying Webhook
-
-```typescript
-import { verifyMercadoPagoWebhookSignature } from '@/lib/payments';
-
-const xSignature = request.headers.get('x-signature');
-const xRequestId = request.headers.get('x-request-id');
-const dataId = request.nextUrl.searchParams.get('data.id');
-
-const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
-const isValid = verifyMercadoPagoWebhookSignature({
-  secret,
-  xSignature,
-  xRequestId,
-  dataId,
-});
-
-if (!isValid) {
-  return { error: 'Invalid signature' };
+**With Mercado Pago:**
+```json
+{
+  "success": true,
+  "giftCardId": "uuid",
+  "checkoutUrl": "https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=..."
 }
 ```
 
-## Webhook Configuration
-
-### In Mercado Pago Developers Panel
-
-1. Go to Your integrations → Webhooks
-2. Add URL: `https://your-domain.com/api/webhooks/mercadopago`
-3. Select event type(s) that include payments (payment topic)
-4. Copy the generated webhook secret and set `MERCADOPAGO_WEBHOOK_SECRET`
-
-### Local Development
-
-For local testing, use a tunnel service like [ngrok](https://ngrok.com):
-
-```bash
-ngrok http 3000
+**Dev Mode:**
+```json
+{
+  "success": true,
+  "giftCardCode": "MIMO-XXXX-XXXX",
+  "giftCardId": "uuid",
+  "redirectUrl": "/store/slug/success?code=MIMO-XXXX-XXXX",
+  "devMode": true
+}
 ```
 
-Then use the ngrok URL in your webhook configuration.
+## Webhook
 
-## Dev Mode
+The webhook endpoint (`/api/webhooks/mercadopago`) receives payment notifications from Mercado Pago.
 
-When `MERCADOPAGO_ACCESS_TOKEN` is not set, the checkout API creates gift cards directly without payment. This is useful for:
+### Notification Types
+- `payment` - Payment status changed (we process this)
+- `merchant_order` - Order status changed (ignored)
 
-- Local development
-- Testing the UI flow
-- Demo environments
+### Processing Flow
+1. Receive notification with payment ID
+2. Fetch payment details from Mercado Pago API
+3. Find gift card by `external_reference` (gift card ID)
+4. Update gift card status based on payment status:
+   - `approved` → Activate gift card, send emails
+   - `rejected/cancelled` → Mark as failed
+   - `pending` → Keep waiting
 
-The response includes `devMode: true` to indicate this mode.
+## Testing
 
-## Swapping Payment Gateways
+### Sandbox Testing
+1. Create a test account in Mercado Pago developer panel
+2. Use sandbox access token
+3. Use test credit cards from Mercado Pago documentation
 
-The integration is designed to be swappable. To use a different gateway:
-
-1. Create a new client in `src/lib/payments/newgateway.ts`
-2. Implement the `PaymentGateway` interface
-3. Update `src/lib/payments/index.ts` to export the new gateway
-4. Create a new webhook handler
-
-```typescript
-// src/lib/payments/index.ts
-import { newGateway } from './newgateway';
-export const paymentGateway = newGateway;
-```
+### Test Cards (Brazil)
+| Card | Number | CVV | Expiry |
+|------|--------|-----|--------|
+| Approved | 5031 4332 1540 6351 | 123 | 11/25 |
+| Rejected | 5031 4332 1540 6351 | 456 | 11/25 |
 
 ## Troubleshooting
 
-### "MERCADOPAGO_ACCESS_TOKEN not set"
+### Gift card stays PENDING
+- Check webhook logs for errors
+- Verify `MERCADOPAGO_ACCESS_TOKEN` is correct
+- Ensure webhook URL is accessible from internet (use ngrok for local testing)
 
-Add the access token to your `.env.local` file.
-
-### Webhook not receiving events
-
-1. Check the webhook URL is correct in Mercado Pago dashboard
-2. Verify the webhook secret matches `MERCADOPAGO_WEBHOOK_SECRET`
-3. Check server logs for errors
-4. Use ngrok for local testing
-
-### Payment created but gift card not activated
-
-1. Check webhook logs in Mercado Pago dashboard
-2. Verify `payment_provider_id` is being saved
-3. Check database for pending gift cards
-
-## API Reference
-
-### Mercado Pago Endpoints Used
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/checkout/preferences` | POST | Create Checkout Pro preference |
-| `/v1/payments/{id}` | GET | Fetch payment details |
-
-### Webhook Events
-
-| Event | Description |
-|-------|-------------|
-| `payment.*` | Payment status changes |
+### Payment creation fails
+- Check access token permissions
+- Verify amount is within Mercado Pago limits
+- Check for API rate limiting
 
 ## Resources
 
-- [Mercado Pago Docs](https://www.mercadopago.com.br/developers/en/docs)
-- [Webhooks - Validate origin](https://www.mercadopago.com.br/developers/en/docs/your-integrations/notifications/webhooks)
-- [PIX Documentation](https://www.bcb.gov.br/estabilidadefinanceira/pix)
+- [Mercado Pago Checkout Pro Documentation](https://www.mercadopago.com.br/developers/en/docs/checkout-pro/landing)
+- [Node.js SDK GitHub](https://github.com/mercadopago/sdk-nodejs)
+- [Webhook Documentation](https://www.mercadopago.com.br/developers/en/docs/your-integrations/notifications/webhooks)

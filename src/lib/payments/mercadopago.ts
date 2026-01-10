@@ -1,334 +1,258 @@
-import crypto from 'crypto';
+// ============================================
+// Tapresente - Mercado Pago Checkout Pro
+// ============================================
+// Integration with Mercado Pago Checkout Pro for payment processing
+//
+// Environment variables:
+// - MERCADOPAGO_ACCESS_TOKEN: Your Mercado Pago access token (required)
+//
+// Flow:
+// 1. Create preference with items and URLs
+// 2. Redirect user to init_point URL
+// 3. After payment, webhook receives notification
+// 4. Verify payment status and activate gift card
 
-export type MercadoPagoPaymentMethod = 'PIX' | 'CARD' | 'AUTO';
+import { MercadoPagoConfig, Preference, Payment } from 'mercadopago';
 
-type MercadoPagoOrderStatus =
-  | 'created'
-  | 'processing'
-  | 'action_required'
-  | 'processed'
-  | 'approved'
-  | 'rejected'
-  | 'cancelled'
-  | 'expired';
+// ============================================
+// Configuration
+// ============================================
 
-type MercadoPagoOrderPaymentStatus =
-  | 'approved'
-  | 'pending'
-  | 'in_process'
-  | 'rejected'
-  | 'cancelled'
-  | 'refunded'
-  | 'charged_back'
-  | 'action_required';
+const ACCESS_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN;
 
-interface MercadoPagoOrder {
-  id: string;
-  status?: MercadoPagoOrderStatus;
-  status_detail?: string;
-  external_reference?: string;
-  total_amount?: string | number;
-  transactions?: {
-    payments?: Array<{
-      id: string;
-      status?: MercadoPagoOrderPaymentStatus;
-      status_detail?: string;
-      amount?: string | number;
-      payment_method?: {
-        id?: string;
-        type?: string;
-        ticket_url?: string;
-        qr_code?: string;
-        qr_code_base64?: string;
-      };
-    }>;
-  };
-}
-
-interface MercadoPagoPreferenceItem {
-  id: string;
-  title: string;
-  description?: string;
-  quantity: number;
-  unit_price: number;
-  currency_id: 'BRL';
-}
-
-interface MercadoPagoCreatePreferenceRequest {
-  items: MercadoPagoPreferenceItem[];
-  external_reference: string;
-  back_urls: {
-    success: string;
-    pending: string;
-    failure: string;
-  };
-  notification_url?: string;
-  payment_methods?: {
-    excluded_payment_methods?: Array<{ id: string }>;
-    excluded_payment_types?: Array<{ id: string }>;
-    installments?: number;
-    default_installments?: number;
-  };
-  auto_return?: 'approved' | 'all';
-}
-
-interface MercadoPagoCreatePreferenceResponse {
-  id: string;
-  init_point: string;
-  sandbox_init_point?: string;
-}
-
-type MercadoPagoPaymentStatus = 'approved' | 'pending' | 'in_process' | 'rejected' | 'cancelled' | 'refunded' | 'charged_back';
-
-interface MercadoPagoPayment {
-  id: number;
-  status: MercadoPagoPaymentStatus;
-  status_detail?: string;
-  payment_type_id?: string;
-  external_reference?: string;
-  transaction_amount?: number;
-  fee_details?: Array<{ amount: number; type?: string }>; // amount is in BRL
-}
-
-const MERCADOPAGO_API_URL = 'https://api.mercadopago.com';
-
-function getAccessToken(): string {
-  const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
-  if (!token) {
-    throw new Error('MERCADOPAGO_ACCESS_TOKEN environment variable is not set');
-  }
-  return token;
-}
-
+/**
+ * Check if Mercado Pago is configured
+ */
 export function isMercadoPagoConfigured(): boolean {
-  return !!process.env.MERCADOPAGO_ACCESS_TOKEN;
+  return !!ACCESS_TOKEN;
 }
 
-async function mpRequest<T>(
-  path: string,
-  options: { method: 'GET' | 'POST'; body?: unknown; headers?: Record<string, string> }
-): Promise<T> {
-  const token = getAccessToken();
-
-  const response = await fetch(`${MERCADOPAGO_API_URL}${path}`, {
-    method: options.method,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
-    body: options.body ? JSON.stringify(options.body) : undefined,
-  });
-
-  const data = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    const message = data?.message || data?.error || `HTTP ${response.status}`;
-    throw new Error(message);
+/**
+ * Get configured Mercado Pago client
+ */
+function getClient(): MercadoPagoConfig {
+  if (!ACCESS_TOKEN) {
+    throw new Error('MERCADOPAGO_ACCESS_TOKEN not configured');
   }
-
-  return data as T;
+  return new MercadoPagoConfig({
+    accessToken: ACCESS_TOKEN,
+    options: { timeout: 10000 },
+  });
 }
 
-export async function createMercadoPagoPixOrder(params: {
-  amountCents: number;
-  giftCardId: string;
-  payerEmail: string;
-  processingMode?: 'automatic' | 'manual';
-}): Promise<{
-  orderId: string;
-  paymentId: string | null;
-  ticketUrl: string | null;
-  qrCode: string | null;
-  qrCodeBase64: string | null;
-}> {
-  const amountBRL = (Math.round(params.amountCents) / 100).toFixed(2);
+// ============================================
+// Types
+// ============================================
 
-  const body = {
-    type: 'online',
-    total_amount: amountBRL,
-    external_reference: params.giftCardId,
-    processing_mode: params.processingMode || 'automatic',
-    transactions: {
-      payments: [
+export interface CreatePreferenceParams {
+  /** Title shown in checkout */
+  title: string;
+  /** Description (optional) */
+  description?: string;
+  /** Amount in cents (will be converted to decimal) */
+  amountCents: number;
+  /** External reference (gift card ID) */
+  externalReference: string;
+  /** URL to redirect after successful payment */
+  successUrl: string;
+  /** URL to redirect for pending payment */
+  pendingUrl: string;
+  /** URL to redirect after failed payment */
+  failureUrl: string;
+  /** Webhook URL for payment notifications */
+  notificationUrl?: string;
+  /** Payer email (optional) */
+  payerEmail?: string;
+}
+
+export interface PreferenceResponse {
+  /** Preference ID */
+  id: string;
+  /** URL to redirect user for payment (production) */
+  initPoint: string;
+  /** URL for sandbox testing */
+  sandboxInitPoint: string;
+}
+
+export interface PaymentInfo {
+  /** Payment ID */
+  id: number;
+  /** Payment status: approved, pending, rejected, etc */
+  status: string;
+  /** Status detail */
+  statusDetail: string;
+  /** External reference (gift card ID) */
+  externalReference: string | null;
+  /** Payment method ID */
+  paymentMethodId: string;
+  /** Payment type: credit_card, debit_card, ticket, etc */
+  paymentTypeId: string;
+  /** Transaction amount */
+  transactionAmount: number;
+  /** Fee charged by Mercado Pago */
+  feeAmount: number;
+  /** Net amount received */
+  netReceivedAmount: number;
+  /** Date approved */
+  dateApproved: string | null;
+  /** Payer email */
+  payerEmail: string | null;
+}
+
+// ============================================
+// Preference (Checkout Pro)
+// ============================================
+
+/**
+ * Create a Checkout Pro preference
+ * Returns URLs to redirect the user for payment
+ */
+export async function createPreference(params: CreatePreferenceParams): Promise<PreferenceResponse> {
+  const client = getClient();
+  const preference = new Preference(client);
+
+  // Convert cents to decimal (Mercado Pago uses decimal format)
+  const unitPrice = params.amountCents / 100;
+
+  const response = await preference.create({
+    body: {
+      items: [
         {
-          amount: amountBRL,
-          payment_method: {
-            id: 'pix',
-            type: 'bank_transfer',
-          },
+          id: params.externalReference,
+          title: params.title,
+          description: params.description || params.title,
+          quantity: 1,
+          unit_price: unitPrice,
+          currency_id: 'BRL',
         },
       ],
-    },
-    payer: {
-      email: params.payerEmail,
-    },
-  };
-
-  const idempotencyKey = crypto.randomUUID();
-
-  const order = await mpRequest<MercadoPagoOrder>('/v1/orders', {
-    method: 'POST',
-    body,
-    headers: {
-      'X-Idempotency-Key': idempotencyKey,
-    },
-  });
-
-  const payment = order.transactions?.payments?.[0];
-
-  return {
-    orderId: order.id,
-    paymentId: payment?.id || null,
-    ticketUrl: payment?.payment_method?.ticket_url || null,
-    qrCode: payment?.payment_method?.qr_code || null,
-    qrCodeBase64: payment?.payment_method?.qr_code_base64 || null,
-  };
-}
-
-export async function getMercadoPagoOrder(orderId: string): Promise<MercadoPagoOrder> {
-  return mpRequest<MercadoPagoOrder>(`/v1/orders/${encodeURIComponent(orderId)}`, { method: 'GET' });
-}
-
-function paymentMethodsFor(method: MercadoPagoPaymentMethod): MercadoPagoCreatePreferenceRequest['payment_methods'] {
-  // Notes:
-  // - `account_money` cannot be excluded via excluded_payment_methods in Preferences.
-  // - Excluding the payment type `wallet_purchase` is allowed and helps avoid balance-only flows.
-  if (method === 'AUTO') {
-    return undefined;
-  }
-
-  if (method === 'PIX') {
-    return {
-      excluded_payment_types: [
-        { id: 'wallet_purchase' },
-        { id: 'credit_card' },
-        { id: 'debit_card' },
-        { id: 'prepaid_card' },
-        { id: 'ticket' },
-        { id: 'atm' },
-      ],
-    };
-  }
-
-  return {
-    excluded_payment_types: [
-      { id: 'wallet_purchase' },
-      { id: 'bank_transfer' },
-      { id: 'ticket' },
-      { id: 'atm' },
-    ],
-  };
-}
-
-export async function createMercadoPagoPreference(params: {
-  title: string;
-  description?: string;
-  amountCents: number;
-  giftCardId: string;
-  successUrl: string;
-  pendingUrl: string;
-  failureUrl: string;
-  notificationUrl?: string;
-  paymentMethod: MercadoPagoPaymentMethod;
-}): Promise<{ id: string; url: string }> {
-  const amountBRL = Math.round(params.amountCents) / 100;
-
-  const body: MercadoPagoCreatePreferenceRequest = {
-    items: [
-      {
-        id: params.giftCardId,
-        title: params.title,
-        description: params.description,
-        quantity: 1,
-        unit_price: amountBRL,
-        currency_id: 'BRL',
+      back_urls: {
+        success: params.successUrl,
+        pending: params.pendingUrl,
+        failure: params.failureUrl,
       },
-    ],
-    external_reference: params.giftCardId,
-    back_urls: {
-      success: params.successUrl,
-      pending: params.pendingUrl,
-      failure: params.failureUrl,
+      auto_return: 'approved',
+      external_reference: params.externalReference,
+      notification_url: params.notificationUrl,
+      payer: params.payerEmail ? { email: params.payerEmail } : undefined,
+      statement_descriptor: 'TAPRESENTE',
+      expires: true,
+      expiration_date_from: new Date().toISOString(),
+      expiration_date_to: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
     },
-    auto_return: 'approved',
-    payment_methods: paymentMethodsFor(params.paymentMethod),
-    ...(params.notificationUrl ? { notification_url: params.notificationUrl } : {}),
-  };
-
-  const preference = await mpRequest<MercadoPagoCreatePreferenceResponse>('/checkout/preferences', {
-    method: 'POST',
-    body,
   });
 
-  const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
-  const isTestToken = !!token && token.startsWith('TEST-');
-  const url = isTestToken && preference.sandbox_init_point ? preference.sandbox_init_point : preference.init_point;
+  if (!response.id || !response.init_point) {
+    console.error('[MercadoPago] Invalid preference response:', response);
+    throw new Error('Failed to create Mercado Pago preference');
+  }
 
   return {
-    id: preference.id,
-    url,
+    id: response.id,
+    initPoint: response.init_point,
+    sandboxInitPoint: response.sandbox_init_point || response.init_point,
   };
 }
 
-export async function getMercadoPagoPayment(paymentId: string): Promise<MercadoPagoPayment> {
-  return mpRequest<MercadoPagoPayment>(`/v1/payments/${encodeURIComponent(paymentId)}`, { method: 'GET' });
-}
+// ============================================
+// Payment Verification
+// ============================================
 
-function normalizeSecret(value: string): string {
-  const trimmed = value.trim();
-  const first = trimmed[0];
-  const last = trimmed[trimmed.length - 1];
-  if ((first === '"' && last === '"') || (first === "'" && last === "'") || (first === '`' && last === '`')) {
-    return trimmed.slice(1, -1).trim();
+/**
+ * Get payment information by ID
+ * Used to verify payment status from webhook
+ */
+export async function getPayment(paymentId: string | number): Promise<PaymentInfo> {
+  const client = getClient();
+  const payment = new Payment(client);
+
+  const response = await payment.get({ id: Number(paymentId) });
+
+  if (!response.id) {
+    throw new Error(`Payment ${paymentId} not found`);
   }
-  return trimmed;
+
+  return {
+    id: response.id,
+    status: response.status || 'unknown',
+    statusDetail: response.status_detail || '',
+    externalReference: response.external_reference || null,
+    paymentMethodId: response.payment_method_id || '',
+    paymentTypeId: response.payment_type_id || '',
+    transactionAmount: response.transaction_amount || 0,
+    feeAmount: response.fee_details?.reduce((sum, fee) => sum + (fee.amount || 0), 0) || 0,
+    netReceivedAmount: response.transaction_details?.net_received_amount || 0,
+    dateApproved: response.date_approved || null,
+    payerEmail: response.payer?.email || null,
+  };
 }
 
-function isValidHex(value: string): boolean {
-  return value.length > 0 && value.length % 2 === 0 && /^[0-9a-f]+$/i.test(value);
+/**
+ * Check if a payment status indicates success
+ */
+export function isPaymentApproved(status: string): boolean {
+  return status === 'approved';
 }
 
-export function verifyMercadoPagoWebhookSignature(params: {
-  secret: string;
-  xSignature: string;
-  xRequestId: string;
-  dataId: string;
-}): boolean {
-  try {
-    const secret = normalizeSecret(params.secret);
-    const xRequestId = params.xRequestId.trim();
-    const xSignature = params.xSignature.trim();
-    const parts = xSignature.split(',');
-    let ts: string | undefined;
-    let v1: string | undefined;
+/**
+ * Check if a payment is still pending
+ */
+export function isPaymentPending(status: string): boolean {
+  return status === 'pending' || status === 'in_process' || status === 'authorized';
+}
 
-    for (const part of parts) {
-      const [k, v] = part.split('=', 2);
-      if (!k || !v) continue;
-      const key = k.trim();
-      const value = v.trim();
-      if (key === 'ts') ts = value;
-      if (key === 'v1') v1 = value;
-    }
+/**
+ * Check if a payment was rejected
+ */
+export function isPaymentRejected(status: string): boolean {
+  return status === 'rejected' || status === 'cancelled' || status === 'refunded' || status === 'charged_back';
+}
 
-    if (!ts || !v1) return false;
+// ============================================
+// Webhook Signature Verification
+// ============================================
 
-    const dataIdRaw = params.dataId.trim();
-    const dataId = /[a-z]/i.test(dataIdRaw) ? dataIdRaw.toLowerCase() : dataIdRaw;
-    const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
+/**
+ * Verify webhook signature from Mercado Pago
+ * Mercado Pago sends x-signature header with format: ts=xxx,v1=xxx
+ * 
+ * For now, we'll validate by fetching the payment directly
+ * which is the recommended approach for Checkout Pro
+ */
+export function parseWebhookHeaders(headers: Headers): { 
+  signature: string | null; 
+  requestId: string | null;
+} {
+  return {
+    signature: headers.get('x-signature'),
+    requestId: headers.get('x-request-id'),
+  };
+}
 
-    // Decode secret from hex to bytes (MP secret is hex-encoded)
-    const secretBytes = Buffer.from(secret, 'hex');
-    const expected = crypto.createHmac('sha256', secretBytes).update(manifest).digest('hex');
+/**
+ * Parse webhook notification body
+ */
+export interface WebhookNotification {
+  id: number;
+  live_mode: boolean;
+  type: string;
+  date_created: string;
+  user_id: number;
+  api_version: string;
+  action: string;
+  data: {
+    id: string;
+  };
+}
 
-    const received = v1.trim().toLowerCase();
-    if (!isValidHex(expected) || !isValidHex(received)) return false;
-
-    const A = Buffer.from(expected, 'hex');
-    const B = Buffer.from(received, 'hex');
-    return A.length === B.length && crypto.timingSafeEqual(A, B);
-  } catch {
-    return false;
+export function parseWebhookBody(body: unknown): WebhookNotification | null {
+  if (!body || typeof body !== 'object') return null;
+  
+  const notification = body as WebhookNotification;
+  
+  if (!notification.type || !notification.data?.id) {
+    return null;
   }
+  
+  return notification;
 }

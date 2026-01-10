@@ -43,7 +43,6 @@ export function PurchaseForm({ businessId, businessSlug, templateId, amount, acc
         body: JSON.stringify({
           businessId,
           templateId,
-          paymentProvider: 'mercadopago',
           recipientName: isGift ? recipientName : '',
           recipientEmail: isGift ? recipientEmail : '',
           recipientMessage: isGift ? recipientMessage : null,
@@ -62,11 +61,14 @@ export function PurchaseForm({ businessId, businessSlug, templateId, amount, acc
         throw new Error(data.error || 'Erro ao processar compra');
       }
 
-      // Redirect to payment page or success page
+      // Redirect to payment or success page
       if (data.checkoutUrl) {
+        // Mercado Pago checkout - redirect to external payment page
         window.location.href = data.checkoutUrl;
+      } else if (data.redirectUrl) {
+        // Dev mode - redirect to success page
+        router.push(data.redirectUrl);
       } else if (data.giftCardCode) {
-        // Dev mode without payment - redirect to success directly
         router.push(`/store/${businessSlug}/success?code=${data.giftCardCode}`);
       }
     } catch (err) {
