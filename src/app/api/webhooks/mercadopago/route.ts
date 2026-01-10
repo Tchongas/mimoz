@@ -69,7 +69,10 @@ export async function POST(request: NextRequest) {
     const xSignature = request.headers.get('x-signature');
     const xRequestId = request.headers.get('x-request-id');
 
-    const dataIdFromQuery = request.nextUrl.searchParams.get('data.id');
+    const dataIdFromQuery =
+      request.nextUrl.searchParams.get('data.id') ||
+      request.nextUrl.searchParams.get('data[id]') ||
+      request.nextUrl.searchParams.get('id');
 
     const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
     if (secret && xSignature && xRequestId && dataIdFromQuery) {
@@ -81,7 +84,27 @@ export async function POST(request: NextRequest) {
       });
 
       if (!isValid) {
-        console.error('[MercadoPagoWebhook] Invalid signature');
+        const parts = xSignature.split(',');
+        let ts: string | undefined;
+        let v1: string | undefined;
+        for (const part of parts) {
+          const [k, v] = part.split('=', 2);
+          if (!k || !v) continue;
+          const key = k.trim();
+          const value = v.trim();
+          if (key === 'ts') ts = value;
+          if (key === 'v1') v1 = value;
+        }
+
+        console.error('[MercadoPagoWebhook] Invalid signature', {
+          hasSecret: true,
+          hasXSignature: !!xSignature,
+          hasXRequestId: !!xRequestId,
+          dataIdFromQuery,
+          ts,
+          v1Length: v1?.length,
+          xRequestId,
+        });
         return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
       }
     } else if (secret) {

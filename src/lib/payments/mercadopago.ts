@@ -275,6 +275,20 @@ export async function getMercadoPagoPayment(paymentId: string): Promise<MercadoP
   return mpRequest<MercadoPagoPayment>(`/v1/payments/${encodeURIComponent(paymentId)}`, { method: 'GET' });
 }
 
+function normalizeSecret(value: string): string {
+  const trimmed = value.trim();
+  const first = trimmed[0];
+  const last = trimmed[trimmed.length - 1];
+  if ((first === '"' && last === '"') || (first === "'" && last === "'") || (first === '`' && last === '`')) {
+    return trimmed.slice(1, -1).trim();
+  }
+  return trimmed;
+}
+
+function isValidHex(value: string): boolean {
+  return value.length > 0 && value.length % 2 === 0 && /^[0-9a-f]+$/i.test(value);
+}
+
 export function verifyMercadoPagoWebhookSignature(params: {
   secret: string;
   xSignature: string;
@@ -282,7 +296,10 @@ export function verifyMercadoPagoWebhookSignature(params: {
   dataId: string;
 }): boolean {
   try {
-    const parts = params.xSignature.split(',');
+    const secret = normalizeSecret(params.secret);
+    const xRequestId = params.xRequestId.trim();
+    const xSignature = params.xSignature.trim();
+    const parts = xSignature.split(',');
     let ts: string | undefined;
     let v1: string | undefined;
 
@@ -297,13 +314,17 @@ export function verifyMercadoPagoWebhookSignature(params: {
 
     if (!ts || !v1) return false;
 
-    const dataId = /[a-z]/i.test(params.dataId) ? params.dataId.toLowerCase() : params.dataId;
-    const manifest = `id:${dataId};request-id:${params.xRequestId};ts:${ts};`;
+    const dataIdRaw = params.dataId.trim();
+    const dataId = /[a-z]/i.test(dataIdRaw) ? dataIdRaw.toLowerCase() : dataIdRaw;
+    const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
 
-    const expected = crypto.createHmac('sha256', params.secret).update(manifest).digest('hex');
+    const expected = crypto.createHmac('sha256', secret).update(manifest).digest('hex');
 
-    const A = Buffer.from(expected, 'utf8');
-    const B = Buffer.from(v1, 'utf8');
+    const received = v1.trim().toLowerCase();
+    if (!isValidHex(expected) || !isValidHex(received)) return false;
+
+    const A = Buffer.from(expected, 'hex');
+    const B = Buffer.from(received, 'hex');
     return A.length === B.length && crypto.timingSafeEqual(A, B);
   } catch {
     return false;
