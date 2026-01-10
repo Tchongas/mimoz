@@ -15,7 +15,7 @@
 // 5. Send confirmation emails if payment approved
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/server';
 import { 
   getPayment, 
   isPaymentApproved, 
@@ -43,8 +43,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Get payment ID from notification
-    // Format can be: { data: { id: "123" } } or { id: "123" }
-    const paymentId = body.data?.id || body.id;
+    // Formats:
+    // - Webhook v2: { data: { id: "123" } }
+    // - Webhook v1: { id: 123 }
+    // - IPN: { resource: "123", topic: "payment" }
+    const paymentId = body.data?.id || body.resource || body.id;
     
     if (!paymentId) {
       console.error('[MercadoPago Webhook] No payment ID in notification');
@@ -71,8 +74,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No external reference' }, { status: 400 });
     }
 
-    // Get Supabase client
-    const supabase = await createClient();
+    // Get Supabase client with service role (bypasses RLS for webhook operations)
+    const supabase = createServiceClient();
 
     // Find the gift card
     const { data: giftCard, error: fetchError } = await supabase
